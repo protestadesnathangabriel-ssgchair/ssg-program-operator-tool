@@ -1,0 +1,8 @@
+START HERE: START_HERE_TAGALOG.md
+
+DO NOT upload this ZIP into Firebase Console.
+1) Extract ZIP.
+2) Upload/commit the extracted source files to the existing GitHub repository (replace matching files, not the ZIP).
+3) From the extracted project folder, run the Firebase CLI commands listed in START_HERE_TAGALOG.md.
+4) Keep old Apps Script app online until every parity test passes.
+5) Do not upload the workbook to GitHub or import production data yet.
