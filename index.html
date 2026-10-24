@@ -734,6 +734,18 @@ button,input,select,textarea{font-family:inherit!important}
  .ssg-workspace-tip{padding:14px!important;border-radius:13px!important}
 }
 </style>
+<style id="ssg-phone-menu-polish">
+.ssg-mobile-return{display:none}
+#ssgMobileNavBackdrop{display:none}
+@media(max-width:760px){
+ .ssg-mobile-return{display:inline-flex!important;align-items:center;justify-content:center;gap:7px;align-self:flex-start;margin:0 0 14px 0;padding:7px 11px;min-height:34px;border:1px solid var(--ssg-border,#d9deeb);border-radius:8px;background:var(--ssg-surface,#fff);color:var(--ssg-navy,#172554);font:inherit;font-size:12px;font-weight:750;letter-spacing:.01em;box-shadow:0 1px 2px rgba(20,35,80,.05);cursor:pointer;transition:background .15s,border-color .15s}
+ .ssg-mobile-return:before{content:"←";font-size:15px;line-height:1}
+ .ssg-mobile-return:hover,.ssg-mobile-return:focus-visible{background:var(--ssg-soft,#f4f6fb);border-color:var(--ssg-navy,#172554);outline:none}
+ #ssgMobileNavBackdrop{display:block;position:fixed;inset:0;z-index:999;background:rgba(10,18,55,.32);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .18s ease,visibility .18s ease}
+ .sidebar.ssg-mobile-open{z-index:1000!important}
+ .sidebar.ssg-mobile-open~#ssgMobileNavBackdrop{opacity:1;visibility:visible;pointer-events:auto}
+}
+</style>
 </head>
 <body>
 <script>
@@ -1304,7 +1316,7 @@ function getStoredAuth(){
     $('mainApp').innerHTML=`
       <div class="app">
         <aside class="sidebar">
-          <button type="button" class="ssg-mobile-return" onclick="toggleSsgMobileNav()" aria-label="Return to page">← Return</button>
+          <button type="button" class="ssg-mobile-return" onclick="toggleSsgMobileNav()" aria-label="Return to page">Return</button>
           <div class="brand" aria-label="SSG Program Operator Tool"><span>SSG PROGRAM OPERATOR TOOL<small>PROGRAM WORKSPACE</small></span></div>
           <nav class="nav">
             <button data-page="home" class="active" onclick="showPage('home')">Dashboard</button>
@@ -3413,12 +3425,3 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
 </body>
 </html>
 
-/* Requested phone-only menu close controls */
-.ssg-mobile-return{display:none}
-#ssgMobileNavBackdrop{display:none}
-@media(max-width:760px){
- .ssg-mobile-return{display:block!important;align-self:flex-end;margin:0 0 12px auto;padding:8px 12px;border:1px solid var(--ssg-border);border-radius:10px;background:#fff;color:var(--ssg-navy);font-weight:700}
- #ssgMobileNavBackdrop{display:block;position:fixed;inset:0;z-index:999;background:rgba(10,18,55,.32);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s}
- .sidebar.ssg-mobile-open{z-index:1000!important}
- .sidebar.ssg-mobile-open~#ssgMobileNavBackdrop{opacity:1;visibility:visible;pointer-events:auto}
-}
