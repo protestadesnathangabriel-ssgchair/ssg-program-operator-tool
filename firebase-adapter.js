@@ -194,7 +194,7 @@
         if(s.exists && s.data().owner===auth.currentUser.uid) await s.ref.delete();
         return {success:true};
       }
-      case 'exportGuide': throw err('Server-side Google Docs/DOCX export is not available on GitHub Pages + Spark. Use the built-in print/download controls in the app.');
+      case 'exportGuide': throw err('Export is handled locally by the app.');
       default: throw err('This feature is not implemented in the Firestore migration adapter: '+method);
     }
   }

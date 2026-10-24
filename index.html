@@ -358,7 +358,7 @@
     .lyric-screen.blue-theme{background:linear-gradient(90deg,#54c4f6 0%,#b6e4f8 22%,#fff 50%,#b6e4f8 78%,#54c4f6 100%);color:#000;border-radius:8px;font-family:"Georgia Pro",Georgia,serif;font-weight:400}
     .lyric-screen.people-theme{background-color:#dff4fb;color:#061b4f;font-family:Futura,"Futura PT",Century Gothic,Arial,sans-serif;font-weight:400;text-shadow:0 3px 5px rgba(0,0,0,.30)}
     .lyric-screen.royal-theme{background-color:#173b91;color:#fff;font-family:"Trebuchet MS",Trebuchet,Arial,sans-serif;font-weight:400;text-shadow:0 3px 5px rgba(0,0,0,.30)}
-    .lyric-screen-scroll{width:100%;height:100%;overflow:auto;padding:8% 5% 30%;scroll-behavior:smooth}
+    .lyric-screen-scroll{width:100%;height:100%;overflow:auto;padding:8% 5% 30%;scroll-behavior:auto}
     .lyric-screen-text{font-weight:400;white-space:pre-wrap;word-break:normal;text-align:center;line-height:1.22;margin:0 auto;font-family:inherit}
     .lyric-screen-empty{color:#aab2ba;text-align:center;font-size:12px;padding:18% 10%}
     .lyric-preview-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:10px 12px;border-top:1px solid var(--line);background:#fff}
@@ -376,7 +376,7 @@
     .lyric-display-screen.blue-theme{background:linear-gradient(90deg,#54c4f6 0%,#b6e4f8 22%,#fff 50%,#b6e4f8 78%,#54c4f6 100%);color:#000;border-radius:10px;font-family:"Georgia Pro",Georgia,serif;font-weight:400}
     .lyric-display-screen.people-theme{background-color:#dff4fb;color:#061b4f;font-family:Futura,"Futura PT",Century Gothic,Arial,sans-serif;font-weight:800;text-shadow:0 3px 5px rgba(0,0,0,.30)}
     .lyric-display-screen.royal-theme{background-color:#173b91;color:#fff;font-family:"Trebuchet MS",Trebuchet,Arial,sans-serif;font-weight:400;text-shadow:0 3px 5px rgba(0,0,0,.30)}
-    .lyric-display-scroll{width:100%;height:100%;overflow:auto;padding:9vh 5vw 40vh;scroll-behavior:smooth}
+    .lyric-display-scroll{width:100%;height:100%;overflow:auto;padding:9vh 5vw 40vh;scroll-behavior:auto}
     .lyric-display-text{font-weight:400;margin:0 auto;white-space:pre-wrap;text-align:center;line-height:1.18;word-break:normal;font-family:inherit}
     .lyric-display-overlay{position:absolute;left:14px;top:14px;z-index:20;background:rgba(0,0,0,.58);color:#fff;padding:7px 9px;border-radius:7px;font-size:10px;font-weight:800;pointer-events:none}
     .lyric-display-overlay.bottom{top:auto;bottom:14px}
@@ -1931,16 +1931,15 @@ function broadcastGuideToPresenter(){
 
   function exportGuideClient(id){
     showToast('Preparing export options...');
-    safeRun('exportGuide',[id],result=>{
-      safeRun('getGuide',[id],guide=>{
-        hideToast();
-        const copyValue=JSON.stringify(result.text||'').replace(/</g,'\\u003c');
-        const mediaHtml=(result.mediaLinks||[]).length?`<div style="margin-top:16px;border-top:1px solid #e7ebf0;padding-top:12px"><div style="font-weight:800;margin-bottom:8px">MCGI Media / File Links</div>${(result.mediaLinks||[]).map(m=>`<div style="padding:8px 0;border-bottom:1px solid #eef1f4"><div style="font-weight:700">#${esc(m.number||'')} ${esc(m.title||m.name)}</div><a href="${escAttr(m.url)}" target="_blank" rel="noopener" style="font-size:12px;word-break:break-all">${esc(m.url)}</a></div>`).join('')}</div>`:'';
-        const preview=previewHTML(guide);
-        const count=String(buildText(guide)||'').length;
-        const fontSize=count>10000?10:count>7500?11:count>5000?12:count>3000?13:count>1500?14:15;
-        document.body.insertAdjacentHTML('beforeend',`<div class="modal-backdrop show" id="exportModal"><div class="modal"><div class="modal-head"><strong>Export Guide</strong><button class="btn small" onclick="closeExportModal()">Close</button></div><div class="modal-body"><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><button class="btn primary" onclick="downloadGuideDoc('${escAttr(id)}')">Download for Google Docs</button><button class="btn" onclick="downloadGuidePdf('${escAttr(id)}')">Download PDF</button><button class="btn" onclick="downloadImageById('${escAttr(id)}')">Download Image (PNG)</button><button class="btn" onclick="fallbackCopy(${copyValue})">Copy Text + Drive Links</button></div><div id="exportRenderHost" style="margin-top:16px;border:1px solid #d9e0e7;border-radius:6px;max-height:360px;overflow:auto;padding:12px;background:#fff"><div id="exportRender" class="export-render" style="--export-font-size:${fontSize}pt">${preview}</div></div>${mediaHtml}</div></div></div>`);
-      });
+    // Export is generated in the browser; no Apps Script / Cloud Function endpoint is required.
+    safeRun('getGuide',[id],guide=>{
+      if(!guide){hideToast();showToast('Guide not found.');return;}
+      hideToast();
+      const copyValue=JSON.stringify(buildText(guide)).replace(/</g,'\\u003c');
+      const preview=previewHTML(guide);
+      const count=String(buildText(guide)||'').length;
+      const fontSize=count>10000?10:count>7500?11:count>5000?12:count>3000?13:count>1500?14:15;
+      document.body.insertAdjacentHTML('beforeend',`<div class="modal-backdrop show" id="exportModal"><div class="modal"><div class="modal-head"><strong>Export Guide</strong><button class="btn small" onclick="closeExportModal()">Close</button></div><div class="modal-body"><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px"><button class="btn primary" onclick="downloadGuideDoc('${escAttr(id)}')">Download for Google Docs</button><button class="btn" onclick="downloadGuidePdf('${escAttr(id)}')">Download PDF</button><button class="btn" onclick="downloadImageById('${escAttr(id)}')">Download Image (PNG)</button><button class="btn" onclick="fallbackCopy(${copyValue})">Copy Text + Drive Links</button></div><div id="exportRenderHost" style="margin-top:16px;border:1px solid #d9e0e7;border-radius:6px;max-height:360px;overflow:auto;padding:12px;background:#fff"><div id="exportRender" class="export-render" style="--export-font-size:${fontSize}pt">${preview}</div></div></div></div></div>`);
     });
   }
   function closeExportModal(){ $('exportModal')?.remove(); }
@@ -2218,7 +2217,7 @@ function broadcastGuideToPresenter(){
     const loop=(now)=>{
       if(!state.lyrics.scrolling)return;
       const area=$('lyricPreviewScroll');if(!area){stopLyricScroll();return;}
-      const dt=Math.min(50,Math.max(0,now-last||0));last=now;
+      const dt=Math.max(0,now-last||0);last=now;
       const speed=speedTable[Math.max(1,Math.min(9,Number(state.lyrics.speed)||3))-1];
       const max=Math.max(0,area.scrollHeight-area.clientHeight);
       pos=Math.min(max,pos+(speed*dt/1000));
@@ -2407,7 +2406,7 @@ function broadcastGuideToPresenter(){
       if(!displayLyricState.scrolling)return;
       const area=$('lyricDisplayScroll');
       if(!area){stopDisplayLyricScroll();return;}
-      const dt=Math.min(50,Math.max(0,now-displayLyricState.lastScrollTime||0));
+      const dt=Math.max(0,now-displayLyricState.lastScrollTime||0);
       displayLyricState.lastScrollTime=now;
       const speed=speedTable[Math.max(1,Math.min(9,Number(displayLyricState.speed)||3))-1];
       const max=Math.max(0,area.scrollHeight-area.clientHeight);
