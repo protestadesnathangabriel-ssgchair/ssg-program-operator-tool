@@ -21,13 +21,19 @@
     body.viewer-mode .nav button:not([data-page="home"]){display:none}
     body.viewer-mode .ssg-tools-grid,body.viewer-mode .ssg-dashboard-columns{display:none!important}
     body.viewer-mode .ssg-home-intro p{max-width:760px}
+    .operator-follow-modal{position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:10000;display:none;align-items:center;justify-content:center;padding:18px}.operator-follow-modal.show{display:flex}.operator-follow-card{background:#fff;color:#182433;border-radius:14px;padding:22px;width:min(560px,100%);max-height:80vh;overflow:auto;box-shadow:0 20px 60px #0004}.operator-follow-card h3{margin:0 0 8px}.operator-follow-list{display:grid;gap:8px;margin-top:14px}.operator-follow-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #dce2e8;border-radius:9px;padding:12px}.operator-follow-empty{padding:16px;background:#f4f6f8;border-radius:8px;color:#596675;font-size:13px}
+    body.viewer-display-mode .display-key,body.viewer-display-mode .display-controls{display:none!important}
     .officer-request-card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--yellow);border-radius:10px;padding:16px;margin:18px 0}
     .officer-request-card h3{margin:0 0 6px;color:var(--blue)}
     .officer-request-card p{margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.5}
-    .officer-request-card .request-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}
-    .officer-request-card textarea{min-height:66px}
+    .officer-request-card .request-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) auto;gap:10px;align-items:end}
+    .officer-request-card .request-field label{display:block;font-size:12px;font-weight:700;margin-bottom:6px}
+    .officer-request-card .request-field input,.officer-request-card .request-field select{min-height:42px}
     .officer-request-status{font-size:12px;margin-top:8px;color:var(--green)}
     @media(max-width:640px){.officer-request-card .request-row{grid-template-columns:1fr}}
+    body.viewer-display-mode .display-shell{grid-template-columns:minmax(0,1fr)!important}
+    body.viewer-display-mode .display-side,body.viewer-display-mode #promptResizeHandle,body.viewer-display-mode .display-key,body.viewer-display-mode .display-controls{display:none!important}
+    body.viewer-display-mode .display-main{width:100%;height:100vh}
     .sidebar-foot{margin-top:auto;color:#8b96a2;font-size:10px;line-height:1.5}
     .main{flex:1;min-width:0}
     .topbar{padding:18px 22px;border-bottom:1px solid var(--line);background:#fff;display:flex;justify-content:space-between;gap:14px;align-items:center}
@@ -1199,6 +1205,7 @@ function getStoredAuth(){
     return msg;
   }
   function sendToPresenterMode(mode,type,payload){
+    if(APP_CONFIG.mode==='display'&&new URLSearchParams(location.search).get('viewOnly')==='1')return;
     const commandId=presenterCommandId();
     const msg=Object.assign({type:type,commandId:commandId},payload||{});
     markPresenterCommand(commandId);
@@ -1489,7 +1496,7 @@ function getStoredAuth(){
         <div><div class="ssg-eyebrow">${isViewer?'PUBLIC VIEW-ONLY LIBRARY':'YOUR WORKSPACE'}</div><h2>${isViewer?'Saved SSG programs':'Everything ready for your next program.'}</h2><p>${isViewer?'Browse all saved program guides and program sequences. Your account cannot edit, create, or delete saved content.':'Create program guides, arrange the live sequence, and prepare lyrics from one clean workspace.'}</p></div>
         <div class="ssg-home-badge"><span>✦</span><div><strong>SSG Program Operator</strong><small>Program workspace</small></div></div>
       </section>
-      ${isViewer?`<section class="officer-request-card"><h3>Request Officer Access</h3><p>Submit a request for an administrator to review. Submitting this form does not automatically approve your account.</p><div class="request-row"><div><label for="officerRequestReason">Why do you need officer access?</label><textarea id="officerRequestReason" maxlength="1000" placeholder="Briefly describe your SSG role and why you need editing access."></textarea></div><button class="btn primary" type="button" onclick="submitOfficerRequest()">Request Access</button></div><div id="officerRequestStatus" class="officer-request-status" aria-live="polite"></div></section>`:''}
+      ${isViewer?`<section class="officer-request-card"><h3>Request Officer Access</h3><p>Enter your name and role in the Production-Technical Team. An administrator will review your request.</p><div class="request-row"><div class="request-field"><label for="officerRequestName">Full Name</label><input id="officerRequestName" maxlength="200" autocomplete="name" placeholder="Your full name"></div><div class="request-field"><label for="officerRequestRole">Role in Production-Technical Team</label><input id="officerRequestRole" maxlength="200" placeholder="e.g. Technical Director, Audio, Lyrics, Host"></div><button class="btn primary" type="button" onclick="submitOfficerRequest()">Request Access</button></div><div id="officerRequestStatus" class="officer-request-status" aria-live="polite"></div></section>`:''}
       <section class="ssg-tools-grid" aria-label="Main workspace tools">
         <button type="button" class="ssg-tool-card" onclick="createGuide()"><span class="ssg-tool-icon">▤</span><span class="ssg-tool-arrow">↗</span><strong>Program Guides</strong><small>Create, edit, preview, export, and manage your program guides.</small></button>
         <button type="button" class="ssg-tool-card" onclick="createSequenceGuide()"><span class="ssg-tool-icon">☷</span><span class="ssg-tool-arrow">↗</span><strong>Program Sequence</strong><small>Arrange the order of program items and prepare the live flow.</small></button>
@@ -1499,7 +1506,7 @@ function getStoredAuth(){
         <section class="ssg-dashboard-panel">
           <div class="ssg-section-title"><div><h2>Recently opened</h2><p>Pick up where you left off.</p></div><button class="ssg-text-link" type="button" onclick="openSavedGuidesFromHome()">View all →</button></div>
           <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="homeSearch" placeholder="Search guides by title…" value="${escAttr(window.homeSearchValue||'')}" oninput="window.homeSearchValue=this.value;renderHome()"></div>
-          <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button></div>`}</div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
+          <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small" onclick="openWindowDisplayView('${escAttr(g.id)}')">Independent Display</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button></div>`}</div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
         </section>
         <section class="ssg-dashboard-panel">
           <div class="ssg-section-title"><div><h2>Quick access</h2><p>Supporting tools for your program.</p></div></div>
@@ -1513,18 +1520,35 @@ function getStoredAuth(){
       <section class="ssg-dashboard-panel ssg-saved-guides-section" id="savedGuidesSection" style="margin-top:26px">
         <div class="ssg-section-title"><div><h2>Saved Guides & Sequences</h2><p>${isViewer?'View all saved program guides and sequences.':'Open and manage all your saved program guides and sequences.'}</p></div></div>
         <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="savedGuideSearch" placeholder="Search saved guides by title…" aria-label="Search saved guides" oninput="filterSavedGuides(this.value)"></div>
-          <div class="guide-list" id="savedGuideList">${all.length?all.map(g=>`<div class="guide-row" data-saved-title="${escAttr(String(g.title||'').toLowerCase())}"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button></div>`}</div>`).join(''):`<div class="empty">No saved guides yet.<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div>
+          <div class="guide-list" id="savedGuideList">${all.length?all.map(g=>`<div class="guide-row" data-saved-title="${escAttr(String(g.title||'').toLowerCase())}"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small" onclick="openWindowDisplayView('${escAttr(g.id)}')">Independent Display</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button></div>`}</div>`).join(''):`<div class="empty">No saved guides yet.<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div>
         </div>
-      </section>`;
+      </section>
+      <div id="operatorFollowModal" class="operator-follow-modal" role="dialog" aria-modal="true" aria-labelledby="operatorFollowTitle"><div class="operator-follow-card"><h3 id="operatorFollowTitle">Follow an online operator</h3><p style="font-size:13px;color:#596675;margin:0">Choose an operator currently running this guide. Your window is view-only; keyboard and timer controls are disabled.</p><div id="operatorFollowList" class="operator-follow-list"><div class="operator-follow-empty">Checking online operators…</div></div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn" type="button" onclick="closeOperatorFollowModal()">Close</button></div></div></div>`;
   }
 
+  let operatorListUnsubscribe=null;
+  function closeOperatorFollowModal(){if(operatorListUnsubscribe){operatorListUnsubscribe();operatorListUnsubscribe=null;}const m=document.getElementById('operatorFollowModal');if(m)m.classList.remove('show');}
+  function chooseOnlineOperator(guideId){
+    const modal=document.getElementById('operatorFollowModal');const list=document.getElementById('operatorFollowList');
+    if(!modal||!list){showToast('Operator selector is not available. Return to Dashboard and try again.');return;}
+    modal.dataset.guideId=String(guideId);modal.classList.add('show');list.innerHTML='<div class="operator-follow-empty">Checking online operators…</div>';
+    if(operatorListUnsubscribe){operatorListUnsubscribe();operatorListUnsubscribe=null;}
+    if(typeof SSGFirebase?.listOnlineOperators!=='function'){list.innerHTML='<div class="operator-follow-empty">Live operator monitoring is not available in this build.</div>';return;}
+    operatorListUnsubscribe=SSGFirebase.listOnlineOperators(guideId,rows=>{
+      if(!rows.length){list.innerHTML='<div class="operator-follow-empty">No online operator is currently publishing this guide. Ask the operator to open the live Window Display first.</div>';return;}
+      list.innerHTML=rows.map(op=>`<div class="operator-follow-row"><div><strong>${esc(op.operatorName)}</strong><div style="font-size:11px;color:#657180">${esc(op.email||'Approved operator')} · Online</div></div><button class="btn primary small" type="button" onclick="followOnlineOperator('${escAttr(guideId)}','${escAttr(op.uid)}')">Follow</button></div>`).join('');
+    },err=>{list.innerHTML='<div class="operator-follow-empty">Could not load online operators. Please refresh and try again.</div>';console.warn(err);});
+  }
+  function followOnlineOperator(guideId,uid){closeOperatorFollowModal();const base=state.bootstrap?.appUrl||APP_CONFIG.appUrl||'';if(!base){showToast('App URL is not ready yet.');return;}const win=window.open(base+'?mode=display&viewOnly=1&guideId='+encodeURIComponent(guideId)+'&followUid='+encodeURIComponent(uid),'SSG_PROGRAM_FOLLOW_OPERATOR','popup=yes,resizable=yes,scrollbars=yes,width=1280,height=800');try{if(win&&!win.closed)win.focus();}catch(err){}}
+
   function submitOfficerRequest(){
-    const reason=String(document.getElementById('officerRequestReason')?.value||'').trim();
+    const name=String(document.getElementById('officerRequestName')?.value||'').trim();
+    const teamRole=String(document.getElementById('officerRequestRole')?.value||'').trim();
     const status=document.getElementById('officerRequestStatus');
-    if(!reason){if(status)status.textContent='Please enter a short reason before submitting.';return;}
+    if(!name||!teamRole){if(status)status.textContent='Please enter both your full name and Production-Technical Team role.';return;}
     const button=document.querySelector('.officer-request-card button'); if(button){button.disabled=true;button.textContent='Submitting...';}
     const token=state.auth?.token||getStoredAuth()?.token||'';
-    google.script.run.withSuccessHandler(result=>{if(status)status.textContent=result?.message||'Request submitted for admin review.';const box=document.querySelector('.officer-request-card');if(box){const form=box.querySelector('.request-row');if(form)form.style.display='none';}}).withFailureHandler(error=>{if(status)status.textContent=(error?.message||String(error)).replace(/^Error:\s*/,'');if(button){button.disabled=false;button.textContent='Request Access';}}).apiCall('submitOfficerRequest',[{reason}],token);
+    google.script.run.withSuccessHandler(result=>{if(status)status.textContent=result?.message||'Request submitted for admin review.';const box=document.querySelector('.officer-request-card');if(box){const form=box.querySelector('.request-row');if(form)form.style.display='none';}}).withFailureHandler(error=>{if(status)status.textContent=(error?.message||String(error)).replace(/^Error:\s*/,'');if(button){button.disabled=false;button.textContent='Request Access';}}).apiCall('submitOfficerRequest',[{name,teamRole}],token);
   }
 
   function openSavedGuidesFromHome(){
@@ -2984,6 +3008,24 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     const select=$('promptGuideSelect'); if(select) editGuideForPrompt(select.value); else if(state.guide?.id) openPromptForGuide(state.guide); else showToast('Select a saved guide.');
   }
   function editGuideForPrompt(id){safeRun('getGuide',[id],guide=>openPromptForGuide(guide));}
+  function openWindowDisplayView(guideId){
+    const guide=(state.guides||[]).find(g=>String(g.id)===String(guideId));
+    if(!guide){safeRun('getGuide',[guideId],g=>openWindowDisplayViewForGuide(g));return;}
+    openWindowDisplayViewForGuide(guide);
+  }
+  function openWindowDisplayViewForGuide(guide){
+    if(!guide||!guide.id){showToast('Saved program not found.');return;}
+    const base=state.bootstrap?.appUrl||APP_CONFIG.appUrl||'';
+    if(!base){showToast('App URL is not ready yet.');return;}
+    const win=window.open(base+'?mode=display&viewOnly=1&guideId='+encodeURIComponent(guide.id),'SSG_PROGRAM_VIEW_ONLY_DISPLAY','popup=yes,resizable=yes,scrollbars=yes,width=1280,height=800');
+    try{if(win&&!win.closed)win.focus();}catch(err){}
+  }
+  function openHostViewReadOnly(guideId){
+    const guide=(state.guides||[]).find(g=>String(g.id)===String(guideId));
+    if(!guide){safeRun('getGuide',[guideId],g=>openHostViewForGuide(g));return;}
+    openHostViewForGuide(guide);
+  }
+
   function openHostView(){
     const select=$('promptGuideSelect');
     if(select){safeRun('getGuide',[select.value],guide=>openHostViewForGuide(guide));}
@@ -3068,7 +3110,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     [state.displayWindow,state.controlWindow].forEach(win=>{if(win&&!win.closed)win.postMessage({ssgPresenter:true,type:'targetState',target:state.promptTarget,commandId:id},'*');});
   }
 /* DISPLAY */
-  const displayState={guide:null,target:'display',scrolling:false,speed:3,zoom:100,raf:null,activeItemId:'',timer:null};
+  const displayState={guide:null,target:'display',scrolling:false,speed:3,zoom:100,raf:null,activeItemId:'',timer:null,followUid:'',followUnsubscribe:null,operatorPublishTimer:null};
   let guideLiveUnsubscribe=null;
   function subscribeDisplayedGuide(guideId,mode){
     if(typeof SSGFirebase?.subscribeGuide!=='function'||!guideId)return;
@@ -3086,7 +3128,17 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
       }else updateHostZoomLabel();
     },function(error){console.warn('Cross-account guide live sync:',error);});
   }
-  window.addEventListener('beforeunload',()=>{if(typeof guideLiveUnsubscribe==='function')guideLiveUnsubscribe();});
+  window.addEventListener('beforeunload',()=>{if(typeof guideLiveUnsubscribe==='function')guideLiveUnsubscribe();if(typeof displayState.followUnsubscribe==='function')displayState.followUnsubscribe();if(displayState.operatorPublishTimer)clearInterval(displayState.operatorPublishTimer);if(APP_CONFIG.mode==='display'&&!new URLSearchParams(location.search).get('viewOnly')){try{google.script.run.withFailureHandler(()=>{}).apiCall('markOperatorOffline',[],getStoredAuth()?.token||'');}catch(e){}}});
+  function currentOperatorDisplayState(){const area=$('displayContent');return {activeItemId:displayState.activeItemId||'',scrollTop:area?area.scrollTop:0,zoom:displayState.zoom||100,scrolling:!!displayState.scrolling,speed:displayState.speed||3,timer:displayState.timer||null,target:displayState.target||'display'};}
+  function publishOperatorDisplayState(){if(APP_CONFIG.mode!=='display'||new URLSearchParams(location.search).get('viewOnly')==='1'||!APP_CONFIG.guideId)return;const payload={guideId:APP_CONFIG.guideId,state:currentOperatorDisplayState()};try{google.script.run.withFailureHandler(e=>console.warn('Operator live-state publish failed:',e)).apiCall('publishOperatorState',[payload],getStoredAuth()?.token||'');}catch(e){console.warn(e);}}
+  function applyFollowedOperatorState(session){
+    if(!session){const status=$('controlList');if(status)status.innerHTML='<div class="operator-follow-empty">Operator is offline or has stopped sharing this guide. Waiting for the live session to return…</div>';const target=$('controlTarget');if(target)target.textContent='OPERATOR OFFLINE · READ ONLY';return;}
+    const status=$('controlList');if(status)status.innerHTML=`<div class="operator-follow-empty"><strong>LIVE · ${esc(session.operatorName||'Selected operator')}</strong><br>Following the operator’s current display state. Keyboard and timer controls are disabled in this window.</div>`;const target=$('controlTarget');if(target)target.textContent='LIVE OPERATOR · READ ONLY';
+    const st=session.state||{};displayState.activeItemId=String(st.activeItemId||'');displayState.timer=st.timer||null;displayState.zoom=Number(st.zoom)||100;displayState.scrolling=!!st.scrolling;displayState.speed=Number(st.speed)||3;displayState.target=st.target||'display';
+    applyDisplayZoom();document.querySelectorAll('#displayZoomContent .display-item').forEach(el=>el.classList.toggle('active',el.dataset.itemId===displayState.activeItemId));renderDisplayTimer();const area=$('displayContent');if(area&&Number.isFinite(Number(st.scrollTop)))area.scrollTop=Number(st.scrollTop);
+    const key=$('displayKey');if(key)key.textContent='VIEW-ONLY · FOLLOWING '+String(session.operatorName||'OPERATOR').toUpperCase();
+  }
+  function initFollowOperator(uid){displayState.followUid=String(uid||'');if(!displayState.followUid||typeof SSGFirebase?.subscribeOperatorSession!=='function')return;displayState.followUnsubscribe=SSGFirebase.subscribeOperatorSession(displayState.followUid,applyFollowedOperatorState,err=>console.warn('Follow operator state:',err));}
   function initHostView(){
     // Subscribe to operator edits in other tabs/windows on this GitHub Pages origin.
     openPresenterChannel();
@@ -3115,23 +3167,28 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
   function updateHostZoomLabel(){const label=$('hostZoomValue');if(label)label.textContent=displayState.zoom+'%';}
 
   function initDisplay(){
+    const params=new URLSearchParams(location.search);const viewOnly=params.get('viewOnly')==='1';const followUid=params.get('followUid')||'';
     const token=getStoredAuth()?.token||'';
     if(!token){ document.body.innerHTML='<div class="auth-gate"><div class="auth-card"><div class="auth-brand">SSG PROGRAM GUIDE BUILDER<small>DISPLAY LOCKED</small></div><p class="auth-sub">This presenter window requires an active signed-in session.</p></div></div>'; return; }
-    openPresenterChannel();
+    if(!viewOnly)openPresenterChannel();
+    if(viewOnly)document.body.classList.add('viewer-display-mode');
     document.body.innerHTML=`<div class="display-shell"><div class="display-main"><div class="display-controls">PROGRAM PROMPT</div><div id="displayContent" class="display-scroll"><div id="displayZoomContent" class="display-zoom-content"><div style="font-size:14px;color:#aaa">Loading program...</div></div></div><div id="displayKey" class="display-key">SPACE = PLAY/PAUSE · 1–9 = SPEED · [ / ] = ZOOM</div></div><div id="promptResizeHandle" class="display-resize-handle display-resize-horizontal" role="separator" aria-label="Resize prompt and timer/control panels" aria-orientation="vertical" tabindex="0"></div><aside class="display-side"><div class="display-timer-pane"><div id="displayTimer" class="display-timer"><div id="displayTimerSmall" class="display-timer-small">TIMER</div><div id="displayTimerName" class="display-timer-name">No active timer</div><div id="displayTimerClock" class="display-timer-clock">00:00:00</div><div id="displayOvertime" class="display-overtime">OVERTIME</div></div></div><div id="timerResizeHandle" class="display-resize-handle display-resize-vertical" role="separator" aria-label="Resize timer and controls panels" aria-orientation="horizontal" tabindex="0"></div><div class="display-control-pane"><div class="control-top"><div><h2>PROGRAM CONTROL / TIMER</h2><div id="controlTarget" class="control-target">0 → DISPLAY</div></div></div><div id="controlList" class="control-list"><div class="card"><div style="font-size:12px;color:#68737e">Loading controls...</div></div></div><div class="control-hint">SPACE = PLAY/PAUSE · 1–9 = SPEED · [ / ] = ZOOM</div></div></aside></div>`;
-    initDisplayResizing();
-    window.addEventListener('message',e=>{const d=e.data||{};if(!d||d.ssgPresenter!==true)return;if(d.type==='guide'&&d.guide){displayState.guide=d.guide;renderDisplay();controlState.guide=d.guide;prepareTimers();renderControl();}if(d.type==='targetState'){displayState.target=d.target;controlState.target=d.target;updateDisplayTarget();renderControlTarget();}if(d.type==='timerState'){displayState.timer=d.payload;renderDisplayTimer();}if(d.type==='activeItem'){setActiveDisplayItem(d.payload?.itemId||'');}});
+    if(!viewOnly)initDisplayResizing();
+    window.addEventListener('message',e=>{const d=e.data||{};if(!d||d.ssgPresenter!==true)return;if(d.type==='guide'&&d.guide){displayState.guide=d.guide;renderDisplay();if(!followUid){controlState.guide=d.guide;prepareTimers();renderControl();}}if(!followUid&&d.type==='targetState'){displayState.target=d.target;controlState.target=d.target;updateDisplayTarget();renderControlTarget();}if(!followUid&&d.type==='timerState'){displayState.timer=d.payload;renderDisplayTimer();}if(!followUid&&d.type==='activeItem'){setActiveDisplayItem(d.payload?.itemId||'');}});
     // Load the selected saved guide directly in the presenter window.
     // The parent window still sends the guide through postMessage, but this
     // direct load guarantees the presenter does not remain on "Loading program"
     // if the initial postMessage arrives before the listener is ready.
     if(APP_CONFIG.guideId){
       google.script.run.withSuccessHandler(function(guide){
-        if(guide&&guide.id){displayState.guide=guide;renderDisplay();controlState.guide=guide;prepareTimers();renderControl();subscribeDisplayedGuide(APP_CONFIG.guideId,'display');}
+        if(guide&&guide.id){displayState.guide=guide;renderDisplay();if(!followUid){controlState.guide=guide;prepareTimers();renderControl();}subscribeDisplayedGuide(APP_CONFIG.guideId,'display');}
       }).withFailureHandler(function(err){console.warn('Display guide load failed:',err);}).apiCall('getGuide',[APP_CONFIG.guideId],token);
     }
-    setTimeout(()=>{const area=$('displayContent');if(area){area.addEventListener('scroll',()=>sendDisplayMirrorState(),{passive:true});sendDisplayMirrorState();}},250);
-    window.addEventListener('keydown',e=>{
+    if(!viewOnly)setTimeout(()=>{const area=$('displayContent');if(area){area.addEventListener('scroll',()=>sendDisplayMirrorState(),{passive:true});sendDisplayMirrorState();}},250);
+    if(viewOnly&&followUid){initFollowOperator(followUid);const title=document.querySelector('.display-controls');if(title)title.textContent='LIVE OPERATOR VIEW · READ ONLY';const key=$('displayKey');if(key)key.textContent='VIEW-ONLY · FOLLOWING ONLINE OPERATOR';const heading=document.querySelector('.control-top h2');if(heading)heading.textContent='LIVE OPERATOR STATUS';const status=$('controlList');if(status)status.innerHTML='<div class="operator-follow-empty">Connecting to the selected operator’s live display…</div>';const target=$('controlTarget');if(target)target.textContent='CONNECTING · READ ONLY';}
+    else if(viewOnly){const title=document.querySelector('.display-controls');if(title)title.textContent='INDEPENDENT WINDOW DISPLAY · LOCAL CONTROLS';const key=$('displayKey');if(key)key.textContent='LOCAL VIEW CONTROLS · DOES NOT CONTROL AN OPERATOR';}
+    if(!viewOnly){publishOperatorDisplayState();displayState.operatorPublishTimer=setInterval(publishOperatorDisplayState,2000);}
+    if(!followUid)window.addEventListener('keydown',e=>{
       if(e.repeat)return;
       const key=(e.code==='Numpad0'||e.key==='0')?'0':(e.code==='Space'||e.key===' ')?' ':e.key;
       if(key==='0'){
@@ -3272,6 +3329,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
   function startDisplayScroll(){stopDisplayScroll();displayState.scrolling=true;sendDisplayMirrorState();const speedSteps=[0.15,0.35,0.65,1.1,1.8,2.8,4.2,6.2,8.5];const step=speedSteps[Math.max(1,Math.min(9,displayState.speed))-1];let lastSync=0;const loop=(now)=>{if(!displayState.scrolling)return;const area=$('displayContent');if(area){area.scrollTop+=step;if(now-lastSync>50){lastSync=now;sendDisplayMirrorState();}}displayState.raf=requestAnimationFrame(loop)};displayState.raf=requestAnimationFrame(loop)}
   function stopDisplayScroll(){if(displayState.raf)cancelAnimationFrame(displayState.raf);displayState.raf=null;sendDisplayMirrorState();}
   function sendDisplayMirrorState(){
+    if(new URLSearchParams(location.search).get('viewOnly')==='1')return;
     const area=document.getElementById('displayContent');
     const timer=document.getElementById('displayTimer');
     const zoomContent=document.getElementById('displayZoomContent');const payload={scrollTop:area?area.scrollTop:0,zoom:displayState.zoom,scrolling:displayState.scrolling,speed:displayState.speed,activeItemId:displayState.activeItemId,html:zoomContent?zoomContent.innerHTML:(area?area.innerHTML:''),timerHtml:timer?timer.innerHTML:'',timerClass:timer?timer.className:'display-timer'};
@@ -3295,7 +3353,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
       $('displayTimerSmall').textContent='TIMER';$('displayTimerName').textContent='No active timer';$('displayTimerClock').textContent='00:00:00';$('displayTimer').classList.remove('warn','overtime');$('displayOvertime').classList.remove('show');$('displayTimerSmall').style.color='';return;
     }
     if(t.mode==='sequence'){
-      $('displayTimerSmall').textContent=t.scheduledTime||'—';
+      $('displayTimerSmall').textContent=t.sectionTitle||t.scheduledTime||'—';
       $('displayTimerName').textContent='#'+(t.itemNumber||'')+' '+(t.title||'TAKE');
       $('displayTimerClock').textContent=t.actualClock||'--:--:--';
       $('displayTimer').classList.remove('warn');$('displayTimer').classList.toggle('overtime',t.status==='overtime');
@@ -3305,7 +3363,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
       sendDisplayMirrorState();
       return;
     }
-    $('displayTimerSmall').textContent='#'+t.itemNumber;$('displayTimerName').textContent=t.title||'Program Item';
+    $('displayTimerSmall').textContent=t.sectionTitle||('#'+t.itemNumber);$('displayTimerName').textContent=(t.sectionTitle?'#'+t.itemNumber+' ':'')+(t.title||'Program Item');
     const remaining=Math.max(0,(t.plannedMs||0)-(t.elapsedMs||0));
     $('displayTimerClock').textContent=t.overtime?('+'+formatClock((t.elapsedMs||0)-(t.plannedMs||0))):formatClock(remaining);
     $('displayTimer').classList.toggle('warn',!!t.warn);$('displayTimer').classList.toggle('overtime',!!t.overtime);$('displayOvertime').textContent='OVERTIME';$('displayOvertime').classList.toggle('show',!!t.overtime);
@@ -3472,10 +3530,15 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
   function activateControlRow(id){document.querySelectorAll('.control-item').forEach(el=>el.style.outline=el.id==='ctl-'+id?'2px solid #f3c400':'none');}
   function timerPayload(t){
     if(!t)return null;
-    if(String(controlState.guide?.type||'PROGRAM_FLOW').toUpperCase()==='PROGRAM_SEQUENCE'){
-      const st=sequenceStatus(t);return {mode:'sequence',visible:!!t.visible,itemId:t.itemId,itemNumber:t.itemNumber,title:t.title,scheduledTime:t.scheduledTime,actualClock:sequenceClockNow().text,status:t.done?'done':st.status,deltaLabel:st.label};
+    const guide=controlState.guide||displayState.guide;
+    let sectionTitle='';
+    if(String(guide?.type||'PROGRAM_FLOW').toUpperCase()!=='PROGRAM_SEQUENCE'){
+      for(const section of (guide?.sections||[])){if((section.items||[]).some(item=>String(item.id)===String(t.itemId))){sectionTitle=String(section.title||'');break;}}
     }
-    const elapsed=t.status==='running'?Date.now()-t.startedAt:t.elapsedMs;const remaining=t.plannedMs>0?Math.max(0,t.plannedMs-elapsed):0;return {mode:'flow',visible:!!t.visible,itemId:t.itemId,itemNumber:t.itemNumber,title:t.title,elapsedMs:elapsed,plannedMs:t.plannedMs,warn:t.plannedMs>0&&remaining<=10000&&elapsed<t.plannedMs,overtime:t.plannedMs>0&&elapsed>=t.plannedMs};
+    if(String(guide?.type||'PROGRAM_FLOW').toUpperCase()==='PROGRAM_SEQUENCE'){
+      const st=sequenceStatus(t);return {mode:'sequence',visible:!!t.visible,itemId:t.itemId,itemNumber:t.itemNumber,title:t.title,sectionTitle,scheduledTime:t.scheduledTime,actualClock:sequenceClockNow().text,status:t.done?'done':st.status,deltaLabel:st.label};
+    }
+    const elapsed=t.status==='running'?Date.now()-t.startedAt:t.elapsedMs;const remaining=t.plannedMs>0?Math.max(0,t.plannedMs-elapsed):0;return {mode:'flow',visible:!!t.visible,itemId:t.itemId,itemNumber:t.itemNumber,title:t.title,sectionTitle,elapsedMs:elapsed,plannedMs:t.plannedMs,warn:t.plannedMs>0&&remaining<=10000&&elapsed<t.plannedMs,overtime:t.plannedMs>0&&elapsed>=t.plannedMs};
   }
   function broadcastTimer(){const t=controlState.activeId?controlState.timers[controlState.activeId]:lastVisibleTimer();const payload=timerPayload(t);controlPreviewState.timer=payload;renderControlPreviewTimer();if(APP_CONFIG.mode==='display'){displayState.timer=payload;renderDisplayTimer();}sendToPresenterMode('display','timerState',{payload:payload});}
   function lastVisibleTimer(){const vals=Object.values(controlState.timers).filter(t=>t.visible);return vals.length?vals[vals.length-1]:null;}

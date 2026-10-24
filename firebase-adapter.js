@@ -145,14 +145,40 @@
       case 'submitOfficerRequest': {
         const {user,role}=await currentAccess();
         if(role!=='viewer') throw err('Your account already has officer access.','REQUEST_NOT_NEEDED');
-        const reason=String(a[0]?.reason||'').trim();
-        if(!reason) throw err('Please enter a short reason for your officer access request.');
-        if(reason.length>1000) throw err('Please keep the reason within 1000 characters.');
+        const name=String(a[0]?.name||'').trim();
+        const teamRole=String(a[0]?.teamRole||'').trim();
+        if(!name||!teamRole) throw err('Please enter both your full name and Production-Technical Team role.');
+        if(name.length>200||teamRole.length>200) throw err('Please keep your name and team role within 200 characters each.');
         const requestRef=db.collection('officerAccessRequests').doc(user.uid);
-        await requestRef.set({uid:user.uid,email:user.email||'',name:user.displayName||'',reason,status:'pending',requestedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        await requestRef.set({uid:user.uid,email:user.email||'',name,teamRole,status:'pending',requestedAt:firebase.firestore.FieldValue.serverTimestamp()});
         return {success:true,message:'Your request was submitted for admin review.'};
       }
       case 'getGuide': return await getGuide(a[0]);
+      case 'publishOperatorState': {
+        const {user,role}=await requireOfficer();
+        const payload=a[0]||{};
+        const guideId=String(payload.guideId||'');
+        if(!guideId) throw err('A saved guide is required before publishing live status.');
+        const state=payload.state&&typeof payload.state==='object'?payload.state:{};
+        await db.collection('operatorSessions').doc(user.uid).set({
+          uid:user.uid, guideId, operatorName:String(user.displayName||user.email||'SSG Officer'),
+          email:String(user.email||''), role, online:true, state,
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:true});
+        return {success:true};
+      }
+      case 'markOperatorOffline': {
+        const {user}=await requireOfficer();
+        await db.collection('operatorSessions').doc(user.uid).set({online:false,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+        return {success:true};
+      }
+      case 'listOnlineOperators': {
+        const guideId=String(a[0]||'');
+        if(!guideId) return [];
+        const snap=await db.collection('operatorSessions').where('guideId','==',guideId).get();
+        const now=Date.now();
+        return snap.docs.map(d=>({uid:d.id,...d.data()})).filter(x=>x.online===true&&x.updatedAt&&typeof x.updatedAt.toMillis==='function'&&(now-x.updatedAt.toMillis())<15000).map(x=>({uid:x.uid,operatorName:x.operatorName||x.email||'Online operator',email:x.email||'',guideId:x.guideId,updatedAt:x.updatedAt?.toMillis?.()||0}));
+      }
       case 'saveGuide': {
         const g=normalizeGuide(a[0]||{});
         if(!g.title) throw err('Guide/Event Title is required.');
@@ -240,6 +266,34 @@
     signOut:()=>auth.signOut(),
     onReady:callback=>authReady.then(callback),
     // Cross-account real-time subscription for the currently displayed guide.
+    listOnlineOperators:(guideId,onNext,onError)=>{
+      let unsubscribe=null,cancelled=false;
+      const fail=typeof onError==='function'?onError:(e=>console.error('Operator list error:',e));
+      Promise.resolve().then(currentAccess).then(()=>{
+        if(cancelled)return;
+        unsubscribe=db.collection('operatorSessions').where('guideId','==',String(guideId)).onSnapshot(snap=>{
+          const now=Date.now();
+          const rows=snap.docs.map(d=>({uid:d.id,...d.data()})).filter(x=>x.online===true&&x.updatedAt&&typeof x.updatedAt.toMillis==='function'&&(now-x.updatedAt.toMillis())<15000).map(x=>({uid:x.uid,operatorName:x.operatorName||x.email||'Online operator',email:x.email||'',guideId:x.guideId,updatedAt:x.updatedAt?.toMillis?.()||0}));
+          if(typeof onNext==='function')onNext(rows);
+        },fail);
+      }).catch(fail);
+      return ()=>{cancelled=true;if(unsubscribe)unsubscribe();};
+    },
+    subscribeOperatorSession:(uid,onNext,onError)=>{
+      let unsubscribe=null,cancelled=false;
+      const fail=typeof onError==='function'?onError:(e=>console.error('Operator session error:',e));
+      Promise.resolve().then(currentAccess).then(()=>{
+        if(cancelled)return;
+        unsubscribe=db.collection('operatorSessions').doc(String(uid)).onSnapshot(snap=>{
+          if(!snap.exists){if(typeof onNext==='function')onNext(null);return;}
+          const session={uid:snap.id,...snap.data()};
+          const stamp=session.updatedAt&&typeof session.updatedAt.toMillis==='function'?session.updatedAt.toMillis():0;
+          if(!session.online||!stamp||Date.now()-stamp>15000){if(typeof onNext==='function')onNext(null);return;}
+          if(typeof onNext==='function')onNext(session);
+        },fail);
+      }).catch(fail);
+      return ()=>{cancelled=true;if(unsubscribe)unsubscribe();};
+    },
     subscribeGuide:(guideId,onNext,onError)=>{
       let unsubscribe=null, cancelled=false;
       const fail=typeof onError==='function'?onError:(e=>console.error('Guide live-sync error:',e));
