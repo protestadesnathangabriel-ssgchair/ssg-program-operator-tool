@@ -2829,7 +2829,9 @@ function broadcastGuideToPresenter(){
     displayLyricState.remoteBlockIndex=incomingBlockIndex;
     displayLyricState.remoteText=incomingText;
     const incomingHtml=sanitizeRichHtml(String(p.html||textToRichHtml(incomingText)));
-    text.innerHTML=incomingHtml;
+    // Avoid rebuilding the lyric DOM on every settings/heartbeat message.
+    // Replacing identical HTML during auto-scroll can trigger needless layout work.
+    if(text.innerHTML!==incomingHtml)text.innerHTML=incomingHtml;
     if(!displayLyricState.hasReceivedInitialState){
       displayLyricState.textSize=Math.max(22,Math.min(168,Number(p.textSize)||42));
       displayLyricState.lineWidth=Math.max(20,Math.min(100,Number(p.lineWidth)||80));
@@ -2911,7 +2913,10 @@ function broadcastGuideToPresenter(){
       if(!displayLyricState.scrolling)return;
       const area=$('lyricDisplayScroll');
       if(!area){stopDisplayLyricScroll();return;}
-      const dt=Math.max(0,now-displayLyricState.lastScrollTime||0);
+      // Clamp long frame gaps (e.g. browser scheduling hiccups) so one delayed
+      // animation frame cannot create a visible sudden jump in lyric scrolling.
+      const rawDt=Math.max(0,now-displayLyricState.lastScrollTime||0);
+      const dt=Math.min(rawDt,50);
       displayLyricState.lastScrollTime=now;
       const speed=speedTable[Math.max(1,Math.min(9,Number(displayLyricState.speed)||3))-1];
       const max=Math.max(0,area.scrollHeight-area.clientHeight);
@@ -3157,7 +3162,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     [state.displayWindow,state.controlWindow].forEach(win=>{if(win&&!win.closed)win.postMessage({ssgPresenter:true,type:'targetState',target:state.promptTarget,commandId:id},'*');});
   }
 /* DISPLAY */
-  const displayState={guide:null,target:'display',scrolling:false,speed:3,zoom:100,raf:null,activeItemId:'',timer:null,followUid:'',followUnsubscribe:null,operatorPublishTimer:null};
+  const displayState={guide:null,target:'display',scrolling:false,speed:3,zoom:100,raf:null,activeItemId:'',timer:null,followUid:'',followUnsubscribe:null,operatorPublishTimer:null,lastMirrorHtml:null,lastMirrorTimerHtml:null,lastMirrorTimerClass:null};
   let guideLiveUnsubscribe=null;
   function subscribeDisplayedGuide(guideId,mode){
     if(!guideId)return;
@@ -3385,13 +3390,22 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     } else { el.scrollIntoView({behavior:'smooth',block:'center'}); }
   }
   function toggleDisplayScroll(){displayState.scrolling=!displayState.scrolling; if(displayState.scrolling)startDisplayScroll(); else stopDisplayScroll();}
-  function startDisplayScroll(){stopDisplayScroll();displayState.scrolling=true;sendDisplayMirrorState();const speedSteps=[0.15,0.35,0.65,1.1,1.8,2.8,4.2,6.2,8.5];const step=speedSteps[Math.max(1,Math.min(9,displayState.speed))-1];let lastSync=0;const loop=(now)=>{if(!displayState.scrolling)return;const area=$('displayContent');if(area){area.scrollTop+=step;if(now-lastSync>50){lastSync=now;sendDisplayMirrorState();}}displayState.raf=requestAnimationFrame(loop)};displayState.raf=requestAnimationFrame(loop)}
+  function startDisplayScroll(){stopDisplayScroll();displayState.scrolling=true;sendDisplayMirrorState();const speedSteps=[9,21,39,66,108,168,252,372,510];let lastFrame=0,lastSync=0;const loop=(now)=>{if(!displayState.scrolling)return;const area=$('displayContent');if(area){const dt=lastFrame?Math.min(50,Math.max(0,now-lastFrame)):0;lastFrame=now;const speed=speedSteps[Math.max(1,Math.min(9,displayState.speed))-1];area.scrollTop+=speed*dt/1000;if(now-lastSync>100){lastSync=now;sendDisplayMirrorState();}}displayState.raf=requestAnimationFrame(loop)};displayState.raf=requestAnimationFrame(loop)}
   function stopDisplayScroll(){if(displayState.raf)cancelAnimationFrame(displayState.raf);displayState.raf=null;sendDisplayMirrorState();}
   function sendDisplayMirrorState(){
     if(new URLSearchParams(location.search).get('viewOnly')==='1')return;
     const area=document.getElementById('displayContent');
     const timer=document.getElementById('displayTimer');
-    const zoomContent=document.getElementById('displayZoomContent');const payload={scrollTop:area?area.scrollTop:0,zoom:displayState.zoom,scrolling:displayState.scrolling,speed:displayState.speed,activeItemId:displayState.activeItemId,html:zoomContent?zoomContent.innerHTML:(area?area.innerHTML:''),timerHtml:timer?timer.innerHTML:'',timerClass:timer?timer.className:'display-timer'};
+    const zoomContent=document.getElementById('displayZoomContent');
+    // The prompt markup can be large. Send it only when it actually changes;
+    // routine scroll/timer updates carry just the lightweight live state.
+    const currentHtml=zoomContent?zoomContent.innerHTML:(area?area.innerHTML:'');
+    const currentTimerHtml=timer?timer.innerHTML:'';
+    const currentTimerClass=timer?timer.className:'display-timer';
+    const payload={scrollTop:area?area.scrollTop:0,zoom:displayState.zoom,scrolling:displayState.scrolling,speed:displayState.speed,activeItemId:displayState.activeItemId};
+    if(currentHtml!==displayState.lastMirrorHtml){payload.html=currentHtml;displayState.lastMirrorHtml=currentHtml;}
+    if(currentTimerHtml!==displayState.lastMirrorTimerHtml){payload.timerHtml=currentTimerHtml;displayState.lastMirrorTimerHtml=currentTimerHtml;}
+    if(currentTimerClass!==displayState.lastMirrorTimerClass){payload.timerClass=currentTimerClass;displayState.lastMirrorTimerClass=currentTimerClass;}
     const commandId=presenterCommandId();
     const msg={type:'displayMirrorState',commandId:commandId,payload:payload};
     markPresenterCommand(commandId);
