@@ -644,7 +644,7 @@ button,input,select,textarea{font-family:inherit!important}
 .ssg-home-badge>span{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--ssg-pale);color:var(--ssg-navy);font-size:19px}
 .ssg-home-badge strong,.ssg-home-badge small{display:block}.ssg-home-badge strong{font-size:12px}.ssg-home-badge small{font-size:10px;color:var(--ssg-muted);margin-top:3px}
 .ssg-dashboard-columns{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(270px,.75fr);gap:18px;align-items:start}
-.ssg-dashboard-panel{min-width:0}.ssg-dashboard-panel .ssg-section-title{margin-bottom:13px}
+.ssg-dashboard-panel{min-width:0}.ssg-dashboard-panel .ssg-section-title{margin-bottom:13px}.ssg-saved-guides-section{scroll-margin-top:18px}.ssg-saved-guides-section .guide-row{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid var(--ssg-border);border-radius:12px;background:#fff;margin-bottom:8px}.ssg-saved-guides-section .guide-info{flex:1;min-width:0}.ssg-saved-guides-section .guide-title{overflow-wrap:anywhere;font-size:12px}.ssg-saved-guides-section .guide-meta{font-size:10px;color:var(--ssg-muted)}
 .ssg-panel-inner{padding:16px;background:#fff;border:1px solid var(--ssg-border);border-radius:16px;box-shadow:0 7px 24px rgba(23,35,111,.035)}
 .ssg-search-row{margin-bottom:12px}.ssg-search-row .search{width:100%;min-width:0;padding:11px 12px;border-radius:10px;background:#FAFBFE}
 .ssg-dashboard-panel .guide-list{gap:8px}.ssg-dashboard-panel .guide-row{display:flex;flex-direction:row;align-items:center;gap:10px;padding:11px;border-radius:12px;box-shadow:none}.ssg-guide-mark{display:grid;place-items:center;flex:0 0 38px;width:38px;height:40px;border-radius:10px;background:#EDF1FC;color:var(--ssg-navy);font-size:18px}.ssg-dashboard-panel .guide-info{flex:1;min-width:0}.ssg-dashboard-panel .guide-title{white-space:normal;overflow-wrap:anywhere;font-size:12px;color:var(--ssg-ink)}.ssg-dashboard-panel .guide-meta{font-size:10px;line-height:1.4}.ssg-type-pill{padding:5px 7px;border-radius:999px;background:#FFF3CC;color:#75520B;font-size:9px;font-weight:800;white-space:nowrap}.ssg-dashboard-panel .guide-row .actions{flex-wrap:nowrap!important}.ssg-dashboard-panel .guide-row .btn{white-space:nowrap}
@@ -692,6 +692,41 @@ button,input,select,textarea{font-family:inherit!important}
  #ssgMobileNav{flex-basis:38px!important;width:38px!important;height:38px!important}
 }
 
+
+/* PHONE DASHBOARD: match the supplied reference; keep hamburger at the far left. */
+@media(max-width:600px){
+ .topbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:14px 16px!important;min-height:66px!important}
+ .topbar>div:first-of-type{display:flex!important;align-items:center!important;justify-content:flex-start!important;flex:0 0 auto!important;min-width:42px!important;gap:0!important}
+ #ssgMobileNav{display:inline-flex!important;align-items:center!important;justify-content:center!important;position:static!important;left:auto!important;transform:none!important;flex:0 0 46px!important;width:46px!important;height:46px!important;margin:0!important;border:1px solid var(--ssg-border)!important;border-radius:13px!important;background:#fff!important;color:var(--ssg-navy)!important;font-size:22px!important;box-shadow:none!important}
+ .topbar h1,.topbar p{display:none!important}
+ .topbar .toolbar-right,.topbar>div:last-child{margin-left:auto!important;flex:0 0 auto!important}
+ .topbar .btn,.topbar button{min-height:42px!important;border-radius:13px!important}
+ .content{padding:18px 16px 28px!important}
+ .ssg-home-intro{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:14px!important;margin-bottom:22px!important;min-height:0!important}
+ .ssg-home-intro h2{font-size:clamp(26px,7vw,30px)!important;line-height:1.12!important;letter-spacing:-.04em!important;margin:0 0 12px!important}
+ .ssg-home-intro p{font-size:13px!important;line-height:1.55!important;margin:0!important}
+ .ssg-home-badge{align-self:flex-start!important;display:inline-flex!important;padding:10px 12px!important;border-radius:14px!important}
+ .ssg-home-badge>span{width:30px!important;height:30px!important}
+ .ssg-tools-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important;margin-bottom:30px!important}
+ .ssg-tool-card{display:grid!important;grid-template-columns:40px minmax(0,1fr)!important;grid-template-rows:auto auto!important;align-items:center!important;gap:4px 12px!important;min-height:0!important;padding:15px!important;border-radius:16px!important;text-align:left!important}
+ .ssg-tool-icon{grid-column:1!important;grid-row:1 / span 2!important;width:40px!important;height:40px!important;border-radius:12px!important;font-size:19px!important}
+ .ssg-tool-card strong{grid-column:2!important;font-size:14px!important;line-height:1.3!important;padding-right:22px!important}
+ .ssg-tool-card small{grid-column:2!important;font-size:11px!important;line-height:1.45!important;max-width:none!important;padding-right:8px!important}
+ .ssg-tool-arrow{right:13px!important;top:14px!important;font-size:16px!important}
+ .ssg-dashboard-columns{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:22px!important}
+ .ssg-dashboard-panel .ssg-section-title{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:10px!important;margin-bottom:12px!important}
+ .ssg-dashboard-panel .ssg-section-title h2{font-size:16px!important;margin:0!important}
+ .ssg-dashboard-panel .ssg-section-title p{font-size:11px!important;line-height:1.4!important;margin-top:4px!important}
+ .ssg-text-link{font-size:11px!important;min-height:36px!important;padding:5px 0!important;white-space:nowrap!important}
+ .ssg-panel-inner{padding:12px!important;border-radius:15px!important}
+ .ssg-search-row{margin-bottom:10px!important}
+ .ssg-search-row .search{padding:12px!important;font-size:12px!important;border-radius:12px!important}
+ .ssg-dashboard-panel .guide-row{display:flex!important;flex-direction:row!important;align-items:center!important;flex-wrap:wrap!important;gap:9px!important;padding:11px!important;border-radius:12px!important}
+ .ssg-dashboard-panel .guide-row .actions{width:100%!important;margin:0!important;padding-left:47px!important;gap:7px!important}
+ .ssg-dashboard-panel .guide-row .actions .btn{flex:1!important;min-height:36px!important}
+ .ssg-type-pill{font-size:9px!important;margin-left:auto!important}
+ .ssg-workspace-tip{padding:14px!important;border-radius:13px!important}
+}
 </style>
 </head>
 <body>
@@ -1376,7 +1411,7 @@ function getStoredAuth(){
     const q=(window.homeSearchValue||'').toLowerCase().trim();
     const all=state.guides||[];
     const filtered=all.filter(g=>String(g.title||'').toLowerCase().includes(q)||String(g.eventDate||'').toLowerCase().includes(q));
-    const recent=filtered.slice(0,4);
+    const recent=window.homeShowAll?filtered:filtered.slice(0,4);
     $('page-home').innerHTML=`
       <section class="ssg-home-intro">
         <div><div class="ssg-eyebrow">YOUR WORKSPACE</div><h2>Everything ready for your next program.</h2><p>Create program guides, arrange the live sequence, and prepare lyrics from one clean workspace.</p></div>
@@ -1389,7 +1424,7 @@ function getStoredAuth(){
       </section>
       <div class="ssg-dashboard-columns">
         <section class="ssg-dashboard-panel">
-          <div class="ssg-section-title"><div><h2>Recently opened</h2><p>Pick up where you left off.</p></div><button class="ssg-text-link" type="button" onclick="window.homeSearchValue='';renderHome()">View all →</button></div>
+          <div class="ssg-section-title"><div><h2>Recently opened</h2><p>Pick up where you left off.</p></div><button class="ssg-text-link" type="button" onclick="openSavedGuidesFromHome()">View all →</button></div>
           <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="homeSearch" placeholder="Search guides by title…" value="${escAttr(window.homeSearchValue||'')}" oninput="window.homeSearchValue=this.value;renderHome()"></div>
           <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span><div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button></div></div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
         </section>
@@ -1401,7 +1436,22 @@ function getStoredAuth(){
             <div class="ssg-workspace-tip"><small>WORKSPACE TIP</small><strong>Keep your program ready.</strong><p>Prepare your sequence ahead of time, then open the live windows when you’re ready to present.</p></div>
           </div>
         </section>
-      </div>`;
+      </div>
+      <section class="ssg-dashboard-panel ssg-saved-guides-section" id="savedGuidesSection" style="margin-top:26px">
+        <div class="ssg-section-title"><div><h2>Saved Guides</h2><p>Open and manage all your saved program guides and sequences.</p></div></div>
+        <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="savedGuideSearch" placeholder="Search saved guides by title…" aria-label="Search saved guides" oninput="filterSavedGuides(this.value)"></div>
+          <div class="guide-list" id="savedGuideList">${all.length?all.map(g=>`<div class="guide-row" data-saved-title="${escAttr(String(g.title||'').toLowerCase())}"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span><div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button></div></div>`).join(''):`<div class="empty">No saved guides yet.<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div>
+        </div>
+      </section>`;
+  }
+
+  function openSavedGuidesFromHome(){
+    const section=document.getElementById('savedGuidesSection');
+    if(section) section.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function filterSavedGuides(value){
+    const q=String(value||'').toLowerCase().trim();
+    document.querySelectorAll('#savedGuideList [data-saved-title]').forEach(row=>{row.style.display=row.dataset.savedTitle.includes(q)?'':'none';});
   }
 
   function createGuide(){
