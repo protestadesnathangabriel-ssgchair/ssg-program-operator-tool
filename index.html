@@ -636,6 +636,45 @@ button,input,select,textarea{font-family:inherit!important}
 @media(min-width:761px){.sidebar{position:sticky!important;top:0;height:100vh;overflow-y:auto}.sidebar.ssg-mobile-open{position:sticky!important;inset:auto!important;width:258px!important;height:100vh!important;box-shadow:none!important}.app.ssg-sidebar-collapsed .sidebar{display:none!important}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
 
+
+/* FINAL RESPONSIVE CHECKPOINT PASS: UI-only overrides; app logic remains unchanged. */
+.topbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;min-width:0!important}
+.topbar>div:first-of-type{flex:1 1 auto!important;min-width:0!important;display:flex!important;align-items:center!important;gap:10px!important}
+#ssgMobileNav{position:relative!important;inset:auto!important;align-self:center!important;justify-self:start!important;flex:0 0 42px!important;width:42px!important;height:42px!important;margin:0!important;line-height:1!important;white-space:nowrap!important}
+.topbar h1{min-width:0!important;overflow-wrap:anywhere!important}
+.main,.content,.card,.guide-row{min-width:0!important;max-width:100%!important}
+@media(max-width:760px){
+ .topbar{padding:11px 12px!important;min-height:62px!important;gap:8px!important}
+ .topbar>div:first-of-type{gap:8px!important}
+ #ssgMobileNav{flex-basis:38px!important;width:38px!important;height:38px!important;font-size:19px!important;border-radius:10px!important}
+ .topbar h1{font-size:clamp(16px,4.6vw,21px)!important;line-height:1.2!important}
+ .topbar p{font-size:11px!important;line-height:1.35!important}
+ .content{padding:14px 12px 24px!important}
+ .sidebar.ssg-mobile-open{width:min(278px,84vw)!important;padding:18px 13px!important}
+ .nav button{min-height:39px!important;padding:9px 10px!important;font-size:12px!important;gap:9px!important;border-radius:10px!important}
+ .nav button:before{flex-basis:20px!important;width:20px!important;height:20px!important}
+ .card{padding:13px!important;border-radius:13px!important}
+ .form-grid,.item-card .form-grid{grid-template-columns:minmax(0,1fr)!important}
+ .toolbar-right{flex-wrap:wrap!important;gap:7px!important}
+ .toolbar-right .btn,.guide-row .actions .btn{flex:0 1 auto!important;min-width:0!important}
+}
+@media(max-width:420px){
+ .topbar{padding:9px 9px!important;gap:6px!important}
+ .topbar>div:first-of-type{gap:7px!important}
+ #ssgMobileNav{flex-basis:36px!important;width:36px!important;height:36px!important;font-size:18px!important}
+ .topbar h1{font-size:16px!important;letter-spacing:-.025em!important}
+ .topbar p{display:none!important}
+ .content{padding:12px 9px 20px!important}
+ .sidebar.ssg-mobile-open{width:min(260px,82vw)!important;padding:16px 11px!important}
+ .nav button{font-size:11px!important;padding:8px 9px!important}
+ .card{padding:10px!important}
+}
+@media(min-width:761px) and (max-width:1100px){
+ .app{min-width:0!important}.sidebar{flex:0 0 220px!important;width:220px!important;padding:18px 12px!important}
+ .topbar{gap:10px!important}.topbar>div:first-of-type{gap:9px!important}
+ #ssgMobileNav{flex-basis:38px!important;width:38px!important;height:38px!important}
+}
+
 </style>
 </head>
 <body>
