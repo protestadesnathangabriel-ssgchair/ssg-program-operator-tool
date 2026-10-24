@@ -18,6 +18,16 @@
     .nav{display:flex;flex-direction:column;gap:7px}
     .nav button{border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:8px;color:#34404b;font-weight:700;font-size:13px}
     .nav button:hover,.nav button.active{background:#edf3f9;color:var(--blue)}
+    body.viewer-mode .nav button:not([data-page="home"]){display:none}
+    body.viewer-mode .ssg-tools-grid,body.viewer-mode .ssg-dashboard-columns{display:none!important}
+    body.viewer-mode .ssg-home-intro p{max-width:760px}
+    .officer-request-card{background:#fff;border:1px solid var(--line);border-left:4px solid var(--yellow);border-radius:10px;padding:16px;margin:18px 0}
+    .officer-request-card h3{margin:0 0 6px;color:var(--blue)}
+    .officer-request-card p{margin:0 0 12px;color:var(--muted);font-size:13px;line-height:1.5}
+    .officer-request-card .request-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:end}
+    .officer-request-card textarea{min-height:66px}
+    .officer-request-status{font-size:12px;margin-top:8px;color:var(--green)}
+    @media(max-width:640px){.officer-request-card .request-row{grid-template-columns:1fr}}
     .sidebar-foot{margin-top:auto;color:#8b96a2;font-size:10px;line-height:1.5}
     .main{flex:1;min-width:0}
     .topbar{padding:18px 22px;border-bottom:1px solid var(--line);background:#fff;display:flex;justify-content:space-between;gap:14px;align-items:center}
@@ -1246,10 +1256,10 @@ function getStoredAuth(){
       <div class="auth-gate">
         <div class="auth-card">
           <div class="auth-brand">SSG PROGRAM GUIDE BUILDER<small>GOOGLE SIGN IN</small></div>
-          <div class="auth-sub">Sign in with an authorized Google account. Access is controlled by your Firestore user role.</div>
+          <div class="auth-sub">Sign in with Google to view saved SSG Program Guides and Program Sequences. Editing tools require an approved officer account.</div>
           <div class="auth-mode">
-            <h3>SSG OFFICER ACCESS</h3>
-            <p>Only accounts provisioned as an officer in Firebase can access the program builder.</p>
+            <h3>VIEW SAVED PROGRAMS</h3>
+            <p>Unapproved accounts can browse saved guides and sequences in read-only mode. You can request officer access after signing in.</p>
             <button class="btn primary" style="width:100%" onclick="loginOfficer()">Continue with Google</button>
           </div>
           <div id="authError" class="auth-error">${esc(errorMessage||'')}</div>
@@ -1326,13 +1336,15 @@ function getStoredAuth(){
   function updateHeaderUser(){
     const el=$('headerActions'); if(!el)return;
     if(!state.auth){el.innerHTML='';return;}
-    const role='SSG OFFICER';
+    const role=state.auth.role==='viewer'?'VIEW-ONLY ACCESS':'SSG OFFICER';
     const identity=state.auth.name||state.auth.username||state.auth.email||'';
     const task=state.auth.task||'';
     el.innerHTML=`<div class="header-user"><span class="header-user-role">${role}</span>${identity?`<span class="header-user-email">${esc(identity)}${task?' · '+esc(task):''}</span>`:''}<button class="btn small" onclick="logoutClient()">Sign Out</button></div>`;
   }
 
     function applyRoleUI(){
+    const viewer=state.auth?.role==='viewer';
+    document.body.classList.toggle('viewer-mode',!!viewer);
   }
 
   function renderShell(){
@@ -1467,15 +1479,17 @@ function getStoredAuth(){
 
           let homeGuideTab='mine';
   function renderHome(){
+    const isViewer=state.auth?.role==='viewer';
     const q=(window.homeSearchValue||'').toLowerCase().trim();
     const all=state.guides||[];
     const filtered=all.filter(g=>String(g.title||'').toLowerCase().includes(q)||String(g.eventDate||'').toLowerCase().includes(q));
     const recent=window.homeShowAll?filtered:filtered.slice(0,4);
     $('page-home').innerHTML=`
       <section class="ssg-home-intro">
-        <div><div class="ssg-eyebrow">YOUR WORKSPACE</div><h2>Everything ready for your next program.</h2><p>Create program guides, arrange the live sequence, and prepare lyrics from one clean workspace.</p></div>
+        <div><div class="ssg-eyebrow">${isViewer?'PUBLIC VIEW-ONLY LIBRARY':'YOUR WORKSPACE'}</div><h2>${isViewer?'Saved SSG programs':'Everything ready for your next program.'}</h2><p>${isViewer?'Browse all saved program guides and program sequences. Your account cannot edit, create, or delete saved content.':'Create program guides, arrange the live sequence, and prepare lyrics from one clean workspace.'}</p></div>
         <div class="ssg-home-badge"><span>✦</span><div><strong>SSG Program Operator</strong><small>Program workspace</small></div></div>
       </section>
+      ${isViewer?`<section class="officer-request-card"><h3>Request Officer Access</h3><p>Submit a request for an administrator to review. Submitting this form does not automatically approve your account.</p><div class="request-row"><div><label for="officerRequestReason">Why do you need officer access?</label><textarea id="officerRequestReason" maxlength="1000" placeholder="Briefly describe your SSG role and why you need editing access."></textarea></div><button class="btn primary" type="button" onclick="submitOfficerRequest()">Request Access</button></div><div id="officerRequestStatus" class="officer-request-status" aria-live="polite"></div></section>`:''}
       <section class="ssg-tools-grid" aria-label="Main workspace tools">
         <button type="button" class="ssg-tool-card" onclick="createGuide()"><span class="ssg-tool-icon">▤</span><span class="ssg-tool-arrow">↗</span><strong>Program Guides</strong><small>Create, edit, preview, export, and manage your program guides.</small></button>
         <button type="button" class="ssg-tool-card" onclick="createSequenceGuide()"><span class="ssg-tool-icon">☷</span><span class="ssg-tool-arrow">↗</span><strong>Program Sequence</strong><small>Arrange the order of program items and prepare the live flow.</small></button>
@@ -1485,7 +1499,7 @@ function getStoredAuth(){
         <section class="ssg-dashboard-panel">
           <div class="ssg-section-title"><div><h2>Recently opened</h2><p>Pick up where you left off.</p></div><button class="ssg-text-link" type="button" onclick="openSavedGuidesFromHome()">View all →</button></div>
           <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="homeSearch" placeholder="Search guides by title…" value="${escAttr(window.homeSearchValue||'')}" oninput="window.homeSearchValue=this.value;renderHome()"></div>
-          <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span><div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button></div></div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
+          <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button></div>`}</div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
         </section>
         <section class="ssg-dashboard-panel">
           <div class="ssg-section-title"><div><h2>Quick access</h2><p>Supporting tools for your program.</p></div></div>
@@ -1497,11 +1511,20 @@ function getStoredAuth(){
         </section>
       </div>
       <section class="ssg-dashboard-panel ssg-saved-guides-section" id="savedGuidesSection" style="margin-top:26px">
-        <div class="ssg-section-title"><div><h2>Saved Guides</h2><p>Open and manage all your saved program guides and sequences.</p></div></div>
+        <div class="ssg-section-title"><div><h2>Saved Guides & Sequences</h2><p>${isViewer?'View all saved program guides and sequences.':'Open and manage all your saved program guides and sequences.'}</p></div></div>
         <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="savedGuideSearch" placeholder="Search saved guides by title…" aria-label="Search saved guides" oninput="filterSavedGuides(this.value)"></div>
-          <div class="guide-list" id="savedGuideList">${all.length?all.map(g=>`<div class="guide-row" data-saved-title="${escAttr(String(g.title||'').toLowerCase())}"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span><div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button></div></div>`).join(''):`<div class="empty">No saved guides yet.<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div>
+          <div class="guide-list" id="savedGuideList">${all.length?all.map(g=>`<div class="guide-row" data-saved-title="${escAttr(String(g.title||'').toLowerCase())}"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button></div>`}</div>`).join(''):`<div class="empty">No saved guides yet.<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div>
         </div>
       </section>`;
+  }
+
+  function submitOfficerRequest(){
+    const reason=String(document.getElementById('officerRequestReason')?.value||'').trim();
+    const status=document.getElementById('officerRequestStatus');
+    if(!reason){if(status)status.textContent='Please enter a short reason before submitting.';return;}
+    const button=document.querySelector('.officer-request-card button'); if(button){button.disabled=true;button.textContent='Submitting...';}
+    const token=state.auth?.token||getStoredAuth()?.token||'';
+    google.script.run.withSuccessHandler(result=>{if(status)status.textContent=result?.message||'Request submitted for admin review.';const box=document.querySelector('.officer-request-card');if(box){const form=box.querySelector('.request-row');if(form)form.style.display='none';}}).withFailureHandler(error=>{if(status)status.textContent=(error?.message||String(error)).replace(/^Error:\s*/,'');if(button){button.disabled=false;button.textContent='Request Access';}}).apiCall('submitOfficerRequest',[{reason}],token);
   }
 
   function openSavedGuidesFromHome(){

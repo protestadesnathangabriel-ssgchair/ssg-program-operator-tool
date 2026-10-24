@@ -14,14 +14,18 @@
   auth.onAuthStateChanged(user => authReadyResolve(user));
 
   function err(message, code='APP_ERROR'){ const e=new Error(message); e.code=code; return e; }
-  async function requireOfficer(){
+  async function currentAccess(){
     await authReady;
     const user = auth.currentUser;
     if(!user) throw err('AUTH_REQUIRED: Sign in with Google first.','AUTH_REQUIRED');
     const snap = await db.collection('users').doc(user.uid).get();
     const role = snap.exists ? String(snap.data().role||'').toLowerCase() : '';
-    if(!['officer','admin'].includes(role)) throw err('AUTH_FORBIDDEN: This Google account is not provisioned as an SSG officer. Ask the Firebase project owner to add users/'+user.uid+' with role "officer".','AUTH_FORBIDDEN');
-    return {user, role};
+    return {user, role:['officer','admin'].includes(role)?role:'viewer'};
+  }
+  async function requireOfficer(){
+    const access=await currentAccess();
+    if(access.role==='viewer') throw err('AUTH_FORBIDDEN: This account has view-only access. Request officer access from the dashboard.','AUTH_FORBIDDEN');
+    return access;
   }
   async function getAll(collection, max=5000){
     const snap = await db.collection(collection).limit(max).get();
@@ -63,8 +67,9 @@
     if(!id) return null;
     const snap=await db.collection('guides').doc(String(id)).get();
     if(!snap.exists) return null;
+    let canEdit=false; try { canEdit=(await currentAccess()).role!=='viewer'; } catch(e) {}
     const g=snap.data();
-    return {...g,id:snap.id,isOwner:true,canEdit:true};
+    return {...g,id:snap.id,isOwner:canEdit,canEdit};
   }
   function newId(prefix){return String(prefix||'ID')+'_'+crypto.randomUUID().replace(/-/g,'').slice(0,14);}
   function getCPFCTemplate() {
@@ -126,13 +131,26 @@
   }
   
   async function apiCall(method,args){
-    await requireOfficer();
+    const publicMethods=['getBootstrap','getGuides','getGuide','submitOfficerRequest','warmupLibraries'];
+    if(!publicMethods.includes(method)) await requireOfficer();
     const a=Array.isArray(args)?args:[args];
     switch(method){
       case 'getBootstrap': return {appName:'SSG PROGRAM FLOW / TECH GUIDE BUILDER',appUrl:location.origin+location.pathname,databaseId:'firestore',timezone:'Asia/Manila'};
       case 'getGuides': {
         const rows=await getAll('guides',1000);
-        return rows.map(g=>({...g,isOwner:true,canEdit:true})).sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
+        let role='viewer'; try { role=(await currentAccess()).role; } catch(e) {}
+        const canEdit=role!=='viewer';
+        return rows.map(g=>({...g,isOwner:canEdit,canEdit})).sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
+      }
+      case 'submitOfficerRequest': {
+        const {user,role}=await currentAccess();
+        if(role!=='viewer') throw err('Your account already has officer access.','REQUEST_NOT_NEEDED');
+        const reason=String(a[0]?.reason||'').trim();
+        if(!reason) throw err('Please enter a short reason for your officer access request.');
+        if(reason.length>1000) throw err('Please keep the reason within 1000 characters.');
+        const requestRef=db.collection('officerAccessRequests').doc(user.uid);
+        await requestRef.set({uid:user.uid,email:user.email||'',name:user.displayName||'',reason,status:'pending',requestedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        return {success:true,message:'Your request was submitted for admin review.'};
       }
       case 'getGuide': return await getGuide(a[0]);
       case 'saveGuide': {
@@ -204,7 +222,7 @@
       withSuccessHandler(fn){this._ok=fn;return this;},
       withFailureHandler(fn){this._fail=fn;return this;},
       apiCall(method,args,token){const ok=this._ok,fail=this._fail;Promise.resolve().then(()=>apiCall(method,args)).then(v=>ok&&ok(v)).catch(e=>fail&&fail(e));},
-      validateSession(token){const ok=this._ok,fail=this._fail;Promise.resolve().then(requireOfficer).then(({user,role})=>ok&&ok({success:true,role,email:user.email||'',username:user.displayName||user.email,name:user.displayName||user.email,task:''})).catch(e=>fail&&fail(e));},
+      validateSession(token){const ok=this._ok,fail=this._fail;Promise.resolve().then(currentAccess).then(({user,role})=>ok&&ok({success:true,role,email:user.email||'',username:user.displayName||user.email,name:user.displayName||user.email,task:''})).catch(e=>fail&&fail(e));},
       logoutSession(){const ok=this._ok,fail=this._fail;auth.signOut().then(()=>ok&&ok({success:true})).catch(e=>fail&&fail(e));},
       verifyOfficerCode(){const fail=this._fail;Promise.reject(err('Use Google sign-in instead of the legacy officer code.')).catch(e=>fail&&fail(e));}
     };
@@ -216,7 +234,7 @@
   window.SSGFirebase={
     signIn:async()=>{
       const result=await auth.signInWithPopup(provider);
-      const {user,role}=await requireOfficer();
+      const {user,role}=await currentAccess();
       return {success:true,token:user.uid,role,email:user.email||'',username:user.displayName||user.email,name:user.displayName||user.email,task:''};
     },
     signOut:()=>auth.signOut(),
@@ -225,7 +243,7 @@
     subscribeGuide:(guideId,onNext,onError)=>{
       let unsubscribe=null, cancelled=false;
       const fail=typeof onError==='function'?onError:(e=>console.error('Guide live-sync error:',e));
-      Promise.resolve().then(requireOfficer).then(()=>{
+      Promise.resolve().then(currentAccess).then(()=>{
         if(cancelled)return;
         unsubscribe=db.collection('guides').doc(String(guideId)).onSnapshot(snap=>{
           if(!snap.exists){fail(err('This program guide was deleted or is no longer available.','GUIDE_NOT_FOUND'));return;}
@@ -234,6 +252,6 @@
       }).catch(fail);
       return ()=>{cancelled=true;if(unsubscribe)unsubscribe();};
     },
-    validateCurrentUser:async()=>{const {user,role}=await requireOfficer();return {success:true,role,email:user.email||'',username:user.displayName||user.email,name:user.displayName||user.email,task:''};}
+    validateCurrentUser:async()=>{const {user,role}=await currentAccess();return {success:true,role,email:user.email||'',username:user.displayName||user.email,name:user.displayName||user.email,task:''};}
   };
 })();

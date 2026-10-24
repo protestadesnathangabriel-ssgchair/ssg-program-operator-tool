@@ -1,24 +1,32 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() {
-      return request.auth != null;
-    }
+    function signedIn() { return request.auth != null; }
     function isOfficer() {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['officer', 'admin'];
     }
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
 
-    // Provision this document manually in Firebase Console. The web app cannot grant itself a role.
+    // Roles are provisioned manually by the project owner only.
     match /users/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
       allow create, update, delete: if false;
     }
 
+    // Saved program guides and program sequences are publicly readable.
+    // Only approved officers/admins may change or delete them.
     match /guides/{guideId} {
-      allow read, create, update, delete: if isOfficer();
+      allow read: if true;
+      allow create, update, delete: if isOfficer();
     }
+
+    // Reference libraries remain officer-only.
     match /songLibrary/{songId} {
       allow read, create, update, delete: if isOfficer();
     }
@@ -30,6 +38,26 @@ service cloud.firestore {
     }
     match /lineups/{lineupId} {
       allow read, create, update, delete: if isOfficer();
+    }
+
+    // A signed-in non-officer may submit one request document using their own UID.
+    // Only admins can review or change requests. The client cannot approve itself.
+    match /officerAccessRequests/{uid} {
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && !isOfficer()
+        && !exists(/databases/$(database)/documents/officerAccessRequests/$(uid))
+        && request.resource.data.keys().hasAll(['uid', 'email', 'name', 'reason', 'status', 'requestedAt'])
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'name', 'reason', 'status', 'requestedAt'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 200
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() <= 1000
+        && request.resource.data.status == 'pending'
+        && request.resource.data.requestedAt == request.time;
+      allow read, update, delete: if isAdmin();
     }
 
     // Deny all other collections by default.
