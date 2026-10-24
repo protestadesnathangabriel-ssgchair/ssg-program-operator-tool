@@ -606,6 +606,36 @@
  .nav>button,.nav .lyric-nav-group{width:100%!important}
 }
 
+
+/* SSG UI refresh: typography, icon navigation, and all-device menu toggle */
+:root{--ssg-navy:#17236F;--ssg-blue:#2853A5;--ssg-pale:#FFF0B6;--ssg-yellow:#FFB02C;--ssg-orange:#F39A28;--ssg-bg:#FAF9F5;--ssg-ink:#171D52;--ssg-muted:#727995;--ssg-border:#E0E4F0}
+html,body{font-family:Inter,"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif!important;background:var(--ssg-bg)!important;color:var(--ssg-ink)}
+button,input,select,textarea{font-family:inherit!important}
+.app{min-height:100vh;background:var(--ssg-bg)}
+.sidebar{flex:0 0 258px;width:258px;padding:24px 16px!important;gap:24px!important;background:#fff!important;border-right:1px solid var(--ssg-border)!important;box-shadow:4px 0 24px rgba(23,35,111,.025)}
+.brand{padding:2px 8px 16px!important;border-bottom:1px solid #EDF0F7;color:var(--ssg-navy)!important;font-size:14px!important;line-height:1.5!important;letter-spacing:.035em}
+.brand:before{content:"SSG";display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;margin-right:12px;border-radius:13px;background:var(--ssg-navy);color:white;font-weight:900;font-size:15px;letter-spacing:-1px}
+.brand>span{display:block;min-width:0}.brand small{font-size:10px!important;color:var(--ssg-muted)!important;letter-spacing:.04em}
+.nav{gap:5px!important}.nav button{position:relative;display:flex;align-items:center;gap:12px;min-height:44px;padding:11px 12px 11px 14px!important;border-radius:12px!important;color:#202650!important;font-size:13px!important;font-weight:650!important;line-height:1.35!important;transition:background .16s,color .16s}
+.nav button:before{content:"";display:inline-grid;place-items:center;flex:0 0 22px;width:22px;height:22px;border-radius:7px;background:#F0F2FC;color:var(--ssg-navy);font-size:15px;font-weight:700}
+.nav button[data-page="home"]:before{content:"▤"}.nav button[data-page="editor"]:before{content:"▧"}.nav button[data-page="sequence"]:before{content:"☷"}.nav button[data-page="lyrics"]:before{content:"▥"}.nav button[data-page="prompt"]:before{content:"▣"}
+.nav .lyric-subnav{padding-left:34px!important}.nav .lyric-subnav button{min-height:36px;font-size:12px!important;font-weight:550!important}.nav .lyric-subnav button:before{content:"·";flex-basis:14px;width:14px;height:14px;background:transparent;font-size:22px}
+.nav button:hover{background:#F6F7FC!important}.nav button.active{background:#E8ECFC!important;color:var(--ssg-navy)!important;box-shadow:inset 3px 0 0 var(--ssg-blue)!important}.nav button.active:before{background:#fff;color:var(--ssg-blue)}
+.sidebar-foot{border-top:1px solid #EDF0F7;padding:16px 8px 0;font-size:10px!important;color:#858BA4!important}
+.main{min-width:0;background:var(--ssg-bg)}.topbar{position:sticky;top:0;z-index:30;min-height:76px;padding:15px clamp(16px,2.5vw,34px)!important;background:rgba(255,255,255,.96)!important;border-bottom:1px solid var(--ssg-border)!important;backdrop-filter:blur(12px)}
+.topbar>div:first-of-type{display:flex;align-items:center;gap:13px;min-width:0}.topbar h1{font-size:clamp(20px,2vw,25px)!important;letter-spacing:-.035em;color:var(--ssg-navy)!important;font-weight:750!important}.topbar p{color:var(--ssg-muted)!important;line-height:1.5}
+#ssgMobileNav{display:inline-flex!important;align-items:center;justify-content:center;width:42px;height:42px;padding:0!important;flex:0 0 42px;border:1px solid var(--ssg-border)!important;border-radius:12px!important;background:#fff!important;color:var(--ssg-navy)!important;font-size:21px!important;box-shadow:0 2px 7px rgba(23,35,111,.04)}
+.content{padding:clamp(18px,3vw,36px)!important}
+.card,.guide-row,.live-preview{border-radius:15px!important;border-color:var(--ssg-border)!important;box-shadow:0 7px 24px rgba(23,35,111,.045)}
+.btn{border-radius:10px!important;font-weight:650!important}.btn.primary{background:var(--ssg-navy)!important;border-color:var(--ssg-navy)!important}.btn.yellow{background:var(--ssg-yellow)!important;border-color:var(--ssg-yellow)!important;color:var(--ssg-navy)!important}
+/* Desktop: menu collapses and restores the sidebar; mobile: drawer behavior. */
+.app.ssg-sidebar-collapsed .sidebar{display:none!important}.app.ssg-sidebar-collapsed .main{width:100%;min-width:0}
+.sidebar.ssg-mobile-open{display:flex!important;position:fixed!important;z-index:1000!important;inset:0 auto 0 0!important;width:min(300px,86vw)!important;height:100dvh!important;overflow-y:auto!important;box-shadow:20px 0 55px rgba(23,35,111,.2)!important}
+#ssgMobileNav:focus-visible,.nav button:focus-visible{outline:3px solid var(--ssg-yellow)!important;outline-offset:2px!important}
+@media(max-width:760px){.app{display:block!important}.sidebar{display:none!important}.sidebar.ssg-mobile-open{display:flex!important}.main{width:100%!important}.topbar{align-items:center!important}.topbar>div:first-of-type{align-items:center}.content{padding:18px 15px 30px!important}}
+@media(min-width:761px){.sidebar{position:sticky!important;top:0;height:100vh;overflow-y:auto}.sidebar.ssg-mobile-open{position:sticky!important;inset:auto!important;width:258px!important;height:100vh!important;box-shadow:none!important}.app.ssg-sidebar-collapsed .sidebar{display:none!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+
 </style>
 </head>
 <body>
@@ -1209,8 +1239,12 @@ function getStoredAuth(){
   function toggleSsgMobileNav(){
     const sidebar=document.querySelector('.sidebar');
     const button=document.getElementById('ssgMobileNav');
-    if(!sidebar||!button)return;
-    const open=sidebar.classList.toggle('ssg-mobile-open');
+    const app=document.querySelector('.app');
+    if(!sidebar||!button||!app)return;
+    const isMobile=window.matchMedia('(max-width:760px)').matches;
+    let open;
+    if(isMobile){open=sidebar.classList.toggle('ssg-mobile-open');}
+    else{open=app.classList.contains('ssg-sidebar-collapsed');app.classList.toggle('ssg-sidebar-collapsed',!open);}
     button.setAttribute('aria-expanded',String(open));
     button.setAttribute('aria-label',open?'Close navigation':'Open navigation');
     button.textContent=open?'✕':'☰';
@@ -1218,10 +1252,26 @@ function getStoredAuth(){
   function setupSsgResponsiveShell(){
     const button=document.getElementById('ssgMobileNav');
     if(!button)return;
-    const sync=()=>{button.style.display=window.matchMedia('(max-width:760px)').matches?'inline-flex':'none';if(!window.matchMedia('(max-width:760px)').matches){document.querySelector('.sidebar')?.classList.remove('ssg-mobile-open');button.textContent='☰';button.setAttribute('aria-expanded','false');}};
+    const sync=()=>{
+      button.style.display='inline-flex';
+      if(!window.matchMedia('(max-width:760px)').matches){
+        document.querySelector('.sidebar')?.classList.remove('ssg-mobile-open');
+        button.textContent=document.querySelector('.app')?.classList.contains('ssg-sidebar-collapsed')?'☰':'✕';
+        button.setAttribute('aria-expanded',String(!document.querySelector('.app')?.classList.contains('ssg-sidebar-collapsed')));
+      }else{
+        document.querySelector('.app')?.classList.remove('ssg-sidebar-collapsed');
+        const open=!!document.querySelector('.sidebar')?.classList.contains('ssg-mobile-open');
+        button.textContent=open?'✕':'☰';button.setAttribute('aria-expanded',String(open));
+      }
+    };
     sync();
     window.addEventListener('resize',sync,{passive:true});
-    document.querySelectorAll('.sidebar [data-page]').forEach(item=>item.addEventListener('click',()=>{if(window.matchMedia('(max-width:760px)').matches){document.querySelector('.sidebar')?.classList.remove('ssg-mobile-open');button.textContent='☰';button.setAttribute('aria-expanded','false');}}));
+    document.querySelectorAll('.sidebar [data-page]').forEach(item=>item.addEventListener('click',()=>{
+      if(window.matchMedia('(max-width:760px)').matches){
+        document.querySelector('.sidebar')?.classList.remove('ssg-mobile-open');
+        button.textContent='☰';button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Open navigation');
+      }
+    }));
   }
 
   const pageInfo={
