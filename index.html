@@ -1198,7 +1198,7 @@ function getStoredAuth(){
         const area=$('displayContent');
         const oldTop=area?area.scrollTop:0;
         displayState.guide=d.guide;
-        renderDisplay();
+        renderDisplay({preserveScroll:true});
         applyDisplayZoom();
         updateHostZoomLabel();
         const refreshedArea=$('displayContent');
@@ -1206,13 +1206,11 @@ function getStoredAuth(){
       }
     }else if(APP_CONFIG.mode==='display'){
       if(d.type==='guide' && d.guide){
-        const oldTop=$('displayContent')?.scrollTop||0;
         displayState.guide=d.guide;
-        renderDisplay();
+        renderDisplay({preserveScroll:true});
         controlState.guide=d.guide;
         prepareTimers();
         renderControl();
-        const area=$('displayContent');if(area)area.scrollTop=oldTop;
       }else if(d.type==='targetState' && d.target){
         displayState.target=d.target; updateDisplayTarget();
       }else if(d.type==='timerState'){
@@ -3172,9 +3170,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
       if(cancelled||!guide||!guide.id)return;
       displayState.guide=guide;
       const area=$('displayContent');
-      const previousScroll=area?area.scrollTop:0;
-      renderDisplay();
-      if(area)area.scrollTop=previousScroll;
+      renderDisplay({preserveScroll:true});
       if(mode==='display'){
         controlState.guide=guide;
         renderControl();
@@ -3362,15 +3358,27 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     });
   }
 
-  function renderDisplay(){
+  function renderDisplay(options={}){
     const g=displayState.guide; if(!g)return;
+    const displayArea=$('displayContent');
+    const previousScroll=displayArea?displayArea.scrollTop:0;
     if(String(g.type||'PROGRAM_FLOW').toUpperCase()==='PROGRAM_SEQUENCE'){
       const items=sequenceItems(g);
       $('displayZoomContent').innerHTML=`<div class="display-title sequence-display-header" style="color:#0878c8">${esc(g.title||'')}</div><div class="display-title sequence-display-header" style="font-size:clamp(15px,1.5vw,24px);margin-top:-6px">${esc(g.eventDate||'')}</div><div class="display-title sequence-display-header" style="font-size:clamp(15px,1.5vw,24px);margin-top:-6px">${esc(g.venue||'')}</div><div class="sequence-prompt-display">${items.map((it,ii)=>{const body=formatSequenceInputHtml([it.participants||'',it.notes||''].filter(Boolean).join(it.participants&&it.notes?'\n':''),false,g).replaceAll('sequence-format-oncam','sequence-display-oncam').replaceAll('sequence-format-oncam-label','sequence-display-oncam-label').replaceAll('sequence-format-oncam-name','sequence-display-oncam-name').replaceAll('sequence-format-oncam-cont','sequence-display-oncam-cont').replaceAll('sequence-format-line','sequence-display-detail');return `<div class="display-item sequence-display-item" data-item-id="${escAttr(it.id)}"><div class="sequence-display-take">[TAKE ${esc(it.number||String(ii))}]${it.startTime?' '+esc(it.startTime):''}</div>${it.title?`<div class="sequence-display-spec">** ${esc(it.title)}</div>`:''}${body}</div>`;}).join('')}${items.length?'<div class="sequence-display-end">** END OF PROGRAM</div>':''}${g.title?`<div class="sequence-display-endnote">** END OF ${esc(g.title)}${g.eventDate?`<br>HERE (${esc(g.eventDate)})`:''} **</div>`:''}</div>`;
     }else{
       $('displayZoomContent').innerHTML=`<div class="display-title">${esc(g.title)}</div>${(g.sections||[]).map((s,si)=>`<section class="display-section"><div class="display-section-title">${si+1}. ${esc(s.title)}</div>${s.startTime||s.endTime?`<div class="display-section-time">${esc(s.startTime||'—')} – ${esc(s.endTime||'—')}</div>`:''}${(s.items||[]).map((it,ii)=>`<div class="display-item" data-item-id="${escAttr(it.id)}"><div class="display-item-title">#${esc(it.number||String(ii+1))} ${esc(it.title)}</div><div class="display-item-time">TIME: ${esc(it.startTime||'—')} – ${esc(it.endTime||'—')}</div><div class="display-item-trt">TRT: ${esc(trtDisplay(it)||'—')}</div>${it.notes?`<div class="display-item-note">NOTE: ${esc(it.notes)}</div>`:''}</div>`).join('')}</section>`).join('')}`;
     }
-    applyDisplayZoom(); if(displayState.activeItemId) setActiveDisplayItem(displayState.activeItemId);
+    applyDisplayZoom();
+    if(options.preserveScroll){
+      // Live guide edits arrive frequently. Re-rendering must not restart the
+      // active TAKE's smooth-scroll animation on every incoming draft update.
+      if(displayState.activeItemId){
+        document.querySelectorAll('#displayZoomContent .display-item').forEach(el=>el.classList.toggle('active',el.dataset.itemId===displayState.activeItemId));
+      }
+      if(displayArea)displayArea.scrollTop=previousScroll;
+    }else if(displayState.activeItemId){
+      setActiveDisplayItem(displayState.activeItemId);
+    }
   }
   function updateDisplayTarget(){ $('displayKey').textContent='KEYBOARD: DISPLAY + CONTROL'; }
   function setActiveDisplayItem(id){
