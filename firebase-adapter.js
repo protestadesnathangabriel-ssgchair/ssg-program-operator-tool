@@ -27,6 +27,11 @@
     if(access.role==='viewer') throw err('AUTH_FORBIDDEN: This account has view-only access. Request officer access from the dashboard.','AUTH_FORBIDDEN');
     return access;
   }
+  async function requireAdmin(){
+    const access=await currentAccess();
+    if(access.role!=='admin') throw err('AUTH_FORBIDDEN: Administrator access is required.','AUTH_FORBIDDEN');
+    return access;
+  }
   async function getAll(collection, max=5000){
     const snap = await db.collection(collection).limit(max).get();
     return snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -152,6 +157,31 @@
         const requestRef=db.collection('officerAccessRequests').doc(user.uid);
         await requestRef.set({uid:user.uid,email:user.email||'',name,teamRole,status:'pending',requestedAt:firebase.firestore.FieldValue.serverTimestamp()});
         return {success:true,message:'Your request was submitted for admin review.'};
+      }
+      case 'getOfficerRequests': {
+        await requireAdmin();
+        const snap=await db.collection('officerAccessRequests').get();
+        return snap.docs.map(d=>{const r=d.data()||{};const ts=r.requestedAt;return {id:d.id,uid:r.uid||d.id,email:r.email||'',name:r.name||'',teamRole:r.teamRole||'',status:r.status||'pending',requestedAtText:ts&&typeof ts.toDate==='function'?ts.toDate().toLocaleString('en-PH',{timeZone:'Asia/Manila'}):''};}).sort((a,b)=>({pending:0,approved:1,rejected:2}[a.status]??3)-({pending:0,approved:1,rejected:2}[b.status]??3));
+      }
+      case 'approveOfficerRequest': {
+        const {user}=await requireAdmin();
+        const uid=String(a[0]||'');if(!uid||uid===user.uid)throw err('Invalid applicant account.');
+        const requestRef=db.collection('officerAccessRequests').doc(uid);
+        const snap=await requestRef.get();if(!snap.exists)throw err('This access request no longer exists.');
+        const req=snap.data()||{};if(String(req.status||'pending')!=='pending')throw err('This request has already been reviewed.');
+        const batch=db.batch();
+        batch.set(db.collection('users').doc(uid),{role:'officer',name:String(req.name||''),email:String(req.email||''),teamRole:String(req.teamRole||''),approvedAt:firebase.firestore.FieldValue.serverTimestamp(),approvedBy:user.uid});
+        batch.update(requestRef,{status:'approved',reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),reviewedBy:user.uid});
+        await batch.commit();
+        return {success:true,message:'Officer access approved. The applicant can refresh or sign in again.'};
+      }
+      case 'rejectOfficerRequest': {
+        const {user}=await requireAdmin();
+        const uid=String(a[0]||'');if(!uid||uid===user.uid)throw err('Invalid applicant account.');
+        const ref=db.collection('officerAccessRequests').doc(uid);const snap=await ref.get();if(!snap.exists)throw err('This access request no longer exists.');
+        if(String(snap.data()?.status||'pending')!=='pending')throw err('This request has already been reviewed.');
+        await ref.update({status:'rejected',reviewedAt:firebase.firestore.FieldValue.serverTimestamp(),reviewedBy:user.uid});
+        return {success:true,message:'Officer access request rejected.'};
       }
       case 'getGuide': return await getGuide(a[0]);
       case 'publishOperatorState': {

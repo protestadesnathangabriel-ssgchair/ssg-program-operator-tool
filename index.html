@@ -210,7 +210,7 @@
     /* DISPLAY WINDOW */
     .display-shell{height:100vh;background:#000;color:#fff;overflow:hidden;display:grid;grid-template-columns:minmax(0,65fr) minmax(0,35fr);position:relative}
     .display-main{min-width:0;height:100vh;position:relative;background:#000}
-    .display-scroll{height:100%;overflow:auto;padding:6vh 7vw 30vh 0.7in;scroll-behavior:auto}
+    .display-scroll{height:100%;overflow:auto;padding:6vh 7vw 30vh 0.7in;scroll-behavior:smooth}
     .display-title{font-size:clamp(22px,3vw,46px);font-weight:800;margin:0 0 7vh;line-height:1.08}
     .display-section{margin-bottom:7vh}.display-section-title{display:block;background:#f3c400;color:#111;font-weight:900;font-size:clamp(18px,2.1vw,36px);padding:12px 18px;margin-bottom:24px;letter-spacing:.2px}
     .sequence-prompt-display{background:#000}
@@ -1402,6 +1402,7 @@ function getStoredAuth(){
               </div>
             </div>
             <button data-page="prompt" onclick="showPage('prompt')">Live Windows</button>
+            ${state.auth?.role==='admin'?'<button data-page="admin" onclick="showPage(\'admin\')">Officer Requests</button>':''}
           </nav>
           <div class="sidebar-foot">Independent Apps Script database.<br>Does not use TALAAN or Event Tracker data.</div>
         </aside>
@@ -1412,6 +1413,7 @@ function getStoredAuth(){
             <section id="page-editor" class="page"></section>
             <section id="page-prompt" class="page"></section>
             <section id="page-lyrics" class="page"></section>
+            <section id="page-admin" class="page"></section>
           </div>
         </main>
       </div>`;
@@ -1479,6 +1481,7 @@ function getStoredAuth(){
     sequence:['Program Sequence','Build a take-based live program sequence with scheduled times.'],
     prompt:['Live Windows','Open the presenter display and timer/control window for the selected guide.'],
     lyrics:['Lyric Prompter','Prepare text lyrics, preview them, and send them to the lyric prompter display.'],
+    admin:['Officer Access Requests','Review and approve Production-Technical Team access requests.'],
   };
 
   function setSsgActiveNav(page){
@@ -1491,6 +1494,7 @@ function getStoredAuth(){
   }
 
   function showPage(page){
+    if(page==='admin' && state.auth?.role!=='admin'){showToast('Administrator access is required.');return;}
     state.page=page;
     document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -1500,6 +1504,34 @@ function getStoredAuth(){
     if(page==='editor' || page==='sequence') renderEditor();
     if(page==='prompt') renderPromptPage();
     if(page==='lyrics') renderLyricsPage();
+    if(page==='admin') renderAdminRequestsPage();
+  }
+
+  function renderAdminRequestsPage(){
+    const root=document.getElementById('page-admin');
+    if(!root)return;
+    if(state.auth?.role!=='admin'){root.innerHTML='<div class="card">Administrator access is required.</div>';return;}
+    root.innerHTML='<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h2 style="margin:0 0 5px">Officer Access Requests</h2><p style="margin:0;color:#65717d;font-size:13px">Approve only people you recognize as members of the Production-Technical Team.</p></div><button class="btn" type="button" onclick="renderAdminRequestsPage()">Refresh</button></div><div id="adminRequestList" style="margin-top:16px">Loading requests…</div></div>';
+    safeRun('getOfficerRequests',[],rows=>{
+      const list=document.getElementById('adminRequestList');if(!list)return;
+      rows=Array.isArray(rows)?rows:[];
+      if(!rows.length){list.innerHTML='<div class="empty">No officer access requests found.</div>';return;}
+      list.innerHTML=rows.map(r=>{
+        const status=String(r.status||'pending').toLowerCase();
+        const date=r.requestedAtText||'';
+        return `<div class="card" style="margin:10px 0;border:1px solid #e3e8ef"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap"><div style="min-width:220px;flex:1"><strong style="font-size:15px">${esc(r.name||'Unnamed applicant')}</strong><div style="font-size:12px;color:#65717d;margin-top:4px">${esc(r.email||'No email')} · ${esc(r.teamRole||'Role not specified')}</div><div style="font-size:11px;color:#8a94a1;margin-top:4px">UID: ${esc(r.uid||r.id||'')}</div>${date?`<div style="font-size:11px;color:#8a94a1;margin-top:3px">Requested: ${esc(date)}</div>`:''}</div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="ssg-type-pill">${esc(status.toUpperCase())}</span>${status==='pending'?`<button class="btn primary small" type="button" onclick="approveOfficerRequest('${escAttr(r.uid||r.id)}')">Approve</button><button class="btn small" type="button" onclick="rejectOfficerRequest('${escAttr(r.uid||r.id)}')">Reject</button>`:''}</div></div></div>`;
+      }).join('');
+    });
+  }
+  function approveOfficerRequest(uid){
+    if(state.auth?.role!=='admin'||!uid)return;
+    if(!confirm('Approve this request and grant Officer access to this Google account?'))return;
+    safeRun('approveOfficerRequest',[uid],result=>{showToast(result?.message||'Officer access approved.');renderAdminRequestsPage();});
+  }
+  function rejectOfficerRequest(uid){
+    if(state.auth?.role!=='admin'||!uid)return;
+    if(!confirm('Reject this Officer Access Request?'))return;
+    safeRun('rejectOfficerRequest',[uid],result=>{showToast(result?.message||'Request rejected.');renderAdminRequestsPage();});
   }
 
   function loadGuides(openId){
