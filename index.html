@@ -695,6 +695,9 @@ button,input,select,textarea{font-family:inherit!important}
 
 /* PHONE DASHBOARD: align mobile header and dashboard headline without changing tablet/desktop. */
 @media(max-width:600px){
+ .header-user-role,.header-user-email{display:none!important}
+ .header-user{display:flex!important;align-items:center!important;gap:0!important}
+ .header-user .btn{white-space:nowrap!important;padding:8px 10px!important;font-size:11px!important}
  .topbar{display:grid!important;grid-template-columns:40px minmax(0,1fr) auto!important;align-items:center!important;justify-content:initial!important;column-gap:10px!important;row-gap:0!important;padding:12px 14px!important;min-height:62px!important}
  .topbar>div:first-of-type{display:flex!important;align-items:center!important;justify-content:flex-start!important;flex:initial!important;min-width:0!important;width:100%!important;gap:0!important;grid-column:2!important;grid-row:1!important}
  .topbar>div:first-of-type:after{content:"SSG\A OPERATOR TOOL";display:block!important;white-space:pre;line-height:1.12;font-size:11px;font-weight:850;letter-spacing:-.02em;color:var(--ssg-navy);margin:0!important;max-width:none!important}
@@ -1301,6 +1304,7 @@ function getStoredAuth(){
     $('mainApp').innerHTML=`
       <div class="app">
         <aside class="sidebar">
+          <button type="button" class="ssg-mobile-return" onclick="toggleSsgMobileNav()" aria-label="Return to page">← Return</button>
           <div class="brand" aria-label="SSG Program Operator Tool"><span>SSG PROGRAM OPERATOR TOOL<small>PROGRAM WORKSPACE</small></span></div>
           <nav class="nav">
             <button data-page="home" class="active" onclick="showPage('home')">Dashboard</button>
@@ -1346,6 +1350,11 @@ function getStoredAuth(){
   function setupSsgResponsiveShell(){
     const button=document.getElementById('ssgMobileNav');
     if(!button)return;
+    if(!document.getElementById('ssgMobileNavBackdrop')){
+      const backdrop=document.createElement('div');backdrop.id='ssgMobileNavBackdrop';backdrop.setAttribute('aria-hidden','true');
+      backdrop.addEventListener('click',()=>{if(window.matchMedia('(max-width:760px)').matches){document.querySelector('.sidebar')?.classList.remove('ssg-mobile-open');button.textContent='☰';button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Open navigation');}});
+      document.querySelector('.app')?.appendChild(backdrop);
+    }
     const sync=()=>{
       button.style.display='inline-flex';
       if(!window.matchMedia('(max-width:760px)').matches){
@@ -3403,3 +3412,13 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
 </script>
 </body>
 </html>
+
+/* Requested phone-only menu close controls */
+.ssg-mobile-return{display:none}
+#ssgMobileNavBackdrop{display:none}
+@media(max-width:760px){
+ .ssg-mobile-return{display:block!important;align-self:flex-end;margin:0 0 12px auto;padding:8px 12px;border:1px solid var(--ssg-border);border-radius:10px;background:#fff;color:var(--ssg-navy);font-weight:700}
+ #ssgMobileNavBackdrop{display:block;position:fixed;inset:0;z-index:999;background:rgba(10,18,55,.32);opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s}
+ .sidebar.ssg-mobile-open{z-index:1000!important}
+ .sidebar.ssg-mobile-open~#ssgMobileNavBackdrop{opacity:1;visibility:visible;pointer-events:auto}
+}
