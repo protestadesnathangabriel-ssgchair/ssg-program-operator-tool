@@ -795,6 +795,32 @@ html[data-ssg-layout="phone"] .ssg-dashboard-columns{grid-template-columns:minma
 <body>
 <script>
   const APP_CONFIG = window.SSG_APP_CONFIG || {mode: new URLSearchParams(location.search).get('mode') || 'main', guideId: new URLSearchParams(location.search).get('guideId') || '', appUrl: location.origin + location.pathname};
+  // Full-screen keyboard support for every display/prompter window.
+  // Browser security requires a user gesture; Ctrl+Alt+F is the explicit gesture.
+  (function installPrompterFullscreenShortcut(){
+    const mode = APP_CONFIG.mode;
+    if(!['host','display','lyric-display'].includes(mode)) return;
+    window.addEventListener('keydown', function(event){
+      if(event.ctrlKey && event.altKey && String(event.key||'').toLowerCase()==='f'){
+        event.preventDefault();
+        event.stopPropagation();
+        if(document.fullscreenElement) return;
+        const root = document.documentElement;
+        const enter = root.requestFullscreen || root.webkitRequestFullscreen;
+        if(typeof enter !== 'function'){
+          console.warn('Full screen is not supported by this browser.');
+          return;
+        }
+        try{
+          const result = enter.call(root, {navigationUI:'hide'});
+          if(result && typeof result.catch === 'function') result.catch(function(err){console.warn('Unable to enter full screen:',err);});
+        }catch(err){
+          try{const fallback=enter.call(root);if(fallback&&typeof fallback.catch==='function')fallback.catch(function(e){console.warn('Unable to enter full screen:',e);});}catch(e){console.warn('Unable to enter full screen:',e);}
+        }
+      }
+      // Escape is intentionally not intercepted: the browser exits full screen natively.
+    }, true);
+  })();
 </script>
 
 <div id="mainApp"></div>
