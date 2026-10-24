@@ -4,7 +4,7 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SSG Program Guide Builder</title>
+  <title>SSG Program Operator Tool</title>
   <style>
     *{box-sizing:border-box}
     :root{--blue:#073763;--blue2:#0b4d87;--yellow:#f3c400;--bg:#f5f7fa;--line:#d9e0e7;--text:#17202a;--muted:#66717e;--red:#d71920;--green:#17823b}
@@ -637,6 +637,23 @@ button,input,select,textarea{font-family:inherit!important}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
 
 
+/* Dashboard merged from the approved responsive concept; all actions call existing app functions. */
+.ssg-home-intro{align-items:center!important;min-height:112px;margin-bottom:24px!important}
+.ssg-home-intro h2{max-width:780px}
+.ssg-home-badge{display:flex;align-items:center;gap:10px;flex:0 0 auto;padding:12px 15px;border:1px solid var(--ssg-border);border-radius:14px;background:#fff;color:var(--ssg-navy)}
+.ssg-home-badge>span{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--ssg-pale);color:var(--ssg-navy);font-size:19px}
+.ssg-home-badge strong,.ssg-home-badge small{display:block}.ssg-home-badge strong{font-size:12px}.ssg-home-badge small{font-size:10px;color:var(--ssg-muted);margin-top:3px}
+.ssg-dashboard-columns{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(270px,.75fr);gap:18px;align-items:start}
+.ssg-dashboard-panel{min-width:0}.ssg-dashboard-panel .ssg-section-title{margin-bottom:13px}
+.ssg-panel-inner{padding:16px;background:#fff;border:1px solid var(--ssg-border);border-radius:16px;box-shadow:0 7px 24px rgba(23,35,111,.035)}
+.ssg-search-row{margin-bottom:12px}.ssg-search-row .search{width:100%;min-width:0;padding:11px 12px;border-radius:10px;background:#FAFBFE}
+.ssg-dashboard-panel .guide-list{gap:8px}.ssg-dashboard-panel .guide-row{display:flex;flex-direction:row;align-items:center;gap:10px;padding:11px;border-radius:12px;box-shadow:none}.ssg-guide-mark{display:grid;place-items:center;flex:0 0 38px;width:38px;height:40px;border-radius:10px;background:#EDF1FC;color:var(--ssg-navy);font-size:18px}.ssg-dashboard-panel .guide-info{flex:1;min-width:0}.ssg-dashboard-panel .guide-title{white-space:normal;overflow-wrap:anywhere;font-size:12px;color:var(--ssg-ink)}.ssg-dashboard-panel .guide-meta{font-size:10px;line-height:1.4}.ssg-type-pill{padding:5px 7px;border-radius:999px;background:#FFF3CC;color:#75520B;font-size:9px;font-weight:800;white-space:nowrap}.ssg-dashboard-panel .guide-row .actions{flex-wrap:nowrap!important}.ssg-dashboard-panel .guide-row .btn{white-space:nowrap}
+.ssg-text-link{border:0;background:transparent;color:var(--ssg-blue);font-size:12px;font-weight:750;white-space:nowrap;padding:5px 0}.ssg-library-link{display:flex;align-items:center;gap:11px;position:relative;width:100%;padding:12px 28px 12px 11px;margin-bottom:9px;text-align:left;border:1px solid var(--ssg-border);border-radius:12px;background:#fff;color:var(--ssg-ink)}.ssg-library-link:hover{border-color:#AAB8EA;background:#FBFCFF}.ssg-library-icon{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:11px;background:var(--ssg-navy);color:#fff;font-size:18px}.ssg-library-orange{background:var(--ssg-orange);color:var(--ssg-navy)}.ssg-library-link strong,.ssg-library-link small{display:block}.ssg-library-link strong{font-size:12px}.ssg-library-link small{font-size:10px;color:var(--ssg-muted);margin-top:4px;line-height:1.4}.ssg-library-link .ssg-tool-arrow{right:10px;top:16px;font-size:15px}
+.ssg-workspace-tip{margin-top:16px;padding:15px;border-radius:12px;background:#FFF7DB;border:1px solid #F7E7A9}.ssg-workspace-tip small{display:block;font-size:9px;letter-spacing:.1em;font-weight:850;color:#85620C;margin-bottom:7px}.ssg-workspace-tip strong{font-size:13px;color:var(--ssg-navy)}.ssg-workspace-tip p{font-size:11px;line-height:1.55;color:#6E6241;margin:6px 0 0}
+@media(max-width:1050px){.ssg-dashboard-columns{grid-template-columns:minmax(0,1fr)}.ssg-dashboard-columns>section:last-child .ssg-panel-inner{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.ssg-dashboard-columns>section:last-child .ssg-library-link{margin:0}.ssg-workspace-tip{grid-column:1/-1;margin-top:3px}}
+@media(max-width:760px){.ssg-home-badge{align-self:stretch}.ssg-dashboard-columns{grid-template-columns:minmax(0,1fr);gap:20px}.ssg-dashboard-columns>section:last-child .ssg-panel-inner{display:block}.ssg-dashboard-columns>section:last-child .ssg-library-link{margin-bottom:9px}.ssg-workspace-tip{margin-top:14px}.ssg-dashboard-panel .guide-row{flex-wrap:wrap}.ssg-dashboard-panel .guide-row .actions{margin-left:48px;width:calc(100% - 48px)}.ssg-type-pill{margin-left:auto}}
+@media(max-width:480px){.ssg-home-intro h2{font-size:25px}.ssg-home-badge{padding:10px}.ssg-dashboard-panel .guide-row{gap:8px}.ssg-dashboard-panel .guide-row .actions{margin-left:0;width:100%}.ssg-dashboard-panel .guide-row .actions .btn{flex:1}.ssg-type-pill{font-size:8px}}
+
 /* FINAL RESPONSIVE CHECKPOINT PASS: UI-only overrides; app logic remains unchanged. */
 .topbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;min-width:0!important}
 .topbar>div:first-of-type{flex:1 1 auto!important;min-width:0!important;display:flex!important;align-items:center!important;gap:10px!important}
@@ -1248,8 +1265,8 @@ function getStoredAuth(){
         <aside class="sidebar">
           <div class="brand" aria-label="SSG Program Operator Tool"><span>SSG PROGRAM OPERATOR TOOL<small>PROGRAM WORKSPACE</small></span></div>
           <nav class="nav">
-            <button data-page="home" class="active" onclick="showPage('home')">Saved Guides</button>
-            <button data-page="editor" onclick="createGuide()">Program Flow</button><button data-page="sequence" onclick="createSequenceGuide();setSsgActiveNav('sequence')">Program Sequence</button>
+            <button data-page="home" class="active" onclick="showPage('home')">Dashboard</button>
+            <button data-page="editor" onclick="createGuide()">Program Guides</button><button data-page="sequence" onclick="createSequenceGuide();setSsgActiveNav('sequence')">Program Sequence</button>
             <div class="lyric-nav-group">
               <button data-page="lyrics" class="lyric-main" onclick="showPage('lyrics')">Lyric Prompter</button>
               <div class="lyric-subnav">
@@ -1258,7 +1275,7 @@ function getStoredAuth(){
                 <button class="wip" data-page="lyrics" onclick="showPage('lyrics');setLyricMode('video')">[WIP] Video Lyrics</button>
               </div>
             </div>
-            <button data-page="prompt" onclick="showPage('prompt')">Prompt</button>
+            <button data-page="prompt" onclick="showPage('prompt')">Live Windows</button>
           </nav>
           <div class="sidebar-foot">Independent Apps Script database.<br>Does not use TALAAN or Event Tracker data.</div>
         </aside>
@@ -1314,10 +1331,10 @@ function getStoredAuth(){
   }
 
   const pageInfo={
-    home:['Saved Guides','Open, edit, preview, export, or run a saved technical guide.'],
-    editor:['Program Flow','Build a complete event program flow with unlimited sections and items.'],
+    home:['Dashboard','Your workspace for program guides, live sequence, and lyrics.'],
+    editor:['Program Guides','Build a complete event program flow with unlimited sections and items.'],
     sequence:['Program Sequence','Build a take-based live program sequence with scheduled times.'],
-    prompt:['Prompt','Open the presenter display and timer/control window for the selected guide.'],
+    prompt:['Live Windows','Open the presenter display and timer/control window for the selected guide.'],
     lyrics:['Lyric Prompter','Prepare text lyrics, preview them, and send them to the lyric prompter display.'],
   };
 
@@ -1359,7 +1376,32 @@ function getStoredAuth(){
     const q=(window.homeSearchValue||'').toLowerCase().trim();
     const all=state.guides||[];
     const filtered=all.filter(g=>String(g.title||'').toLowerCase().includes(q)||String(g.eventDate||'').toLowerCase().includes(q));
-    $('page-home').innerHTML=`<section class="ssg-home-intro"><div><div class="ssg-eyebrow">SSG PROGRAM OPERATOR</div><h2>Your program workspace.</h2><p>Prepare program guides, organize the sequence, and manage lyric prompts from one clean workspace.</p></div></section><section class="ssg-tools-grid" aria-label="Main tools"><button type="button" class="ssg-tool-card" onclick="createGuide()"><span class="ssg-tool-icon">▤</span><span class="ssg-tool-arrow">↗</span><strong>Program Guides</strong><small>Create, edit, preview, and manage your program guides.</small></button><button type="button" class="ssg-tool-card" onclick="createSequenceGuide()"><span class="ssg-tool-icon">☷</span><span class="ssg-tool-arrow">↗</span><strong>Program Sequence</strong><small>Arrange the order of program items for your event.</small></button><button type="button" class="ssg-tool-card" onclick="showPage('lyrics')"><span class="ssg-tool-icon">▥</span><span class="ssg-tool-arrow">↗</span><strong>Lyric Prompter</strong><small>Prepare lyrics and send them to the existing display.</small></button></section><section class="ssg-section-title"><div><h2>Saved guides</h2><p>Continue working on a previously saved program.</p></div></section><div class="toolbar"><div class="toolbar-left"><input class="search" id="homeSearch" placeholder="Search saved guides..." value="${escAttr(window.homeSearchValue||'')}" oninput="window.homeSearchValue=this.value;renderHome()"></div><div class="toolbar-right"><button class="btn" onclick="createGuide()">+ Program Flow</button><button class="btn primary" onclick="createSequenceGuide()">+ Program Sequence</button></div></div><div class="guide-list">${filtered.length?filtered.map(g=>`<div class="guide-row"><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'PROGRAM SEQUENCE':'PROGRAM FLOW'} · ${esc(g.eventDate||'No date')} · Updated ${esc(g.updatedAt||'')}</div></div><div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Edit</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button><button class="btn small" onclick="promptGuide('${escAttr(g.id)}')">Prompt</button><button class="btn small" onclick="exportGuideClient('${escAttr(g.id)}')">Export</button><button class="btn small danger" onclick="deleteGuideClient('${escAttr(g.id)}')">Delete</button></div></div>`).join(''):`<div class="empty">No saved guides yet.<br><br>Create a Program Flow or Program Sequence.</div>`}</div>`;
+    const recent=filtered.slice(0,4);
+    $('page-home').innerHTML=`
+      <section class="ssg-home-intro">
+        <div><div class="ssg-eyebrow">YOUR WORKSPACE</div><h2>Everything ready for your next program.</h2><p>Create program guides, arrange the live sequence, and prepare lyrics from one clean workspace.</p></div>
+        <div class="ssg-home-badge"><span>✦</span><div><strong>SSG Program Operator</strong><small>Program workspace</small></div></div>
+      </section>
+      <section class="ssg-tools-grid" aria-label="Main workspace tools">
+        <button type="button" class="ssg-tool-card" onclick="createGuide()"><span class="ssg-tool-icon">▤</span><span class="ssg-tool-arrow">↗</span><strong>Program Guides</strong><small>Create, edit, preview, export, and manage your program guides.</small></button>
+        <button type="button" class="ssg-tool-card" onclick="createSequenceGuide()"><span class="ssg-tool-icon">☷</span><span class="ssg-tool-arrow">↗</span><strong>Program Sequence</strong><small>Arrange the order of program items and prepare the live flow.</small></button>
+        <button type="button" class="ssg-tool-card" onclick="showPage('lyrics')"><span class="ssg-tool-icon">▥</span><span class="ssg-tool-arrow">↗</span><strong>Lyric Prompter</strong><small>Prepare text or image lyrics and send them to the existing display.</small></button>
+      </section>
+      <div class="ssg-dashboard-columns">
+        <section class="ssg-dashboard-panel">
+          <div class="ssg-section-title"><div><h2>Recently opened</h2><p>Pick up where you left off.</p></div><button class="ssg-text-link" type="button" onclick="window.homeSearchValue='';renderHome()">View all →</button></div>
+          <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="homeSearch" placeholder="Search guides by title…" value="${escAttr(window.homeSearchValue||'')}" oninput="window.homeSearchValue=this.value;renderHome()"></div>
+          <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span><div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button></div></div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
+        </section>
+        <section class="ssg-dashboard-panel">
+          <div class="ssg-section-title"><div><h2>Quick access</h2><p>Supporting tools for your program.</p></div></div>
+          <div class="ssg-panel-inner">
+            <button class="ssg-library-link" type="button" onclick="showPage('lyrics');setLyricMode('text')"><span class="ssg-library-icon">♫</span><span><strong>Song & Lyrics Library</strong><small>Manage and prepare lyric content</small></span><span class="ssg-tool-arrow">↗</span></button>
+            <button class="ssg-library-link" type="button" onclick="showPage('prompt')"><span class="ssg-library-icon ssg-library-orange">▱</span><span><strong>Live Windows</strong><small>Open presenter display and controls</small></span><span class="ssg-tool-arrow">↗</span></button>
+            <div class="ssg-workspace-tip"><small>WORKSPACE TIP</small><strong>Keep your program ready.</strong><p>Prepare your sequence ahead of time, then open the live windows when you’re ready to present.</p></div>
+          </div>
+        </section>
+      </div>`;
   }
 
   function createGuide(){
