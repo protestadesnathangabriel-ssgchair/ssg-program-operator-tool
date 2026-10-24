@@ -1,3 +1,133 @@
+
+Loading older messages…
+ano ibigsabihin mo dito sa "Hindi na muling bubuuin ang lyric content kapag pareho lang ang natanggap na HTML"
+Ang ibig kong sabihin ay ito:
+
+Kapag nagbabago ang lyric content sa Lyric Prompter, kailangang ipakita ng app ang bagong lyrics sa screen. Pero kapag paulit-ulit na natatanggap ng app ang parehong HTML ng lyrics mula sa live sync, hindi na nito kailangang burahin at buuin ulit ang buong lyric display kung wala namang nagbago.
+
+Halimbawa:
+
+Naka-display ang lyrics ng isang kanta at umaandar ang auto-scroll.
+
+Paulit-ulit na nagpapadala o tumatanggap ang app ng parehong lyric content.
+
+Kung pareho pa rin ang content, puwedeng laktawan ang unnecessary na pagbuo muli ng display.
+
+Mas kaunting trabaho para sa browser, kaya posibleng mabawasan ang lag o pagputol-putol ng scroll.
+
+Mahalagang linawin: hindi ibig sabihin nito na hindi na mag-a-update ang lyrics kapag may binago ka. Kapag may bagong lyrics o ibang formatting, dapat pa ring maipakita ang pagbabago.
+
+At hindi rin ito garantiya na ito lang ang sanhi ng paghinto ng scroll. Bahagi lang ito ng performance optimization; kailangan pa ring subukan kung nabawasan talaga ang lag sa aktuwal na browser.
+
+sa lyric prompter, smooth na. sa program flow at program sequence prompter naglalag pa rin nagbabuffer
+Gets ko. Since smooth na ang Lyric Prompter, Program Flow at Program Sequence na lang ang tututukan natin.
+
+May nakita akong posibleng dahilan sa code: kapag may dumarating na live update sa guide, muling nire-render ang display at maaaring nagsisimula ulit ang smooth-scroll animation ng active item. Kapag paulit-ulit itong nangyayari habang nag-o-scroll, puwede itong magdulot ng buffering at delayed na keyboard response.
+
+Gumawa ako ng panibagong build na tumutugon mismo sa behavior na iyon.
+
+Program Prompter Smoothness Fix
+
+Updated ZIP · Syntax at archive integrity checked
+
+I-download ang bagong ZIP
+
+Ano ang binago
+
+Pinananatili ang kasalukuyang scroll position habang dumarating ang live guide updates.
+
+Hindi na nire-restart ang active-item smooth scrolling sa bawat live update.
+
+Hindi binago ang keyboard shortcuts o speed levels.
+
+Paano i-deploy
+I-extract ang ZIP.
+
+Buksan ang folder na ssg-program-operator-tool-main.
+
+Palitan ang index.html sa root ng GitHub repository mo gamit ang bagong index.html.
+
+I-commit ang changes at hintaying matapos ang GitHub Pages deployment.
+
+I-refresh ang Program Flow at Program Sequence prompter gamit ang hard refresh (Ctrl + F5).
+
+Hindi kailangang palitan ang Firebase configuration o Firestore rules para sa pagbabagong ito.
+
+Mahalaga: Hindi ko pa ito nasusubukan sa mismong browser mo, kaya kailangan nating i-verify kung nawala ang lag pagkatapos ng deployment. Kung naroon pa rin, susunod nating susuriin ang dalas ng live-sync updates at ang keyboard event handling, sa halip na paulit-ulit na baguhin ang scroll speed.
+
+Gusto mo bang ipaalala ko sa iyo na subukan ang dalawang prompter pagkatapos mong ma-deploy ang update?
+
+lag talaga. magiispeed ako ng 9, maya maya sumasadsad na yung scroll, biglang bumabagal.after nun, kahit anong number pindutin ko, maglalag na sya. sa first 1 to 2 seconds lang mabilis and according sa speed number
+Ayan, mas malinaw na ngayon ang sintomas. Hindi na simpleng speed setting lang ang problema. Mabilis sa unang 1–2 segundo, tapos unti-unting bumabagal, at hindi na bumabalik sa normal kahit magpalit ka ng speed.
+
+May nakita akong mas konkretong posibleng sanhi sa code ng Program Flow at Program Sequence:
+
+Sa bawat scroll update, paulit-ulit na kinukuha at ikinukumpara ng app ang buong HTML ng prompter.
+
+Kasabay nito, nagpapadala rin ito ng updates sa Control window.
+
+Kapag mahaba ang program at mabigat ang rendering, maaaring maubos ang oras ng browser sa paulit-ulit na gawaing ito. Kaya kahit palitan mo ang speed number, nananatili ang lag.
+
+Bagong fix: bawasan ang trabaho ng browser habang nag-i-scroll
+Program Prompter Lag Fix
+
+ZIP · Updated index.html at deployment instructions
+
+I-download ang bagong ZIP
+
+Mga pagbabago
+
+Hindi na paulit-ulit na binabasa ang buong prompt HTML sa bawat scroll update.
+
+HTML lang ang muling ipinapadala kapag nagbago ang prompt content.
+
+Nilimitahan ang dalas ng scroll updates papunta sa Control preview.
+
+Kasama pa rin ang naunang speed-9 timing fix.
+
+Gawin mo ito
+I-extract ang ZIP.
+
+Buksan ang ssg-program-operator-tool-main.
+
+Palitan ang index.html lang sa root ng GitHub repository.
+
+I-commit at hintaying matapos ang GitHub Pages deployment.
+
+Sa prompter window, pindutin ang Ctrl + F5.
+
+Subukan ang speed 9 nang hindi bababa sa 10–15 segundo. Pagkatapos, magpalit sa speed 5 at speed 9 ulit.
+
+Na-check ko ang JavaScript syntax ng lahat ng inline script blocks at ang ZIP integrity. Hindi ko pa nasusubukan ang aktuwal na performance sa iyong Chrome, kaya kailangan nating kumpirmahin kung nawala ang pagbagal pagkatapos ng deployment.
+
+Hindi na natin babaguhin nang paulit-ulit ang speed values. Ang target ngayon ay alisin ang gawaing nagpapabigat sa scrolling, habang pinananatili ang live sync at kasalukuyang controls.
+
+pwede index.html na lang lagay mo dito? ung able to preview as text hehe mappupuno laptop ko kakadownload eh
+Oo naman HAHAHA 😭❤️ Hindi mo na kailangang mag-download ng buong ZIP!
+
+Ito ang index.html lang mula sa latest Program Prompter Lag Fix build, bilang plain text para mas madaling i-preview at kopyahin.
+
+index.html.txt
+
+342 KB · Buong HTML source code
+
+Buksan ang index.html bilang text
+
+Para mailagay sa GitHub:
+
+Buksan ang text file sa link sa itaas.
+
+Kopyahin ang buong code.
+
+Sa GitHub repository mo, buksan ang index.html at piliin ang Edit.
+
+Palitan ang lumang code at i-commit ang changes.
+
+Importanteng paalala: Huwag i-paste ang HTML sa firebase-adapter.js o sa Firestore Rules. Sa index.html lang ito ilalagay.
+
+
+index.html.txt
+Document
 <!DOCTYPE html>
 <html>
 <head>
@@ -3244,7 +3374,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
         if(guide&&guide.id){displayState.guide=guide;renderDisplay();if(!followUid){controlState.guide=guide;prepareTimers();renderControl();}subscribeDisplayedGuide(APP_CONFIG.guideId,'display');}
       }).withFailureHandler(function(err){console.warn('Display guide load failed:',err);}).apiCall('getGuide',[APP_CONFIG.guideId],token);
     }
-    if(!viewOnly)setTimeout(()=>{const area=$('displayContent');if(area){area.addEventListener('scroll',()=>sendDisplayMirrorState(),{passive:true});sendDisplayMirrorState();}},250);
+    if(!viewOnly)setTimeout(()=>{const area=$('displayContent');if(area){let mirrorScrollTimer=null;area.addEventListener('scroll',()=>{if(mirrorScrollTimer!==null)return;mirrorScrollTimer=setTimeout(()=>{mirrorScrollTimer=null;sendDisplayMirrorState();},120);},{passive:true});sendDisplayMirrorState();}},250);
     if(viewOnly&&followUid){initFollowOperator(followUid);setInterval(()=>{if(displayState.timer)renderDisplayTimer();},250);const title=document.querySelector('.display-controls');if(title)title.textContent='LIVE OPERATOR VIEW · READ ONLY';const key=$('displayKey');if(key)key.textContent='VIEW-ONLY · FOLLOWING ONLINE OPERATOR';const heading=document.querySelector('.control-top h2');if(heading)heading.textContent='LIVE OPERATOR STATUS';const status=$('controlList');if(status)status.innerHTML='<div class="operator-follow-empty">Connecting to the selected operator’s live display…</div>';const target=$('controlTarget');if(target)target.textContent='CONNECTING · READ ONLY';}
     else if(viewOnly){const title=document.querySelector('.display-controls');if(title)title.textContent='VIEW-ONLY DISPLAY';const key=$('displayKey');if(key)key.textContent='VIEW-ONLY';}
     if(!viewOnly){publishOperatorDisplayState();displayState.operatorPublishTimer=setInterval(publishOperatorDisplayState,2000);}
@@ -3369,6 +3499,9 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
       $('displayZoomContent').innerHTML=`<div class="display-title">${esc(g.title)}</div>${(g.sections||[]).map((s,si)=>`<section class="display-section"><div class="display-section-title">${si+1}. ${esc(s.title)}</div>${s.startTime||s.endTime?`<div class="display-section-time">${esc(s.startTime||'—')} – ${esc(s.endTime||'—')}</div>`:''}${(s.items||[]).map((it,ii)=>`<div class="display-item" data-item-id="${escAttr(it.id)}"><div class="display-item-title">#${esc(it.number||String(ii+1))} ${esc(it.title)}</div><div class="display-item-time">TIME: ${esc(it.startTime||'—')} – ${esc(it.endTime||'—')}</div><div class="display-item-trt">TRT: ${esc(trtDisplay(it)||'—')}</div>${it.notes?`<div class="display-item-note">NOTE: ${esc(it.notes)}</div>`:''}</div>`).join('')}</section>`).join('')}`;
     }
     applyDisplayZoom();
+    // The prompt markup changed. Mark the mirror HTML dirty so it is serialized
+    // once for the next mirror update, not repeatedly during every scroll event.
+    displayState.lastMirrorHtml=null;
     if(options.preserveScroll){
       // Live guide edits arrive frequently. Re-rendering must not restart the
       // active TAKE's smooth-scroll animation on every incoming draft update.
@@ -3398,20 +3531,23 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     } else { el.scrollIntoView({behavior:'smooth',block:'center'}); }
   }
   function toggleDisplayScroll(){displayState.scrolling=!displayState.scrolling; if(displayState.scrolling)startDisplayScroll(); else stopDisplayScroll();}
-  function startDisplayScroll(){stopDisplayScroll();displayState.scrolling=true;sendDisplayMirrorState();const speedSteps=[9,21,39,66,108,168,252,372,510];let lastFrame=0,lastSync=0;const loop=(now)=>{if(!displayState.scrolling)return;const area=$('displayContent');if(area){const dt=lastFrame?Math.min(50,Math.max(0,now-lastFrame)):0;lastFrame=now;const speed=speedSteps[Math.max(1,Math.min(9,displayState.speed))-1];area.scrollTop+=speed*dt/1000;if(now-lastSync>100){lastSync=now;sendDisplayMirrorState();}}displayState.raf=requestAnimationFrame(loop)};displayState.raf=requestAnimationFrame(loop)}
+  function startDisplayScroll(){stopDisplayScroll();displayState.scrolling=true;sendDisplayMirrorState();const speedSteps=[9,21,39,66,108,168,252,372,510];let lastFrame=0,lastSync=0;const loop=(now)=>{if(!displayState.scrolling)return;const area=$('displayContent');if(area){const dt=lastFrame?Math.max(0,now-lastFrame):0;lastFrame=now;const speed=speedSteps[Math.max(1,Math.min(9,displayState.speed))-1];area.scrollTop+=speed*dt/1000;if(now-lastSync>250){lastSync=now;sendDisplayMirrorState();}}displayState.raf=requestAnimationFrame(loop)};displayState.raf=requestAnimationFrame(loop)}
   function stopDisplayScroll(){if(displayState.raf)cancelAnimationFrame(displayState.raf);displayState.raf=null;sendDisplayMirrorState();}
   function sendDisplayMirrorState(){
     if(new URLSearchParams(location.search).get('viewOnly')==='1')return;
     const area=document.getElementById('displayContent');
     const timer=document.getElementById('displayTimer');
     const zoomContent=document.getElementById('displayZoomContent');
-    // The prompt markup can be large. Send it only when it actually changes;
-    // routine scroll/timer updates carry just the lightweight live state.
-    const currentHtml=zoomContent?zoomContent.innerHTML:(area?area.innerHTML:'');
+    // Serializing a large prompt with innerHTML on every scroll event is costly.
+    // renderDisplay() invalidates this cache only when the prompt markup changes.
     const currentTimerHtml=timer?timer.innerHTML:'';
     const currentTimerClass=timer?timer.className:'display-timer';
     const payload={scrollTop:area?area.scrollTop:0,zoom:displayState.zoom,scrolling:displayState.scrolling,speed:displayState.speed,activeItemId:displayState.activeItemId};
-    if(currentHtml!==displayState.lastMirrorHtml){payload.html=currentHtml;displayState.lastMirrorHtml=currentHtml;}
+    if(displayState.lastMirrorHtml===null){
+      const currentHtml=zoomContent?zoomContent.innerHTML:(area?area.innerHTML:'');
+      payload.html=currentHtml;
+      displayState.lastMirrorHtml=currentHtml;
+    }
     if(currentTimerHtml!==displayState.lastMirrorTimerHtml){payload.timerHtml=currentTimerHtml;displayState.lastMirrorTimerHtml=currentTimerHtml;}
     if(currentTimerClass!==displayState.lastMirrorTimerClass){payload.timerClass=currentTimerClass;displayState.lastMirrorTimerClass=currentTimerClass;}
     const commandId=presenterCommandId();
@@ -3649,4 +3785,6 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
 </script>
 </body>
 </html>
+
+
 
