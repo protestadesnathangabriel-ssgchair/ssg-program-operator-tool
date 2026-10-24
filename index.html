@@ -3400,36 +3400,3 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
 </script>
 </body>
 </html>
-
-/* FIX: 9:16 phone layout — hamburger is pinned to the left edge, never centered. */
-@media (max-width: 600px) {
-  header.topbar {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: flex-start !important;
-    align-items: center !important;
-    position: sticky !important;
-    padding: 12px 16px !important;
-    gap: 10px !important;
-  }
-  header.topbar > #ssgMobileNav {
-    display: inline-flex !important;
-    position: static !important;
-    inset: auto !important;
-    transform: none !important;
-    order: 0 !important;
-    flex: 0 0 44px !important;
-    width: 44px !important;
-    height: 44px !important;
-    margin: 0 auto 0 0 !important;
-    align-self: center !important;
-  }
-  header.topbar > div:first-of-type { display: none !important; }
-  header.topbar > #headerActions {
-    display: flex !important;
-    flex: 0 0 auto !important;
-    width: auto !important;
-    margin: 0 0 0 auto !important;
-    justify-content: flex-end !important;
-  }
-}
