@@ -591,6 +591,21 @@
  .guide-row .actions .btn{flex:1}
 }
 
+
+/* UI FIX: keep the sidebar navigation vertical and readable */
+.nav{display:flex!important;flex-direction:column!important;align-items:stretch!important;width:100%;gap:6px!important}
+.nav>button,.nav .lyric-nav-group{width:100%;min-width:0}
+.nav>button{display:flex;align-items:center;justify-content:flex-start;white-space:normal;text-align:left;line-height:1.25}
+.nav .lyric-nav-group{display:flex;flex-direction:column;align-items:stretch}
+.nav .lyric-subnav{display:flex;flex-direction:column;align-items:stretch;padding:4px 0 4px 12px;gap:3px}
+.nav .lyric-subnav button{width:100%;text-align:left;white-space:normal;line-height:1.3}
+.nav button.active{background:#E9EDFC!important;color:#17236F!important;box-shadow:inset 3px 0 0 #244DA0!important}
+@media(max-width:760px){
+ .sidebar{width:min(300px,84vw)!important;padding:20px 16px!important}
+ .nav{display:flex!important;flex-direction:column!important}
+ .nav>button,.nav .lyric-nav-group{width:100%!important}
+}
+
 </style>
 </head>
 <body>
@@ -1165,7 +1180,7 @@ function getStoredAuth(){
           <div class="brand" aria-label="SSG Program Operator Tool"><span>SSG PROGRAM OPERATOR TOOL<small>PROGRAM WORKSPACE</small></span></div>
           <nav class="nav">
             <button data-page="home" class="active" onclick="showPage('home')">Saved Guides</button>
-            <button data-page="editor" onclick="createGuide()">Program Flow</button><button data-page="sequence" onclick="createSequenceGuide()">Program Sequence</button>
+            <button data-page="editor" onclick="createGuide()">Program Flow</button><button data-page="sequence" onclick="createSequenceGuide();setSsgActiveNav('sequence')">Program Sequence</button>
             <div class="lyric-nav-group">
               <button data-page="lyrics" class="lyric-main" onclick="showPage('lyrics')">Lyric Prompter</button>
               <div class="lyric-subnav">
@@ -1216,6 +1231,15 @@ function getStoredAuth(){
     prompt:['Prompt','Open the presenter display and timer/control window for the selected guide.'],
     lyrics:['Lyric Prompter','Prepare text lyrics, preview them, and send them to the lyric prompter display.'],
   };
+
+  function setSsgActiveNav(page){
+    document.querySelectorAll('.nav button').forEach(button=>{
+      const selected=button.dataset.page===page;
+      button.classList.toggle('active',selected);
+      if(selected) button.setAttribute('aria-current','page');
+      else button.removeAttribute('aria-current');
+    });
+  }
 
   function showPage(page){
     state.page=page;
