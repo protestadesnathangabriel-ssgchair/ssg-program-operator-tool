@@ -878,7 +878,19 @@ function getStoredAuth(){
   }
   function handlePresenterChannelMessage(d){
     if(!markPresenterCommand(d.commandId)) return;
-    if(APP_CONFIG.mode==='display'){
+    if(APP_CONFIG.mode==='host'){
+      if(d.type==='guide' && d.guide && String(d.guide.id||'')===String(APP_CONFIG.guideId||'')){
+        // Keep Host View live while preserving its current scroll position.
+        const area=$('displayContent');
+        const oldTop=area?area.scrollTop:0;
+        displayState.guide=d.guide;
+        renderDisplay();
+        applyDisplayZoom();
+        updateHostZoomLabel();
+        const refreshedArea=$('displayContent');
+        if(refreshedArea) refreshedArea.scrollTop=oldTop;
+      }
+    }else if(APP_CONFIG.mode==='display'){
       if(d.type==='guide' && d.guide){
         const oldTop=$('displayContent')?.scrollTop||0;
         displayState.guide=d.guide;
@@ -2662,6 +2674,8 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
 /* DISPLAY */
   const displayState={guide:null,target:'display',scrolling:false,speed:3,zoom:100,raf:null,activeItemId:'',timer:null};
   function initHostView(){
+    // Subscribe to operator edits in other tabs/windows on this GitHub Pages origin.
+    openPresenterChannel();
     const token=getStoredAuth()?.token||'';
     if(!token){
       document.body.innerHTML='<div class="auth-gate"><div class="auth-card"><div class="auth-brand">SSG PROGRAM GUIDE BUILDER<small>HOST VIEW LOCKED</small></div><p class="auth-sub">Host View requires an active signed-in session in this browser.</p></div></div>';
