@@ -179,6 +179,24 @@
         const now=Date.now();
         return snap.docs.map(d=>({uid:d.id,...d.data()})).filter(x=>x.online===true&&x.updatedAt&&typeof x.updatedAt.toMillis==='function'&&(now-x.updatedAt.toMillis())<15000).map(x=>({uid:x.uid,operatorName:x.operatorName||x.email||'Online operator',email:x.email||'',guideId:x.guideId,updatedAt:x.updatedAt?.toMillis?.()||0}));
       }
+      case 'publishGuideDraft': {
+        const {user}=await requireOfficer();
+        const draft=a[0]&&typeof a[0]==='object'?a[0]:{};
+        const guideId=String(draft.id||'');
+        if(!guideId) throw err('Save the guide once before publishing live edits.','GUIDE_ID_REQUIRED');
+        if(String(draft.id)!==guideId) throw err('Invalid live guide identifier.','INVALID_GUIDE_ID');
+        const guideRef=db.collection('guides').doc(guideId);
+        const guideSnap=await guideRef.get();
+        if(!guideSnap.exists) throw err('Save the guide once before publishing live edits.','GUIDE_NOT_FOUND');
+        const state=normalizeGuide(draft);
+        await db.collection('guideLiveDrafts').doc(guideId).set({
+          guideId,
+          state,
+          updatedBy:user.uid,
+          updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+        },{merge:false});
+        return {success:true};
+      }
       case 'saveGuide': {
         const g=normalizeGuide(a[0]||{});
         if(!g.title) throw err('Guide/Event Title is required.');
@@ -302,6 +320,20 @@
         unsubscribe=db.collection('guides').doc(String(guideId)).onSnapshot(snap=>{
           if(!snap.exists){fail(err('This program guide was deleted or is no longer available.','GUIDE_NOT_FOUND'));return;}
           if(typeof onNext==='function')onNext({...snap.data(),id:snap.id});
+        },fail);
+      }).catch(fail);
+      return ()=>{cancelled=true;if(unsubscribe)unsubscribe();};
+    },
+    subscribeGuideDraft:(guideId,onNext,onError)=>{
+      let unsubscribe=null,cancelled=false;
+      const fail=typeof onError==='function'?onError:(e=>console.error('Guide live-draft sync error:',e));
+      Promise.resolve().then(currentAccess).then(()=>{
+        if(cancelled)return;
+        unsubscribe=db.collection('guideLiveDrafts').doc(String(guideId)).onSnapshot(snap=>{
+          if(!snap.exists){if(typeof onNext==='function')onNext(null);return;}
+          const row=snap.data()||{};
+          if(row.guideId!==String(guideId)||!row.state||typeof row.state!=='object'){if(typeof onNext==='function')onNext(null);return;}
+          if(typeof onNext==='function')onNext({...row.state,id:String(guideId),_liveDraftUpdatedAt:row.updatedAt&&typeof row.updatedAt.toMillis==='function'?row.updatedAt.toMillis():0});
         },fail);
       }).catch(fail);
       return ()=>{cancelled=true;if(unsubscribe)unsubscribe();};

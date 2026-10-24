@@ -2197,6 +2197,32 @@ function getStoredAuth(){
     `;
   }
   let guideAutoSaveTimer=null;
+  let guideDraftPublishTimer=null;
+  let guideDraftPublishBusy=false;
+  let guideDraftPublishQueued=false;
+  function scheduleGuideDraftPublish(){
+    if(!state.guide?.id||!state.auth?.token&&!getStoredAuth()?.token)return;
+    clearTimeout(guideDraftPublishTimer);
+    guideDraftPublishTimer=setTimeout(publishGuideDraftNow,120);
+  }
+  function publishGuideDraftNow(){
+    if(!state.guide?.id)return;
+    syncGuide();
+    const snapshot=clone(state.guide);
+    if(!snapshot?.id)return;
+    if(guideDraftPublishBusy){guideDraftPublishQueued=true;return;}
+    guideDraftPublishBusy=true;
+    guideDraftPublishQueued=false;
+    const token=state.auth?.token||getStoredAuth()?.token||'';
+    google.script.run.withSuccessHandler(()=>{
+      guideDraftPublishBusy=false;
+      if(guideDraftPublishQueued){guideDraftPublishQueued=false;publishGuideDraftNow();}
+    }).withFailureHandler(err=>{
+      guideDraftPublishBusy=false;
+      console.warn('Live editor draft publish failed:',err);
+      if(guideDraftPublishQueued){guideDraftPublishQueued=false;publishGuideDraftNow();}
+    }).apiCall('publishGuideDraft',[snapshot],token);
+  }
   let guideAutoSaveBusy=false;
   let guideAutoSaveQueued=false;
   let guideAutoSaveSnapshotHash='';
@@ -2208,6 +2234,7 @@ function getStoredAuth(){
   }
   function scheduleGuideAutoSave(){
     if(!state.guide?.id)return;
+    scheduleGuideDraftPublish();
     clearTimeout(guideAutoSaveTimer);
     updateGuideSaveStatus('Saving…','saving');
     guideAutoSaveTimer=setTimeout(runGuideAutoSave,500);
@@ -3107,10 +3134,11 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
   const displayState={guide:null,target:'display',scrolling:false,speed:3,zoom:100,raf:null,activeItemId:'',timer:null,followUid:'',followUnsubscribe:null,operatorPublishTimer:null};
   let guideLiveUnsubscribe=null;
   function subscribeDisplayedGuide(guideId,mode){
-    if(typeof SSGFirebase?.subscribeGuide!=='function'||!guideId)return;
+    if(!guideId)return;
     if(typeof guideLiveUnsubscribe==='function')guideLiveUnsubscribe();
-    guideLiveUnsubscribe=SSGFirebase.subscribeGuide(guideId,function(guide){
-      if(!guide||!guide.id)return;
+    let savedUnsubscribe=null,draftUnsubscribe=null,hasLiveDraft=false,cancelled=false;
+    const applyGuide=(guide)=>{
+      if(cancelled||!guide||!guide.id)return;
       displayState.guide=guide;
       const area=$('displayContent');
       const previousScroll=area?area.scrollTop:0;
@@ -3120,7 +3148,18 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
         controlState.guide=guide;
         renderControl();
       }else updateHostZoomLabel();
-    },function(error){console.warn('Cross-account guide live sync:',error);});
+    };
+    if(typeof SSGFirebase?.subscribeGuide==='function'){
+      savedUnsubscribe=SSGFirebase.subscribeGuide(guideId,function(guide){
+        if(!hasLiveDraft)applyGuide(guide);
+      },function(error){console.warn('Saved guide live sync:',error);});
+    }
+    if(typeof SSGFirebase?.subscribeGuideDraft==='function'){
+      draftUnsubscribe=SSGFirebase.subscribeGuideDraft(guideId,function(guide){
+        if(guide&&guide.id){hasLiveDraft=true;applyGuide(guide);}
+      },function(error){console.warn('Live editor draft sync:',error);});
+    }
+    guideLiveUnsubscribe=()=>{cancelled=true;if(typeof savedUnsubscribe==='function')savedUnsubscribe();if(typeof draftUnsubscribe==='function')draftUnsubscribe();};
   }
   window.addEventListener('beforeunload',()=>{if(typeof guideLiveUnsubscribe==='function')guideLiveUnsubscribe();if(typeof displayState.followUnsubscribe==='function')displayState.followUnsubscribe();if(displayState.operatorPublishTimer)clearInterval(displayState.operatorPublishTimer);if(APP_CONFIG.mode==='display'&&!new URLSearchParams(location.search).get('viewOnly')){try{google.script.run.withFailureHandler(()=>{}).apiCall('markOperatorOffline',[],getStoredAuth()?.token||'');}catch(e){}}});
   function currentOperatorDisplayState(){const area=$('displayContent');return {activeItemId:displayState.activeItemId||'',scrollTop:area?area.scrollTop:0,zoom:displayState.zoom||100,scrolling:!!displayState.scrolling,speed:displayState.speed||3,timer:displayState.timer||null,target:displayState.target||'display'};}
