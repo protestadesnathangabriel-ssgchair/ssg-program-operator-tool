@@ -733,6 +733,29 @@ button,input,select,textarea{font-family:inherit!important}
  .ssg-type-pill{font-size:9px!important;margin-left:auto!important}
  .ssg-workspace-tip{padding:14px!important;border-radius:13px!important}
 }
+/* Three canonical responsive modes selected from the actual available viewport. */
+html[data-ssg-layout="wide"] .app{--ssg-layout-mode:wide}
+html[data-ssg-layout="classic"] .app{--ssg-layout-mode:classic}
+html[data-ssg-layout="phone"] .app{--ssg-layout-mode:phone}
+@media (min-width:761px){
+ html[data-ssg-layout="wide"] .ssg-tools-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ html[data-ssg-layout="wide"] .ssg-tool-card:last-child{grid-column:auto;min-height:178px}
+ html[data-ssg-layout="classic"] .ssg-tools-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ html[data-ssg-layout="classic"] .ssg-tool-card:last-child{grid-column:span 2;min-height:140px}
+ html[data-ssg-layout="wide"] .ssg-dashboard-columns{grid-template-columns:minmax(0,1.45fr) minmax(280px,.85fr)}
+ html[data-ssg-layout="classic"] .ssg-dashboard-columns{grid-template-columns:minmax(0,1fr)}
+ html[data-ssg-layout="classic"] .ssg-dashboard-columns>section:last-child .ssg-panel-inner{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ html[data-ssg-layout="classic"] .ssg-dashboard-columns>section:last-child .ssg-library-link{margin:0}
+ html[data-ssg-layout="classic"] .ssg-workspace-tip{grid-column:1/-1}
+}
+html[data-ssg-layout="phone"] .app{display:block!important}
+html[data-ssg-layout="phone"] .sidebar{display:none!important}
+html[data-ssg-layout="phone"] .sidebar.ssg-mobile-open{display:flex!important}
+html[data-ssg-layout="phone"] .main{width:100%!important;min-width:0!important}
+html[data-ssg-layout="phone"] .topbar{display:grid!important;grid-template-columns:40px minmax(0,1fr) auto!important;align-items:center!important}
+html[data-ssg-layout="phone"] .topbar h1,html[data-ssg-layout="phone"] .topbar p{display:none!important}
+html[data-ssg-layout="phone"] .ssg-tools-grid{grid-template-columns:minmax(0,1fr)!important}
+html[data-ssg-layout="phone"] .ssg-dashboard-columns{grid-template-columns:minmax(0,1fr)!important}
 </style>
 <style id="ssg-phone-menu-polish">
 .ssg-mobile-return{display:none}
@@ -1359,17 +1382,29 @@ function getStoredAuth(){
     button.setAttribute('aria-label',open?'Close navigation':'Open navigation');
     button.textContent=open?'✕':'☰';
   }
+  function updateSsgLayoutMode(){
+    const w=Math.max(1,document.documentElement.clientWidth||window.innerWidth||1);
+    const h=Math.max(1,window.innerHeight||document.documentElement.clientHeight||1);
+    const ratio=w/h;
+    let mode;
+    if(w<=760 && ratio<1.12) mode='phone';
+    else if(ratio<1.50) mode='classic';
+    else mode='wide';
+    document.documentElement.dataset.ssgLayout=mode;
+    return mode;
+  }
   function setupSsgResponsiveShell(){
     const button=document.getElementById('ssgMobileNav');
     if(!button)return;
     if(!document.getElementById('ssgMobileNavBackdrop')){
       const backdrop=document.createElement('div');backdrop.id='ssgMobileNavBackdrop';backdrop.setAttribute('aria-hidden','true');
-      backdrop.addEventListener('click',()=>{if(window.matchMedia('(max-width:760px)').matches){document.querySelector('.sidebar')?.classList.remove('ssg-mobile-open');button.textContent='☰';button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Open navigation');}});
+      backdrop.addEventListener('click',()=>{if(updateSsgLayoutMode()==='phone'){document.querySelector('.sidebar')?.classList.remove('ssg-mobile-open');button.textContent='☰';button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Open navigation');}});
       document.querySelector('.app')?.appendChild(backdrop);
     }
     const sync=()=>{
+      const mode=updateSsgLayoutMode();
       button.style.display='inline-flex';
-      if(!window.matchMedia('(max-width:760px)').matches){
+      if(mode!=='phone'){
         document.querySelector('.sidebar')?.classList.remove('ssg-mobile-open');
         button.textContent=document.querySelector('.app')?.classList.contains('ssg-sidebar-collapsed')?'☰':'✕';
         button.setAttribute('aria-expanded',String(!document.querySelector('.app')?.classList.contains('ssg-sidebar-collapsed')));
@@ -1382,7 +1417,7 @@ function getStoredAuth(){
     sync();
     window.addEventListener('resize',sync,{passive:true});
     document.querySelectorAll('.sidebar [data-page]').forEach(item=>item.addEventListener('click',()=>{
-      if(window.matchMedia('(max-width:760px)').matches){
+      if(updateSsgLayoutMode()==='phone'){
         document.querySelector('.sidebar')?.classList.remove('ssg-mobile-open');
         button.textContent='☰';button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Open navigation');
       }
