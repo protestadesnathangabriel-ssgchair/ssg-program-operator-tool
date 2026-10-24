@@ -221,6 +221,19 @@
     },
     signOut:()=>auth.signOut(),
     onReady:callback=>authReady.then(callback),
+    // Cross-account real-time subscription for the currently displayed guide.
+    subscribeGuide:(guideId,onNext,onError)=>{
+      let unsubscribe=null, cancelled=false;
+      const fail=typeof onError==='function'?onError:(e=>console.error('Guide live-sync error:',e));
+      Promise.resolve().then(requireOfficer).then(()=>{
+        if(cancelled)return;
+        unsubscribe=db.collection('guides').doc(String(guideId)).onSnapshot(snap=>{
+          if(!snap.exists){fail(err('This program guide was deleted or is no longer available.','GUIDE_NOT_FOUND'));return;}
+          if(typeof onNext==='function')onNext({...snap.data(),id:snap.id});
+        },fail);
+      }).catch(fail);
+      return ()=>{cancelled=true;if(unsubscribe)unsubscribe();};
+    },
     validateCurrentUser:async()=>{const {user,role}=await requireOfficer();return {success:true,role,email:user.email||'',username:user.displayName||user.email,name:user.displayName||user.email,task:''};}
   };
 })();

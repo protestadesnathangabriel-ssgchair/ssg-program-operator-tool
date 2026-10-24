@@ -3046,6 +3046,24 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
   }
 /* DISPLAY */
   const displayState={guide:null,target:'display',scrolling:false,speed:3,zoom:100,raf:null,activeItemId:'',timer:null};
+  let guideLiveUnsubscribe=null;
+  function subscribeDisplayedGuide(guideId,mode){
+    if(typeof SSGFirebase?.subscribeGuide!=='function'||!guideId)return;
+    if(typeof guideLiveUnsubscribe==='function')guideLiveUnsubscribe();
+    guideLiveUnsubscribe=SSGFirebase.subscribeGuide(guideId,function(guide){
+      if(!guide||!guide.id)return;
+      displayState.guide=guide;
+      const area=$('displayContent');
+      const previousScroll=area?area.scrollTop:0;
+      renderDisplay();
+      if(area)area.scrollTop=previousScroll;
+      if(mode==='display'){
+        controlState.guide=guide;
+        renderControl();
+      }else updateHostZoomLabel();
+    },function(error){console.warn('Cross-account guide live sync:',error);});
+  }
+  window.addEventListener('beforeunload',()=>{if(typeof guideLiveUnsubscribe==='function')guideLiveUnsubscribe();});
   function initHostView(){
     // Subscribe to operator edits in other tabs/windows on this GitHub Pages origin.
     openPresenterChannel();
@@ -3058,7 +3076,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     displayState.zoom=100;
     if(APP_CONFIG.guideId){
       google.script.run.withSuccessHandler(function(guide){
-        if(guide&&guide.id){displayState.guide=guide;renderDisplay();updateHostZoomLabel();}
+        if(guide&&guide.id){displayState.guide=guide;renderDisplay();updateHostZoomLabel();subscribeDisplayedGuide(APP_CONFIG.guideId,'host');}
         else{const area=$('displayZoomContent');if(area)area.innerHTML='<div style="color:#fff;padding:12px">Program not found.</div>';}
       }).withFailureHandler(function(err){console.warn('Host View guide load failed:',err);const area=$('displayZoomContent');if(area)area.innerHTML='<div style="color:#fff;padding:12px">Unable to load this program. Please sign in again or reopen Host View.</div>';}).apiCall('getGuide',[APP_CONFIG.guideId],token);
     }else{
@@ -3086,7 +3104,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     // if the initial postMessage arrives before the listener is ready.
     if(APP_CONFIG.guideId){
       google.script.run.withSuccessHandler(function(guide){
-        if(guide&&guide.id){displayState.guide=guide;renderDisplay();controlState.guide=guide;prepareTimers();renderControl();}
+        if(guide&&guide.id){displayState.guide=guide;renderDisplay();controlState.guide=guide;prepareTimers();renderControl();subscribeDisplayedGuide(APP_CONFIG.guideId,'display');}
       }).withFailureHandler(function(err){console.warn('Display guide load failed:',err);}).apiCall('getGuide',[APP_CONFIG.guideId],token);
     }
     setTimeout(()=>{const area=$('displayContent');if(area){area.addEventListener('scroll',()=>sendDisplayMirrorState(),{passive:true});sendDisplayMirrorState();}},250);
