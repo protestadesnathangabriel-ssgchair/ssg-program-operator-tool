@@ -860,6 +860,7 @@ function getStoredAuth(){
   function sendLyricDisplayReady(){ sendLyricChannel('ready'); }
 
   function openPresenterChannel(){
+    if(presenterChannel)return;
     try{
       presenterChannel = new BroadcastChannel(PRESENTER_CHANNEL_NAME);
       presenterChannel.onmessage = function(ev){
@@ -878,7 +879,15 @@ function getStoredAuth(){
   function handlePresenterChannelMessage(d){
     if(!markPresenterCommand(d.commandId)) return;
     if(APP_CONFIG.mode==='display'){
-      if(d.type==='targetState' && d.target){
+      if(d.type==='guide' && d.guide){
+        const oldTop=$('displayContent')?.scrollTop||0;
+        displayState.guide=d.guide;
+        renderDisplay();
+        controlState.guide=d.guide;
+        prepareTimers();
+        renderControl();
+        const area=$('displayContent');if(area)area.scrollTop=oldTop;
+      }else if(d.type==='targetState' && d.target){
         displayState.target=d.target; updateDisplayTarget();
       }else if(d.type==='timerState'){
         displayState.timer=d.payload; renderDisplayTimer();
@@ -1404,8 +1413,8 @@ function getStoredAuth(){
     setupSequenceMediaPicker(wrap);
     return wrap;
   }
-  function addSequenceItem(){syncSequenceGuide();state.guide.sections[0].items.push(sequenceItem(state.guide.sections[0].items.length));renderSequenceItems();renderSequencePreview();scheduleGuideAutoSave();}
-  function removeSequenceItem(id){syncSequenceGuide();state.guide.sections[0].items=state.guide.sections[0].items.filter(i=>i.id!==id);renderSequenceItems();renderSequencePreview();scheduleGuideAutoSave();}
+  function addSequenceItem(){syncSequenceGuide();state.guide.sections[0].items.push(sequenceItem(state.guide.sections[0].items.length));renderSequenceItems();renderSequencePreview();broadcastGuideToPresenter();scheduleGuideAutoSave();}
+  function removeSequenceItem(id){syncSequenceGuide();state.guide.sections[0].items=state.guide.sections[0].items.filter(i=>i.id!==id);renderSequenceItems();renderSequencePreview();broadcastGuideToPresenter();scheduleGuideAutoSave();}
   function renderSequencePreview(){
     const box=$('sequencePreviewBody'); if(!box||!state.guide)return;
     const g=state.guide, items=sequenceItems(g);
@@ -1803,10 +1812,15 @@ function getStoredAuth(){
 
 function broadcastGuideToPresenter(){
     if(!state.guide)return;
-    [state.displayWindow,state.controlWindow].forEach(win=>{try{if(win&&!win.closed)win.postMessage({ssgPresenter:true,type:'guide',guide:clone(state.guide),commandId:presenterCommandId()},'*');}catch(err){}});
+    const guide=clone(state.guide);
+    const commandId=presenterCommandId();
+    // Same-origin windows receive updates even if opener references are unavailable.
+    sendPresenterChannel({type:'guide',guide,commandId});
+    [state.displayWindow,state.controlWindow].forEach(win=>{try{if(win&&!win.closed)win.postMessage({ssgPresenter:true,type:'guide',guide:clone(guide),commandId},'*');}catch(err){}});
   }
 
   function setupLivePreviewListener(){
+    if(APP_CONFIG.mode==='main')openPresenterChannel();
     // Bind once at document level so replacing #page-editor with a template or
     // re-rendering a saved guide can never orphan the preview/autosave listener.
     if(document.documentElement.dataset.guideEditorEventsBound==='1')return;
