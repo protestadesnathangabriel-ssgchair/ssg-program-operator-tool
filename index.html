@@ -1314,6 +1314,7 @@ function getStoredAuth(){
     if(btn){btn.disabled=true;btn.textContent='Signing in...';}
     try {
       const auth = await window.SSGFirebase.signIn();
+      if(auth&&auth.redirecting)return;
       storeAuth(auth);
       startAuthenticatedApp();
     } catch(err) {
@@ -1604,7 +1605,23 @@ function getStoredAuth(){
       list.innerHTML=rows.map(op=>`<div class="operator-follow-row"><div><strong>${esc(op.operatorName)}</strong><div style="font-size:11px;color:#657180">${esc(op.email||'Approved operator')} · Online</div></div><button class="btn primary small" type="button" onclick="followOnlineOperator('${escAttr(guideId)}','${escAttr(op.uid)}')">Follow</button></div>`).join('');
     },err=>{list.innerHTML='<div class="operator-follow-empty">Could not load online operators. Please refresh and try again.</div>';console.warn(err);});
   }
-  function followOnlineOperator(guideId,uid){closeOperatorFollowModal();const base=state.bootstrap?.appUrl||APP_CONFIG.appUrl||'';if(!base){showToast('App URL is not ready yet.');return;}const win=window.open(base+'?mode=display&viewOnly=1&guideId='+encodeURIComponent(guideId)+'&followUid='+encodeURIComponent(uid),'SSG_PROGRAM_FOLLOW_OPERATOR','popup=yes,resizable=yes,scrollbars=yes,width=1280,height=800');try{if(win&&!win.closed)win.focus();}catch(err){}}
+  // Mobile browsers commonly turn window.open() into a new tab instead of a popup.
+  // On phones/tablets, keep the prompter in the current tab; desktop keeps popup windows.
+  function isPhoneOrTablet(){
+    const ua=String(navigator.userAgent||'');
+    const appleTablet=navigator.platform==='MacIntel'&&Number(navigator.maxTouchPoints||0)>1;
+    const touch=Number(navigator.maxTouchPoints||0)>1;
+    const coarse=!!(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches);
+    return /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua)||appleTablet||(touch&&coarse);
+  }
+  function openPrompterDestination(url,name,features){
+    if(isPhoneOrTablet()){
+      window.location.assign(url);
+      return {sameTab:true,window:null};
+    }
+    return {sameTab:false,window:window.open(url,name,features)};
+  }
+  function followOnlineOperator(guideId,uid){closeOperatorFollowModal();const base=state.bootstrap?.appUrl||APP_CONFIG.appUrl||'';if(!base){showToast('App URL is not ready yet.');return;}const url=base+'?mode=display&viewOnly=1&guideId='+encodeURIComponent(guideId)+'&followUid='+encodeURIComponent(uid);const opened=openPrompterDestination(url,'SSG_PROGRAM_FOLLOW_OPERATOR','popup=yes,resizable=yes,scrollbars=yes,width=1280,height=800');if(opened.sameTab)return;try{if(opened.window&&!opened.window.closed)opened.window.focus();}catch(err){}}
 
   function submitOfficerRequest(){
     const name=String(document.getElementById('officerRequestName')?.value||'').trim();
@@ -2815,7 +2832,9 @@ function broadcastGuideToPresenter(){
     sendLyricChannel('state',payload);
 
     if(!state.lyrics.displayWindow||state.lyrics.displayWindow.closed){
-      state.lyrics.displayWindow=window.open(base+'?mode=lyric-display','SSG_LYRIC_PROMPTER','popup=yes,resizable=yes,scrollbars=no,width=1400,height=800');
+      const opened=openPrompterDestination(base+'?mode=lyric-display','SSG_LYRIC_PROMPTER','popup=yes,resizable=yes,scrollbars=no,width=1400,height=800');
+      if(opened.sameTab){state.lyrics.displayWindow=null;return;}
+      state.lyrics.displayWindow=opened.window;
       if(!state.lyrics.displayWindow){showToast('The prompter window was blocked. Please allow pop-ups for this site.');return;}
     }
 
@@ -3122,8 +3141,8 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     const base=state.bootstrap?.appUrl||APP_CONFIG.appUrl||'';
     if(!base){showToast('App URL is not ready yet.');return;}
     const features='popup=yes,resizable=yes,scrollbars=yes,width=1100,height=850';
-    const win=window.open(base+'?mode=host&guideId='+encodeURIComponent(guide.id),'SSG_PROGRAM_HOST_VIEW',features);
-    try{if(win&&!win.closed)win.focus();}catch(err){}
+    const opened=openPrompterDestination(base+'?mode=host&guideId='+encodeURIComponent(guide.id),'SSG_PROGRAM_HOST_VIEW',features);
+    if(!opened.sameTab){try{if(opened.window&&!opened.window.closed)opened.window.focus();}catch(err){}}
     showToast('Opening Host View — scrollable program prompt only.');
   }
   function openPromptForGuide(guide){
@@ -3133,8 +3152,10 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     const base=state.bootstrap.appUrl;
     state.promptTarget='display';
     state.controlWindow=null;
-    const features='popup=yes,resizable=yes,scrollbars=yes';
-    state.displayWindow=window.open(base+'?mode=display&guideId='+encodeURIComponent(guide.id),'SSG_PROGRAM_DISPLAY',features+',width=1280,height=800');
+    const features='popup=yes,resizable=yes,scrollbars=yes,width=1280,height=800';
+    const opened=openPrompterDestination(base+'?mode=display&guideId='+encodeURIComponent(guide.id),'SSG_PROGRAM_DISPLAY',features);
+    if(opened.sameTab){state.displayWindow=null;return;}
+    state.displayWindow=opened.window;
     try{ if(state.displayWindow&&!state.displayWindow.closed) state.displayWindow.focus(); }catch(err){}
     setTimeout(()=>{
       sendPresenterState(state.displayWindow);
@@ -3242,7 +3263,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
       document.body.innerHTML='<div class="auth-gate"><div class="auth-card"><div class="auth-brand">SSG PROGRAM GUIDE BUILDER<small>HOST VIEW LOCKED</small></div><p class="auth-sub">Host View requires an active signed-in session in this browser.</p></div></div>';
       return;
     }
-    document.body.innerHTML=`<div class="host-shell"><div class="host-toolbar"><div class="host-toolbar-title">PROGRAM PROMPT · HOST VIEW</div><div class="host-zoom-controls"><button type="button" onclick="changeHostZoom(-10)" aria-label="Zoom out">−</button><span id="hostZoomValue" class="host-zoom-value">100%</span><button type="button" onclick="changeHostZoom(10)" aria-label="Zoom in">+</button><button type="button" onclick="setHostZoom(100)">Reset</button></div></div><main class="display-main host-main"><div id="displayContent" class="display-scroll host-scroll"><div id="displayZoomContent" class="display-zoom-content"><div style="font-size:14px;color:#aaa">Loading program...</div></div></div></main></div>`;
+    document.body.innerHTML=`<div class="host-shell"><div class="host-toolbar"><div class="host-toolbar-title">PROGRAM PROMPT · HOST VIEW</div><div class="host-zoom-controls"><button type="button" onclick="changeHostZoom(-10)" aria-label="Zoom out">−</button><span id="hostZoomValue" class="host-zoom-value">100%</span><button type="button" onclick="changeHostZoom(10)" aria-label="Zoom in">+</button><button type="button" onclick="setHostZoom(100)">Reset</button><button type="button" onclick="exitHostView()" aria-label="Exit Host View" title="Back to main site">←</button></div></div><main class="display-main host-main"><div id="displayContent" class="display-scroll host-scroll"><div id="displayZoomContent" class="display-zoom-content"><div style="font-size:14px;color:#aaa">Loading program...</div></div></div></main></div>`;
     displayState.zoom=100;
     // Keep Host View keyboard controls consistent with the other prompters.
     window.addEventListener('keydown',function(e){
@@ -3260,6 +3281,10 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     }else{
       const area=$('displayZoomContent');if(area)area.innerHTML='<div style="color:#fff;padding:12px">No program selected.</div>';
     }
+  }
+  function exitHostView(){
+    const base=String(APP_CONFIG.appUrl||location.origin+location.pathname).split('?')[0];
+    window.location.assign(base);
   }
   function changeHostZoom(delta){setHostZoom(displayState.zoom+delta);}
   function setHostZoom(value){
