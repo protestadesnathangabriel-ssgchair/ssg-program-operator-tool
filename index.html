@@ -211,6 +211,9 @@
     .display-shell{height:100vh;background:#000;color:#fff;overflow:hidden;display:grid;grid-template-columns:minmax(0,65fr) minmax(0,35fr);position:relative}
     .display-main{min-width:0;height:100vh;position:relative;background:#000}
     .display-scroll{height:100%;overflow:auto;padding:6vh 7vw 30vh 0.7in;scroll-behavior:smooth}
+    /* Prompter displays: hide visual scrollbars while preserving wheel, touch, and keyboard scrolling. */
+    .display-shell .display-scroll,.host-shell .host-scroll,.lyric-display-shell .lyric-display-scroll,.lyric-screen .lyric-screen-scroll{scrollbar-width:none;-ms-overflow-style:none}
+    .display-shell .display-scroll::-webkit-scrollbar,.host-shell .host-scroll::-webkit-scrollbar,.lyric-display-shell .lyric-display-scroll::-webkit-scrollbar,.lyric-screen .lyric-screen-scroll::-webkit-scrollbar{display:none;width:0;height:0}
     .display-title{font-size:clamp(22px,3vw,46px);font-weight:800;margin:0 0 7vh;line-height:1.08}
     .display-section{margin-bottom:7vh}.display-section-title{display:block;background:#f3c400;color:#111;font-weight:900;font-size:clamp(18px,2.1vw,36px);padding:12px 18px;margin-bottom:24px;letter-spacing:.2px}
     .sequence-prompt-display{background:#000}
@@ -2748,7 +2751,7 @@ function broadcastGuideToPresenter(){
     state.lyrics.scrolling=true;
     let pos=el.scrollTop;
     let last=performance.now();
-    const speedTable=[22,36,54,76,104,138,178,226,284];
+    const speedTable=[18,28,40,54,70,88,108,128,150];
     const loop=(now)=>{
       if(!state.lyrics.scrolling)return;
       const area=$('lyricPreviewScroll');if(!area){stopLyricScroll();return;}
@@ -3433,7 +3436,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     } else { el.scrollIntoView({behavior:'smooth',block:'center'}); }
   }
   function toggleDisplayScroll(){displayState.scrolling=!displayState.scrolling; if(displayState.scrolling)startDisplayScroll(); else stopDisplayScroll();}
-  function startDisplayScroll(){stopDisplayScroll();displayState.scrolling=true;sendDisplayMirrorState();const speedSteps=[9,21,39,66,108,168,252,372,510];let lastFrame=0,lastSync=0;const loop=(now)=>{if(!displayState.scrolling)return;const area=$('displayContent');if(area){const dt=lastFrame?Math.max(0,now-lastFrame):0;lastFrame=now;const speed=speedSteps[Math.max(1,Math.min(9,Number(displayState.speed)||1)-1)];area.scrollTop+=speed*dt/1000;if(now-lastSync>1000){lastSync=now;sendDisplayMirrorState();}}displayState.raf=requestAnimationFrame(loop)};displayState.raf=requestAnimationFrame(loop)}
+  function startDisplayScroll(){stopDisplayScroll();displayState.scrolling=true;sendDisplayMirrorState();const speedSteps=[8,14,22,32,45,62,84,112,180];let lastFrame=0,lastSync=0;const loop=(now)=>{if(!displayState.scrolling)return;const area=$('displayContent');if(area){const dt=lastFrame?Math.max(0,now-lastFrame):0;lastFrame=now;const speed=speedSteps[Math.max(1,Math.min(9,Number(displayState.speed)||1)-1)];area.scrollTop+=speed*dt/1000;if(now-lastSync>1000){lastSync=now;sendDisplayMirrorState();}}displayState.raf=requestAnimationFrame(loop)};displayState.raf=requestAnimationFrame(loop)}
   function stopDisplayScroll(){if(displayState.raf)cancelAnimationFrame(displayState.raf);displayState.raf=null;sendDisplayMirrorState();}
   function sendDisplayMirrorState(){
     if(new URLSearchParams(location.search).get('viewOnly')==='1')return;
