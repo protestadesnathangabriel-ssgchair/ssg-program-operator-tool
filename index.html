@@ -1620,9 +1620,12 @@ function getStoredAuth(){
     const dateEl=document.getElementById('ssgDashboardClockDate');
     if(!timeEl||!dateEl)return;
     const now=new Date();
-    timeEl.textContent=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
-    const day=now.toLocaleDateString('en-GB',{weekday:'long'});
-    const date=now.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+    const timeOptions={timeZone:'Asia/Manila',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h12'};
+    const time=now.toLocaleTimeString('en-US',timeOptions).replace(/\s?(AM|PM)$/,' $1');
+    timeEl.textContent=`${time} PHT (UTC+8)`;
+    const dateOptions={timeZone:'Asia/Manila'};
+    const day=now.toLocaleDateString('en-US',{...dateOptions,weekday:'long'});
+    const date=now.toLocaleDateString('en-GB',{...dateOptions,day:'2-digit',month:'long',year:'numeric'});
     dateEl.textContent=`${date}, ${day}`;
   }
 
