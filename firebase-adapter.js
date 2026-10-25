@@ -305,19 +305,10 @@
   window.google=window.google||{};
   window.google.script=window.google.script||{};
   Object.defineProperty(window.google.script,'run',{configurable:true,get:makeRunner});
-  function useSameTabGoogleSignIn(){
-    const ua=String(navigator.userAgent||'');
-    const appleTablet=navigator.platform==='MacIntel'&&Number(navigator.maxTouchPoints||0)>1;
-    const touch=Number(navigator.maxTouchPoints||0)>1;
-    const coarse=!!(window.matchMedia&&window.matchMedia('(pointer: coarse)').matches);
-    return /Android|iPhone|iPad|iPod|Mobile|Tablet/i.test(ua)||appleTablet||(touch&&coarse);
-  }
   window.SSGFirebase={
+    // Keep the known-working Firebase popup sign-in flow. Redirect sign-in on
+    // GitHub Pages can fail on mobile browsers that block third-party storage.
     signIn:async()=>{
-      if(useSameTabGoogleSignIn()){
-        await auth.signInWithRedirect(provider);
-        return {redirecting:true};
-      }
       await auth.signInWithPopup(provider);
       const {user,role}=await currentAccess();
       return {success:true,token:user.uid,role,email:user.email||'',username:user.displayName||user.email,name:user.displayName||user.email,task:''};

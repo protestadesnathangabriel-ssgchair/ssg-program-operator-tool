@@ -1314,7 +1314,6 @@ function getStoredAuth(){
     if(btn){btn.disabled=true;btn.textContent='Signing in...';}
     try {
       const auth = await window.SSGFirebase.signIn();
-      if(auth&&auth.redirecting)return;
       storeAuth(auth);
       startAuthenticatedApp();
     } catch(err) {
