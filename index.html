@@ -181,6 +181,18 @@
 
     /* SSG ACCOUNT AUTHENTICATION */
     .auth-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:22px;background:linear-gradient(135deg,#f5f7fa 0%,#eef3f8 100%)}
+    /* Branded startup screen: shown while Firebase restores the current session. */
+    .boot-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden;color:#fff;background:radial-gradient(ellipse at 50% 35%,#124d7b 0%,#082b4c 42%,#061625 100%);position:relative}
+    .boot-screen:before,.boot-screen:after{content:;position:absolute;width:340px;height:340px;border:1px solid rgba(243,196,0,.12);border-radius:50%;pointer-events:none}
+    .boot-screen:before{transform:translate(-190px,-150px);box-shadow:0 0 0 36px rgba(243,196,0,.025),0 0 0 72px rgba(243,196,0,.02)}.boot-screen:after{transform:translate(210px,180px);width:220px;height:220px}
+    .boot-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;animation:bootFadeIn .55s ease-out both}
+    .boot-emblem{width:76px;height:76px;border-radius:23px;display:grid;place-items:center;background:linear-gradient(145deg,#ffdc45,#e9b600);color:#082b4c;font-size:27px;font-weight:1000;letter-spacing:-2px;box-shadow:0 10px 36px rgba(243,196,0,.22);position:relative}
+    .boot-emblem:after{content:;position:absolute;inset:-7px;border:1px solid rgba(255,220,69,.35);border-radius:28px}
+    .boot-title{font-size:clamp(19px,3vw,25px);font-weight:900;letter-spacing:1.5px;line-height:1.2}.boot-subtitle{font-size:10px;font-weight:700;letter-spacing:3px;color:#b8cddd;margin-top:-8px}
+    .boot-loader{width:140px;height:3px;background:rgba(255,255,255,.16);border-radius:10px;overflow:hidden;margin-top:8px}.boot-loader span{display:block;width:42%;height:100%;border-radius:10px;background:#f3c400;animation:bootProgress 1.35s ease-in-out infinite}
+    .boot-status{font-size:11px;color:#b8cddd;letter-spacing:.5px}
+    @keyframes bootProgress{0%{transform:translateX(-110%)}100%{transform:translateX(350%)}}@keyframes bootFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @media(prefers-reduced-motion:reduce){.boot-content{animation:none}.boot-loader span{animation:none;width:65%}}
     .auth-card{width:min(460px,100%);background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 60px rgba(7,55,99,.12);padding:28px}
     .auth-brand{font-size:21px;font-weight:900;color:var(--blue);line-height:1.15}.auth-brand small{display:block;margin-top:5px;color:var(--muted);font-size:10px;letter-spacing:.6px}
     .auth-sub{margin:11px 0 20px;color:var(--muted);font-size:12px;line-height:1.5}.auth-mode{border:1px solid var(--line);border-radius:11px;padding:15px;margin-top:11px}.auth-mode h3{margin:0 0 5px;color:#1f2933;font-size:13px}.auth-mode p{margin:0 0 10px;color:var(--muted);font-size:11px;line-height:1.45}.auth-input{margin-bottom:8px}.auth-note{margin-top:12px;font-size:10px;color:#7a848f;line-height:1.45}.auth-error{display:none;margin-top:10px;background:#fff1f1;border:1px solid #efc4c6;color:#9b2117;border-radius:8px;padding:9px 10px;font-size:11px;line-height:1.4}.auth-error.show{display:block}
@@ -238,6 +250,7 @@
     .host-scroll{display:block;flex:1 1 0;min-height:0;height:0!important;max-height:100%;box-sizing:border-box;overflow-y:scroll!important;overflow-x:auto!important;padding:0.5in;scroll-behavior:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
     .host-scroll .display-zoom-content{display:flow-root;width:100%;min-width:0;transform-origin:top left}
     @media(max-width:600px){.host-toolbar{align-items:flex-start;flex-direction:column}.host-scroll{padding:20px}}
+    @media(min-width:1100px){.host-exit-button{display:none!important}}
 
     /* CONTROL WINDOW */
     .control-shell{min-height:100vh;height:100vh;background:#f4f6f8;color:var(--text);display:flex;overflow:hidden}.control-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;width:100%;height:100%}.control-left{min-width:0;min-height:0;display:grid;grid-template-rows:25% 75%;overflow:hidden;background:#f4f6f8}.control-timer-pane{min-height:0;background:#050505;border-right:1px solid #252525;border-bottom:1px solid #252525;padding:clamp(8px,1.2vw,18px);display:flex;align-items:center;justify-content:center;overflow:hidden}.control-timer-pane .display-timer{margin:0;width:100%;height:100%;max-width:none;padding:clamp(8px,1vw,16px);display:flex;flex-direction:column;justify-content:center;box-sizing:border-box;color:#fff}.control-timer-pane .display-timer-small{color:#fff;font-size:clamp(10px,1.2vh,16px);line-height:1.1}.control-timer-pane .display-timer-name{color:#fff;font-size:clamp(12px,2vh,24px);line-height:1.15;margin-top:clamp(2px,.6vh,6px)}.control-timer-pane .display-timer-clock{color:#fff;font-size:clamp(24px,6vh,76px);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:clamp(6px,1vh,12px)}.control-timer-pane .display-overtime{font-size:clamp(9px,1.2vh,13px);padding:clamp(3px,.6vh,7px);margin-top:clamp(3px,.6vh,7px)}.control-control-pane{min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}.control-top{flex:0 0 auto;z-index:20;background:#fff;border-bottom:1px solid var(--line);padding:10px 12px;display:flex;justify-content:space-between;gap:8px;align-items:center}.control-top h2{font-size:14px;margin:0;color:var(--blue)}.control-target{font-size:10px;font-weight:800;color:#55616d}.control-list{flex:1;min-width:0;min-height:0;overflow:auto;padding:12px;max-width:none;margin:0}.control-preview-pane{min-width:0;min-height:0;background:#000;border-left:1px solid #252525;overflow:hidden;position:relative}.control-preview-screen{width:100%;height:100%;position:relative;background:#000;overflow:hidden}.control-preview-screen .display-shell{width:100%;height:100%;grid-template-columns:minmax(0,65fr) minmax(0,35fr)}.control-preview-screen .display-main{height:100%;min-height:0}.control-preview-screen .display-scroll{height:100%;overflow:auto}.control-preview-screen .display-side{height:100%;min-height:0}.control-preview-screen .display-controls,.control-preview-screen .display-key{display:none}.control-hint{flex:0 0 auto;padding:7px 10px;color:var(--muted);font-size:9px;text-align:center;background:#f4f6f8;border-top:1px solid var(--line)}.control-section{background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:12px;overflow:hidden}.control-section-head{padding:10px 12px;background:var(--yellow);font-weight:900}.control-section-time{font-size:10px;color:#3b3b3b;margin-top:3px}.control-item{padding:11px 12px;border-top:1px solid var(--line)}.control-item-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.control-item-title{font-weight:800;font-size:12px;line-height:1.35;flex:1}.control-timer{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums;white-space:pre-line;overflow-wrap:anywhere;text-align:right;line-height:1.05}.control-timer.warn{color:var(--red);animation:blinkWarn .55s steps(1,end) infinite}.control-timer.overtime{color:var(--red)}.control-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.control-actions button{border:1px solid var(--line);background:#fff;border-radius:6px;padding:6px 9px;font-size:10px;font-weight:900}.control-actions .start{color:var(--green);border-color:#abd6ba}.control-actions .pause{color:#8a6000;border-color:#ecd388}.control-actions .end{color:var(--red);border-color:#efb9bd}.control-overtime{display:none;background:var(--red);color:#fff;font-size:10px;font-weight:900;text-align:center;padding:5px;margin-top:8px;border-radius:5px}.control-overtime.show{display:block}
@@ -826,7 +839,7 @@ html[data-ssg-layout="phone"] .ssg-dashboard-columns{grid-template-columns:minma
   })();
 </script>
 
-<div id="mainApp"></div>
+<div id="mainApp"><div class="boot-screen" role="status" aria-live="polite"><div class="boot-content"><div class="boot-emblem">SSG</div><div class="boot-title">PROGRAM OPERATOR TOOL</div><div class="boot-subtitle">PROGRAM GUIDE BUILDER</div><div class="boot-loader" aria-hidden="true"><span></span></div><div class="boot-status">Preparing your workspace…</div></div></div></div>
 <div id="toast" class="toast"></div>
 
 <script>
@@ -1284,10 +1297,15 @@ function getStoredAuth(){
   /* MAIN APP */
   function initMain(){
     openLyricChannel();
-    showLoginGate();
+    showBootLoader();
     tryRestoreSession();
     window.addEventListener('message', onPresenterMessage);
     window.addEventListener('message', function(e){const d=e.data||{};if(!d||d.ssgLyric!==true)return;if(d.type==='navigate'){const direction=d.direction||d.payload?.direction||'';if(direction==='prev')prevLyricBlock();if(direction==='next')nextLyricBlock();}if(d.type==='settings')applyLyricRemoteSettings(d.settings||d.payload||{});});
+  }
+
+  function showBootLoader(){
+    document.body.classList.add('auth-locked');
+    $('mainApp').innerHTML='<div class="boot-screen" role="status" aria-live="polite"><div class="boot-content"><div class="boot-emblem">SSG</div><div class="boot-title">PROGRAM OPERATOR TOOL</div><div class="boot-subtitle">PROGRAM GUIDE BUILDER</div><div class="boot-loader" aria-hidden="true"><span></span></div><div class="boot-status">Preparing your workspace…</div></div></div>';
   }
 
   function showLoginGate(errorMessage){
@@ -1325,7 +1343,7 @@ function getStoredAuth(){
 
   function tryRestoreSession(){
     window.SSGFirebase.onReady(async user => {
-      if(!user) return;
+      if(!user){ showLoginGate(); return; }
       try {
         const session = await window.SSGFirebase.validateCurrentUser();
         if(session && session.success){
@@ -1434,6 +1452,7 @@ function getStoredAuth(){
     else{open=app.classList.contains('ssg-sidebar-collapsed');app.classList.toggle('ssg-sidebar-collapsed',!open);}
     button.setAttribute('aria-expanded',String(open));
     button.setAttribute('aria-label',open?'Close navigation':'Open navigation');
+    button.classList.toggle('is-open',!!open);
     button.textContent=open?'✕':'☰';
   }
   function updateSsgLayoutMode(){
@@ -1452,7 +1471,7 @@ function getStoredAuth(){
     if(!button)return;
     if(!document.getElementById('ssgMobileNavBackdrop')){
       const backdrop=document.createElement('div');backdrop.id='ssgMobileNavBackdrop';backdrop.setAttribute('aria-hidden','true');
-      backdrop.addEventListener('click',()=>{if(updateSsgLayoutMode()==='phone'){document.querySelector('.sidebar')?.classList.remove('ssg-mobile-open');button.textContent='☰';button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Open navigation');}});
+      backdrop.addEventListener('click',()=>{if(updateSsgLayoutMode()==='phone'){document.querySelector('.sidebar')?.classList.remove('ssg-mobile-open');button.textContent='☰';button.classList.remove('is-open');button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Open navigation');}});
       document.querySelector('.app')?.appendChild(backdrop);
     }
     const sync=()=>{
@@ -1460,12 +1479,14 @@ function getStoredAuth(){
       button.style.display='inline-flex';
       if(mode!=='phone'){
         document.querySelector('.sidebar')?.classList.remove('ssg-mobile-open');
-        button.textContent=document.querySelector('.app')?.classList.contains('ssg-sidebar-collapsed')?'☰':'✕';
-        button.setAttribute('aria-expanded',String(!document.querySelector('.app')?.classList.contains('ssg-sidebar-collapsed')));
+        const open=!document.querySelector('.app')?.classList.contains('ssg-sidebar-collapsed');
+        button.textContent=open?'✕':'☰';
+        button.classList.toggle('is-open',open);
+        button.setAttribute('aria-expanded',String(open));
       }else{
         document.querySelector('.app')?.classList.remove('ssg-sidebar-collapsed');
         const open=!!document.querySelector('.sidebar')?.classList.contains('ssg-mobile-open');
-        button.textContent=open?'✕':'☰';button.setAttribute('aria-expanded',String(open));
+        button.textContent=open?'✕':'☰';button.classList.toggle('is-open',open);button.setAttribute('aria-expanded',String(open));
       }
     };
     sync();
@@ -1473,7 +1494,7 @@ function getStoredAuth(){
     document.querySelectorAll('.sidebar [data-page]').forEach(item=>item.addEventListener('click',()=>{
       if(updateSsgLayoutMode()==='phone'){
         document.querySelector('.sidebar')?.classList.remove('ssg-mobile-open');
-        button.textContent='☰';button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Open navigation');
+        button.textContent='☰';button.classList.remove('is-open');button.setAttribute('aria-expanded','false');button.setAttribute('aria-label','Open navigation');
       }
     }));
   }
@@ -2546,7 +2567,38 @@ function broadcastGuideToPresenter(){
     safeRun('getGuide',[id],guide=>{
       const count=String(buildText(guide)||'').length;const fs=count>10000?10:count>7500?11:count>5000?12:count>3000?13:count>1500?14:15;
       const docContent=buildGoogleDocsTwoColumnMarkup(guide,fs);
-      const docHtml=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(guide.title||'Program Guide')}</title>${exportGuideStyles()}<style>.export-render{column-count:unset!important}.export-doc-columns{width:100%;table-layout:fixed;border-collapse:collapse}.export-doc-columns td{width:50%;vertical-align:top}.export-doc-columns .preview-section,.export-doc-columns .preview-item,.export-doc-columns .sequence-preview-take{break-inside:avoid;page-break-inside:avoid}</style></head><body>${docContent}</body></html>`;
+      const docHtml=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(guide.title||'Program Guide')}</title>${exportGuideStyles()}<style>.export-render{column-count:unset!important}.export-doc-columns{width:100%;table-layout:fixed;border-collapse:collapse}.export-doc-columns td{width:50%;vertical-align:top}.export-doc-columns .preview-section,.export-doc-columns .preview-item,.export-doc-columns .sequence-preview-take{break-inside:avoid;page-break-inside:avoid}
+
+/* SSG motion polish: smooth navigation drawer, hamburger morph, and page transitions. */
+@keyframes ssgPageEnter{from{opacity:0;transform:translateY(10px) scale(.995)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes ssgNavItemEnter{from{opacity:0;transform:translateX(-9px)}to{opacity:1;transform:translateX(0)}}
+@keyframes ssgMenuIconPop{0%{transform:rotate(-12deg) scale(.92)}65%{transform:rotate(5deg) scale(1.04)}100%{transform:rotate(0) scale(1)}}
+.page.active{animation:ssgPageEnter .28s cubic-bezier(.2,.7,.2,1) both;will-change:opacity,transform}
+#ssgMobileNav{transform-origin:center;transition:transform .24s cubic-bezier(.2,.7,.2,1),background .2s,border-color .2s,box-shadow .2s!important}
+#ssgMobileNav.is-open{background:#EEF1FC!important;border-color:#C9D2F2!important;box-shadow:0 5px 15px rgba(23,35,111,.12)!important;animation:ssgMenuIconPop .24s ease both}
+.sidebar{transition:flex-basis .28s cubic-bezier(.2,.7,.2,1),width .28s cubic-bezier(.2,.7,.2,1),padding .28s ease,opacity .2s ease,transform .28s cubic-bezier(.2,.7,.2,1),visibility .28s!important}
+.nav>button,.nav .lyric-nav-group{animation:ssgNavItemEnter .24s ease both}
+.nav>button:nth-child(1){animation-delay:.025s}.nav>button:nth-child(2){animation-delay:.05s}.nav>button:nth-child(3){animation-delay:.075s}.nav .lyric-nav-group{animation-delay:.10s}.nav>button:nth-last-child(1){animation-delay:.13s}
+.nav button{transition:background .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease!important}
+.nav button:hover{transform:translateX(2px)}
+.ssg-tool-card,.btn{transition:transform .18s ease,box-shadow .18s ease,background .18s ease,border-color .18s ease!important}
+.btn:hover{transform:translateY(-1px)}
+@media(min-width:761px){
+ .app.ssg-sidebar-collapsed .sidebar{display:flex!important;flex:0 0 0!important;width:0!important;min-width:0!important;padding-left:0!important;padding-right:0!important;border-right-width:0!important;opacity:0;transform:translateX(-12px);visibility:hidden;pointer-events:none;overflow:hidden!important}
+ .app:not(.ssg-sidebar-collapsed) .sidebar{opacity:1;transform:translateX(0);visibility:visible}
+}
+@media(max-width:760px){
+ .sidebar{display:flex!important;position:fixed!important;z-index:1000!important;inset:0 auto 0 0!important;width:min(300px,86vw)!important;height:100dvh!important;overflow-y:auto!important;transform:translateX(-105%);visibility:hidden;pointer-events:none;box-shadow:20px 0 55px rgba(23,35,111,.2)!important;transition:transform .28s cubic-bezier(.2,.7,.2,1),visibility .28s ease!important}
+ .sidebar.ssg-mobile-open{display:flex!important;transform:translateX(0)!important;visibility:visible!important;pointer-events:auto!important}
+ #ssgMobileNavBackdrop{display:block!important;position:fixed!important;inset:0!important;z-index:999!important;background:rgba(10,18,55,.34)!important;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .24s ease,visibility .24s ease!important}
+ .sidebar.ssg-mobile-open~#ssgMobileNavBackdrop{opacity:1!important;visibility:visible!important;pointer-events:auto!important}
+}
+@media(prefers-reduced-motion:reduce){
+ .page.active,.nav>button,.nav .lyric-nav-group,#ssgMobileNav.is-open{animation:none!important}
+ .sidebar,#ssgMobileNav,.nav button,.btn,.ssg-tool-card,#ssgMobileNavBackdrop{transition:none!important}
+}
+
+</style></head><body>${docContent}</body></html>`;
       const blob=new Blob(['\ufeff',docHtml],{type:'application/msword;charset=utf-8'});downloadBlobFile(blob,exportFileBase(guide)+'.doc');
       showToast('Downloaded. Upload the .doc file to Google Drive and open it with Google Docs.');
     });
@@ -3262,7 +3314,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
       document.body.innerHTML='<div class="auth-gate"><div class="auth-card"><div class="auth-brand">SSG PROGRAM GUIDE BUILDER<small>HOST VIEW LOCKED</small></div><p class="auth-sub">Host View requires an active signed-in session in this browser.</p></div></div>';
       return;
     }
-    document.body.innerHTML=`<div class="host-shell"><div class="host-toolbar"><div class="host-toolbar-title">PROGRAM PROMPT · HOST VIEW</div><div class="host-zoom-controls"><button type="button" onclick="changeHostZoom(-10)" aria-label="Zoom out">−</button><span id="hostZoomValue" class="host-zoom-value">100%</span><button type="button" onclick="changeHostZoom(10)" aria-label="Zoom in">+</button><button type="button" onclick="setHostZoom(100)">Reset</button><button type="button" onclick="exitHostView()" aria-label="Exit Host View" title="Back to main site">←</button></div></div><main class="display-main host-main"><div id="displayContent" class="display-scroll host-scroll"><div id="displayZoomContent" class="display-zoom-content"><div style="font-size:14px;color:#aaa">Loading program...</div></div></div></main></div>`;
+    document.body.innerHTML=`<div class="host-shell"><div class="host-toolbar"><div class="host-toolbar-title">PROGRAM PROMPT · HOST VIEW</div><div class="host-zoom-controls"><button type="button" onclick="changeHostZoom(-10)" aria-label="Zoom out">−</button><span id="hostZoomValue" class="host-zoom-value">100%</span><button type="button" onclick="changeHostZoom(10)" aria-label="Zoom in">+</button><button type="button" onclick="setHostZoom(100)">Reset</button><button type="button" class="host-exit-button" onclick="exitHostView()" aria-label="Exit Host View" title="Back to main site">←</button></div></div><main class="display-main host-main"><div id="displayContent" class="display-scroll host-scroll"><div id="displayZoomContent" class="display-zoom-content"><div style="font-size:14px;color:#aaa">Loading program...</div></div></div></main></div>`;
     displayState.zoom=100;
     // Keep Host View keyboard controls consistent with the other prompters.
     window.addEventListener('keydown',function(e){
