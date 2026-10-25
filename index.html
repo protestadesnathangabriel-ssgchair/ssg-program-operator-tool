@@ -678,9 +678,10 @@ button,input,select,textarea{font-family:inherit!important}
 /* Dashboard merged from the approved responsive concept; all actions call existing app functions. */
 .ssg-home-intro{align-items:center!important;min-height:112px;margin-bottom:24px!important}
 .ssg-home-intro h2{max-width:780px}
-.ssg-home-badge{display:flex;align-items:center;gap:10px;flex:0 0 auto;padding:12px 15px;border:1px solid var(--ssg-border);border-radius:14px;background:#fff;color:var(--ssg-navy)}
-.ssg-home-badge>span{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--ssg-pale);color:var(--ssg-navy);font-size:19px}
-.ssg-home-badge strong,.ssg-home-badge small{display:block}.ssg-home-badge strong{font-size:12px}.ssg-home-badge small{font-size:10px;color:var(--ssg-muted);margin-top:3px}
+.ssg-home-badge{display:flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:238px;padding:15px 20px;border:1px solid var(--ssg-border);border-radius:16px;background:linear-gradient(145deg,#fff 0%,#f8faff 100%);color:var(--ssg-navy);box-shadow:0 8px 24px rgba(23,35,111,.055);text-align:center}
+.ssg-dashboard-clock{display:flex;flex-direction:column;align-items:center;gap:5px;font-variant-numeric:tabular-nums}
+.ssg-dashboard-clock-time{font-size:clamp(25px,2.4vw,34px);font-weight:850;letter-spacing:.045em;line-height:1.15;color:var(--ssg-navy)}
+.ssg-dashboard-clock-date{font-size:11px;font-weight:650;letter-spacing:.015em;color:var(--ssg-muted);line-height:1.4}
 .ssg-dashboard-columns{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(270px,.75fr);gap:18px;align-items:start}
 .ssg-dashboard-panel{min-width:0}.ssg-dashboard-panel .ssg-section-title{margin-bottom:13px}.ssg-saved-guides-section{scroll-margin-top:18px}.ssg-saved-guides-section .guide-row{display:flex;align-items:center;gap:10px;padding:11px;border:1px solid var(--ssg-border);border-radius:12px;background:#fff;margin-bottom:8px}.ssg-saved-guides-section .guide-info{flex:1;min-width:0}.ssg-saved-guides-section .guide-title{overflow-wrap:anywhere;font-size:12px}.ssg-saved-guides-section .guide-meta{font-size:10px;color:var(--ssg-muted)}
 .ssg-panel-inner{padding:16px;background:#fff;border:1px solid var(--ssg-border);border-radius:16px;box-shadow:0 7px 24px rgba(23,35,111,.035)}
@@ -1580,7 +1581,7 @@ function getStoredAuth(){
     $('page-home').innerHTML=`
       <section class="ssg-home-intro">
         <div><div class="ssg-eyebrow">${isViewer?'PUBLIC VIEW-ONLY LIBRARY':'YOUR WORKSPACE'}</div><h2>${isViewer?'Saved SSG programs':'Everything ready for your next program.'}</h2><p>${isViewer?'Browse all saved program guides and program sequences. Your account cannot edit, create, or delete saved content.':'Create program guides, arrange the live sequence, and prepare lyrics from one clean workspace.'}</p></div>
-        <div class="ssg-home-badge"><span>✦</span><div><strong>SSG Program Operator</strong><small>Program workspace</small></div></div>
+        <div class="ssg-home-badge" role="group" aria-label="Current date and time"><div class="ssg-dashboard-clock"><div id="ssgDashboardClockTime" class="ssg-dashboard-clock-time" aria-live="off">--:--:--</div><div id="ssgDashboardClockDate" class="ssg-dashboard-clock-date">Loading date…</div></div></div>
       </section>
       ${isViewer?`<section class="officer-request-card"><h3>Request Officer Access</h3><p>Enter your name and role in the Production-Technical Team. An administrator will review your request.</p><div class="request-row"><div class="request-field"><label for="officerRequestName">Full Name</label><input id="officerRequestName" maxlength="200" autocomplete="name" placeholder="Your full name"></div><div class="request-field"><label for="officerRequestRole">Role in Production-Technical Team</label><input id="officerRequestRole" maxlength="200" placeholder="e.g. Technical Director, Audio, Lyrics, Host"></div><button class="btn primary" type="button" onclick="submitOfficerRequest()">Request Access</button></div><div id="officerRequestStatus" class="officer-request-status" aria-live="polite"></div></section>`:''}
       <section class="ssg-tools-grid" aria-label="Main workspace tools">
@@ -1610,6 +1611,19 @@ function getStoredAuth(){
         </div>
       </section>
       <div id="operatorFollowModal" class="operator-follow-modal" role="dialog" aria-modal="true" aria-labelledby="operatorFollowTitle"><div class="operator-follow-card"><h3 id="operatorFollowTitle">Follow an online operator</h3><p style="font-size:13px;color:#596675;margin:0">Choose an operator currently running this guide. Your window is view-only; keyboard and timer controls are disabled.</p><div id="operatorFollowList" class="operator-follow-list"><div class="operator-follow-empty">Checking online operators…</div></div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn" type="button" onclick="closeOperatorFollowModal()">Close</button></div></div></div>`;
+    updateSsgDashboardClock();
+    if(!window.ssgDashboardClockInterval)window.ssgDashboardClockInterval=window.setInterval(updateSsgDashboardClock,1000);
+  }
+
+  function updateSsgDashboardClock(){
+    const timeEl=document.getElementById('ssgDashboardClockTime');
+    const dateEl=document.getElementById('ssgDashboardClockDate');
+    if(!timeEl||!dateEl)return;
+    const now=new Date();
+    timeEl.textContent=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+    const day=now.toLocaleDateString('en-GB',{weekday:'long'});
+    const date=now.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+    dateEl.textContent=`${date}, ${day}`;
   }
 
   let operatorListUnsubscribe=null;
