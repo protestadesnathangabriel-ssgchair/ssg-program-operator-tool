@@ -799,12 +799,12 @@ html[data-ssg-layout="phone"] .ssg-dashboard-columns{grid-template-columns:minma
 <script>
   const APP_CONFIG = window.SSG_APP_CONFIG || {mode: new URLSearchParams(location.search).get('mode') || 'main', guideId: new URLSearchParams(location.search).get('guideId') || '', appUrl: location.origin + location.pathname};
   // Full-screen keyboard support for every display/prompter window.
-  // Browser security requires a user gesture; Ctrl+Alt+F is the explicit gesture.
+  // Browser security requires a user gesture; Ctrl+Shift+F is the explicit gesture.
   (function installPrompterFullscreenShortcut(){
     const mode = APP_CONFIG.mode;
     if(!['host','display','lyric-display'].includes(mode)) return;
     window.addEventListener('keydown', function(event){
-      if(event.ctrlKey && event.altKey && String(event.key||'').toLowerCase()==='f'){
+      if(event.ctrlKey && event.shiftKey && !event.altKey && String(event.key||'').toLowerCase()==='f'){
         event.preventDefault();
         event.stopPropagation();
         if(document.fullscreenElement) return;
@@ -2685,7 +2685,7 @@ function broadcastGuideToPresenter(){
     const sc=$('lyricPreviewScroll');if(sc)sc.scrollTop=0;
     const size=$('lyricTextSize');if(size)size.value=String(state.lyrics.textSize);
     const width=$('lyricLineWidth');if(width)width.value=String(state.lyrics.lineWidth);
-    const speed=$('lyricSpeed');if(speed)speed.value=String(state.lyrics.speed);
+    state.lyrics.speed=Math.max(1,Math.min(5,Number(state.lyrics.speed)||3));const speed=$('lyricSpeed');if(speed)speed.value=String(state.lyrics.speed);
     const theme=$('lyricThemeLabel');if(theme)theme.textContent=lyricBackgroundName(state.lyrics.backgroundIndex);
   }
   function saveCurrentLyricLineup(){
@@ -2724,8 +2724,8 @@ function broadcastGuideToPresenter(){
         </div>
         <div class="lyrics-preview-wrap">
           <div class="lyric-preview-card"><div class="lyric-preview-head"><strong>16:9 PROMPTER PREVIEW</strong><span class="lyric-preview-badge">TEXT LYRICS</span></div><div class="lyric-preview-stage"><div class="lyric-preview-16x9"><div id="lyricPreviewScreen" class="lyric-screen"></div></div></div>
-            <div class="lyric-preview-controls"><button class="btn small primary" onclick="sendLyricToPrompter()">Send to Prompter</button><button class="btn small" onclick="cycleLyricBackground()">BG</button><span class="lyric-bg-status" title="Press P in the Prompter to cycle lyric theme">${esc(state.lyrics.backgroundName||'BLACK · ARIAL BOLD')}</span><button class="btn small" onclick="toggleLyricScroll()" id="lyricPlayBtn">PLAY</button><button class="btn small" onclick="prevLyricBlock()">‹</button><button class="btn small" onclick="nextLyricBlock()">›</button><span class="lyric-control-label">SPEED</span><select id="lyricSpeed" onchange="state.lyrics.speed=Number(this.value);sendLyricState()">${[1,2,3,4,5,6,7,8,9].map(n=>`<option value="${n}" ${n===state.lyrics.speed?'selected':''}>${n}</option>`).join('')}</select><span class="lyric-control-label">TEXT</span><input id="lyricTextSize" type="range" min="22" max="80" value="${state.lyrics.textSize}" oninput="state.lyrics.textSize=Number(this.value);updateLyricPreview();sendLyricState()"><span class="lyric-control-label">WIDTH</span><input id="lyricLineWidth" type="range" min="35" max="100" value="${state.lyrics.lineWidth}" oninput="state.lyrics.lineWidth=Number(this.value);updateLyricPreview();sendLyricState()"></div>
-            <div class="lyric-shortcuts"><b>SHORTCUTS:</b> &#96;&#96;&#96; Send to Display · Space Play/Pause · 1–9 Speed · 0 Pause · Numpad + / − Scroll · ← ← Previous Block · → → Next Block (within 400ms) · P Change Theme · [ ] Text Size · − / = Line Width · T Top · ↑ / ↓ Manual</div>
+            <div class="lyric-preview-controls"><button class="btn small primary" onclick="sendLyricToPrompter()">Send to Prompter</button><button class="btn small" onclick="cycleLyricBackground()">BG</button><span class="lyric-bg-status" title="Press P in the Prompter to cycle lyric theme">${esc(state.lyrics.backgroundName||'BLACK · ARIAL BOLD')}</span><button class="btn small" onclick="toggleLyricScroll()" id="lyricPlayBtn">PLAY</button><button class="btn small" onclick="prevLyricBlock()">‹</button><button class="btn small" onclick="nextLyricBlock()">›</button><span class="lyric-control-label">SPEED</span><select id="lyricSpeed" onchange="state.lyrics.speed=Math.max(1,Math.min(5,Number(this.value)||3));sendLyricState()">${[1,2,3,4,5].map(n=>`<option value="${n}" ${n===state.lyrics.speed?'selected':''}>${n}</option>`).join('')}</select><span class="lyric-control-label">TEXT</span><input id="lyricTextSize" type="range" min="22" max="80" value="${state.lyrics.textSize}" oninput="state.lyrics.textSize=Number(this.value);updateLyricPreview();sendLyricState()"><span class="lyric-control-label">WIDTH</span><input id="lyricLineWidth" type="range" min="35" max="100" value="${state.lyrics.lineWidth}" oninput="state.lyrics.lineWidth=Number(this.value);updateLyricPreview();sendLyricState()"></div>
+            <div class="lyric-shortcuts"><b>SHORTCUTS:</b> &#96;&#96;&#96; Send to Display · Space Play/Pause · 1–5 Speed · 0 Pause · Numpad + / − Scroll · ← ← Previous Block · → → Next Block (within 400ms) · P Change Theme · [ ] Text Size · − / = Line Width · T Top · ↑ / ↓ Manual</div>
           </div>
         </div>
       </div>`;
@@ -2751,12 +2751,12 @@ function broadcastGuideToPresenter(){
     state.lyrics.scrolling=true;
     let pos=el.scrollTop;
     let last=performance.now();
-    const speedTable=[18,28,40,54,70,88,108,128,150];
+    const speedTable=[65,80,100,120,150];
     const loop=(now)=>{
       if(!state.lyrics.scrolling)return;
       const area=$('lyricPreviewScroll');if(!area){stopLyricScroll();return;}
       const dt=Math.max(0,now-last||0);last=now;
-      const speed=speedTable[Math.max(1,Math.min(9,Number(state.lyrics.speed)||3))-1];
+      const speed=speedTable[Math.max(1,Math.min(5,Number(state.lyrics.speed)||3))-1];
       const max=Math.max(0,area.scrollHeight-area.clientHeight);
       pos=Math.min(max,pos+(speed*dt/1000));
       area.scrollTop=Math.round(pos);
@@ -2851,7 +2851,7 @@ function broadcastGuideToPresenter(){
   function applyLyricDisplayPayload(p){
     const screen=$('lyricDisplayScreen'),text=$('lyricDisplayText'),scroll=$('lyricDisplayScroll');
     if(!screen||!text||!scroll)return;
-    if(!displayLyricState.hasReceivedInitialState) displayLyricState.speed=Number(p.speed)||3;
+    if(!displayLyricState.hasReceivedInitialState) displayLyricState.speed=Math.max(1,Math.min(5,Number(p.speed)||3));
     const incomingThemeVersion=Number.isFinite(Number(p.themeVersion))?Number(p.themeVersion):null;
     if(incomingThemeVersion!==null)displayLyricState.remoteThemeVersion=incomingThemeVersion;
     const modeIndex=Math.max(0,Math.min(BUILTIN_LYRIC_BACKGROUNDS.length-1,Number.isFinite(Number(p.backgroundIndex))?Number(p.backgroundIndex):0));
@@ -2941,7 +2941,7 @@ function broadcastGuideToPresenter(){
     displayLyricState.scrolling=true;
     displayLyricState.scrollPosition=el.scrollTop;
     displayLyricState.lastScrollTime=performance.now();
-    const speedTable=[22,36,54,76,104,138,178,226,284];
+    const speedTable=[65,80,100,120,150];
     const loop=(now)=>{
       if(!displayLyricState.scrolling)return;
       const area=$('lyricDisplayScroll');
@@ -2951,7 +2951,7 @@ function broadcastGuideToPresenter(){
       const rawDt=Math.max(0,now-displayLyricState.lastScrollTime||0);
       const dt=Math.min(rawDt,50);
       displayLyricState.lastScrollTime=now;
-      const speed=speedTable[Math.max(1,Math.min(9,Number(displayLyricState.speed)||3))-1];
+      const speed=speedTable[Math.max(1,Math.min(5,Number(displayLyricState.speed)||3))-1];
       const max=Math.max(0,area.scrollHeight-area.clientHeight);
       displayLyricState.scrollPosition=Math.min(max,displayLyricState.scrollPosition+(speed*dt/1000));
       area.scrollTop=Math.round(displayLyricState.scrollPosition);
@@ -2990,7 +2990,7 @@ function broadcastGuideToPresenter(){
         if(displayLyricState.scrolling){displayLyricState.localScrollControl=true;stopDisplayLyricScroll();}else{displayLyricState.localScrollControl=true;startDisplayLyricScroll();}
         return;
       }
-      if(/^Digit[1-9]$/.test(code)){
+      if(/^Digit[1-5]$/.test(code)){
         e.preventDefault();e.stopPropagation();
         displayLyricState.speed=Number(code.slice(-1));
         displayLyricState.localScrollControl=true;
@@ -3095,7 +3095,7 @@ function broadcastGuideToPresenter(){
     $('page-prompt').innerHTML=`
       <div class="card"><div style="font-weight:800;color:var(--blue);font-size:15px;margin-bottom:10px">Single-Window Presenter System</div><div style="font-size:12px;color:var(--muted);line-height:1.5">Program Flow uses TRT countdown/overtime. Program Sequence uses the live clock against each TAKE's scheduled time, with START / DONE controls.</div></div>
       <div class="card"><div class="form-grid"><div class="field full"><label>Guide</label><select id="promptGuideSelect">${state.guides.map(g=>`<option value="${escAttr(g.id)}" ${guide&&String(guide.id)===String(g.id)?'selected':''}>${esc(g.title)}${g.eventDate?' — '+esc(g.eventDate):''}</option>`).join('')}</select></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn primary" onclick="openPromptWindows()">Open Program Prompt + Controls</button><button class="btn" onclick="openHostView()">Open Host View</button><button class="btn" onclick="showPage('editor')">Go to Editor</button></div></div>
-      <div class="card"><div style="font-size:12px;color:#4f5b67;line-height:1.6"><b>Keyboard:</b> Program shortcuts: Space = play/pause auto-scroll, 1–9 = speed, [ / ] = zoom. START / PAUSE / END or START / DONE remain mouse-only depending on the program type.</div></div>
+      <div class="card"><div style="font-size:12px;color:#4f5b67;line-height:1.6"><b>Keyboard:</b> Program shortcuts: Space = play/pause auto-scroll, 1–5 = speed, [ = zoom out, ] = zoom in. START / PAUSE / END or START / DONE remain mouse-only depending on the program type.</div></div>
 `;
   }
 function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;showPage('prompt');}); }
@@ -3229,7 +3229,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
   function applyFollowedOperatorState(session){
     if(!session){const status=$('controlList');if(status)status.innerHTML='<div class="operator-follow-empty">Operator is offline or has stopped sharing this guide. Waiting for the live session to return…</div>';const target=$('controlTarget');if(target)target.textContent='OPERATOR OFFLINE · READ ONLY';return;}
     const status=$('controlList');if(status)status.innerHTML=`<div class="operator-follow-empty"><strong>LIVE · ${esc(session.operatorName||'Selected operator')}</strong><br>Following the operator’s current display state. Keyboard and timer controls are disabled in this window.</div>`;const target=$('controlTarget');if(target)target.textContent='LIVE OPERATOR · READ ONLY';
-    const st=session.state||{};displayState.activeItemId=String(st.activeItemId||'');displayState.timer=st.timer||null;displayState.timerReceivedAt=Date.now();displayState.zoom=Number(st.zoom)||100;displayState.scrolling=!!st.scrolling;displayState.speed=Number(st.speed)||3;displayState.target=st.target||'display';
+    const st=session.state||{};displayState.activeItemId=String(st.activeItemId||'');displayState.timer=st.timer||null;displayState.timerReceivedAt=Date.now();displayState.zoom=Number(st.zoom)||100;displayState.scrolling=!!st.scrolling;displayState.speed=Math.max(1,Math.min(5,Number(st.speed)||3));displayState.target=st.target||'display';
     applyDisplayZoom();document.querySelectorAll('#displayZoomContent .display-item').forEach(el=>el.classList.toggle('active',el.dataset.itemId===displayState.activeItemId));renderDisplayTimer();const area=$('displayContent');if(area&&Number.isFinite(Number(st.scrollTop)))area.scrollTop=Number(st.scrollTop);
     const key=$('displayKey');if(key)key.textContent='VIEW-ONLY · FOLLOWING '+String(session.operatorName||'OPERATOR').toUpperCase();
   }
@@ -3244,6 +3244,14 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     }
     document.body.innerHTML=`<div class="host-shell"><div class="host-toolbar"><div class="host-toolbar-title">PROGRAM PROMPT · HOST VIEW</div><div class="host-zoom-controls"><button type="button" onclick="changeHostZoom(-10)" aria-label="Zoom out">−</button><span id="hostZoomValue" class="host-zoom-value">100%</span><button type="button" onclick="changeHostZoom(10)" aria-label="Zoom in">+</button><button type="button" onclick="setHostZoom(100)">Reset</button></div></div><main class="display-main host-main"><div id="displayContent" class="display-scroll host-scroll"><div id="displayZoomContent" class="display-zoom-content"><div style="font-size:14px;color:#aaa">Loading program...</div></div></div></main></div>`;
     displayState.zoom=100;
+    // Keep Host View keyboard controls consistent with the other prompters.
+    window.addEventListener('keydown',function(e){
+      if(e.repeat||e.ctrlKey||e.altKey||e.metaKey)return;
+      const key=(e.code==='Space'||e.key===' ')?' ':e.key;
+      if(key===' '||key==='['||key===']'||/^[1-5]$/.test(key)){
+        e.preventDefault();e.stopPropagation();handleDisplayKey(key);
+      }
+    },{capture:true});
     if(APP_CONFIG.guideId){
       google.script.run.withSuccessHandler(function(guide){
         if(guide&&guide.id){displayState.guide=guide;renderDisplay();updateHostZoomLabel();subscribeDisplayedGuide(APP_CONFIG.guideId,'host');}
@@ -3267,7 +3275,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     if(!token){ document.body.innerHTML='<div class="auth-gate"><div class="auth-card"><div class="auth-brand">SSG PROGRAM GUIDE BUILDER<small>DISPLAY LOCKED</small></div><p class="auth-sub">This presenter window requires an active signed-in session.</p></div></div>'; return; }
     if(!viewOnly)openPresenterChannel();
     if(viewOnly&&followUid)document.body.classList.add('viewer-display-mode');
-    document.body.innerHTML=`<div class="display-shell"><div class="display-main"><div class="display-controls">PROGRAM PROMPT</div><div id="displayContent" class="display-scroll"><div id="displayZoomContent" class="display-zoom-content"><div style="font-size:14px;color:#aaa">Loading program...</div></div></div><div id="displayKey" class="display-key">SPACE = PLAY/PAUSE · 1–9 = SPEED · [ / ] = ZOOM</div></div><div id="promptResizeHandle" class="display-resize-handle display-resize-horizontal" role="separator" aria-label="Resize prompt and timer/control panels" aria-orientation="vertical" tabindex="0"></div><aside class="display-side"><div class="display-timer-pane"><div id="displayTimer" class="display-timer"><div id="displayTimerSmall" class="display-timer-small">TIMER</div><div id="displayTimerName" class="display-timer-name">No active timer</div><div id="displayTimerClock" class="display-timer-clock">00:00:00</div><div id="displayOvertime" class="display-overtime">OVERTIME</div></div></div><div id="timerResizeHandle" class="display-resize-handle display-resize-vertical" role="separator" aria-label="Resize timer and controls panels" aria-orientation="horizontal" tabindex="0"></div><div class="display-control-pane"><div class="control-top"><div><h2>PROGRAM CONTROL / TIMER</h2><div id="controlTarget" class="control-target">0 → DISPLAY</div></div></div><div id="controlList" class="control-list"><div class="card"><div style="font-size:12px;color:#68737e">Loading controls...</div></div></div><div class="control-hint">SPACE = PLAY/PAUSE · 1–9 = SPEED · [ / ] = ZOOM</div></div></aside></div>`;
+    document.body.innerHTML=`<div class="display-shell"><div class="display-main"><div class="display-controls">PROGRAM PROMPT</div><div id="displayContent" class="display-scroll"><div id="displayZoomContent" class="display-zoom-content"><div style="font-size:14px;color:#aaa">Loading program...</div></div></div><div id="displayKey" class="display-key">SPACE = PLAY/PAUSE · 1–5 = SPEED · [ = ZOOM OUT · ] = ZOOM IN</div></div><div id="promptResizeHandle" class="display-resize-handle display-resize-horizontal" role="separator" aria-label="Resize prompt and timer/control panels" aria-orientation="vertical" tabindex="0"></div><aside class="display-side"><div class="display-timer-pane"><div id="displayTimer" class="display-timer"><div id="displayTimerSmall" class="display-timer-small">TIMER</div><div id="displayTimerName" class="display-timer-name">No active timer</div><div id="displayTimerClock" class="display-timer-clock">00:00:00</div><div id="displayOvertime" class="display-overtime">OVERTIME</div></div></div><div id="timerResizeHandle" class="display-resize-handle display-resize-vertical" role="separator" aria-label="Resize timer and controls panels" aria-orientation="horizontal" tabindex="0"></div><div class="display-control-pane"><div class="control-top"><div><h2>PROGRAM CONTROL / TIMER</h2><div id="controlTarget" class="control-target">0 → DISPLAY</div></div></div><div id="controlList" class="control-list"><div class="card"><div style="font-size:12px;color:#68737e">Loading controls...</div></div></div><div class="control-hint">SPACE = PLAY/PAUSE · 1–5 = SPEED · [ = ZOOM OUT · ] = ZOOM IN</div></div></aside></div>`;
     if(!viewOnly)initDisplayResizing();
     window.addEventListener('message',e=>{const d=e.data||{};if(!d||d.ssgPresenter!==true)return;if(d.type==='guide'&&d.guide){displayState.guide=d.guide;renderDisplay();if(!followUid){controlState.guide=d.guide;prepareTimers();renderControl();}}if(!followUid&&d.type==='targetState'){displayState.target=d.target;controlState.target=d.target;updateDisplayTarget();renderControlTarget();}if(!followUid&&d.type==='timerState'){displayState.timer=d.payload;renderDisplayTimer();}if(!followUid&&d.type==='activeItem'){setActiveDisplayItem(d.payload?.itemId||'');}});
     // Load the selected saved guide directly in the presenter window.
@@ -3292,7 +3300,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
         return;
       }
       // Display window owns these shortcuts locally.
-      if(key===' '||key==='['||key===']'||/^[1-9]$/.test(key)){
+      if(key===' '||key==='['||key===']'||/^[1-5]$/.test(key)){
         e.preventDefault();
         e.stopPropagation();
         handleDisplayKey(key);
@@ -3436,7 +3444,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     } else { el.scrollIntoView({behavior:'smooth',block:'center'}); }
   }
   function toggleDisplayScroll(){displayState.scrolling=!displayState.scrolling; if(displayState.scrolling)startDisplayScroll(); else stopDisplayScroll();}
-  function startDisplayScroll(){stopDisplayScroll();displayState.scrolling=true;sendDisplayMirrorState();const speedSteps=[8,14,22,32,45,62,84,112,180];let lastFrame=0,lastSync=0;const loop=(now)=>{if(!displayState.scrolling)return;const area=$('displayContent');if(area){const dt=lastFrame?Math.max(0,now-lastFrame):0;lastFrame=now;const speed=speedSteps[Math.max(1,Math.min(9,Number(displayState.speed)||1)-1)];area.scrollTop+=speed*dt/1000;if(now-lastSync>1000){lastSync=now;sendDisplayMirrorState();}}displayState.raf=requestAnimationFrame(loop)};displayState.raf=requestAnimationFrame(loop)}
+  function startDisplayScroll(){stopDisplayScroll();displayState.scrolling=true;sendDisplayMirrorState();const speedSteps=[65,80,100,120,150];let lastFrame=0,lastSync=0;const loop=(now)=>{if(!displayState.scrolling)return;const area=$('displayContent');if(area){const dt=lastFrame?Math.max(0,now-lastFrame):0;lastFrame=now;const speed=speedSteps[Math.max(1,Math.min(5,Number(displayState.speed)||1)-1)];area.scrollTop+=speed*dt/1000;if(now-lastSync>1000){lastSync=now;sendDisplayMirrorState();}}displayState.raf=requestAnimationFrame(loop)};displayState.raf=requestAnimationFrame(loop)}
   function stopDisplayScroll(){if(displayState.raf)cancelAnimationFrame(displayState.raf);displayState.raf=null;sendDisplayMirrorState();}
   function sendDisplayMirrorState(){
     if(new URLSearchParams(location.search).get('viewOnly')==='1')return;
@@ -3464,9 +3472,9 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
   function applyDisplayZoom(){const el=document.getElementById('displayZoomContent');if(el)el.style.zoom=(displayState.zoom/100);}
   function handleDisplayKey(key){
     if(key===' ')toggleDisplayScroll();
-    else if(/^[1-9]$/.test(key)){displayState.speed=Number(key);if(displayState.scrolling)startDisplayScroll();}
-    else if(key==='['){displayState.zoom=Math.min(400,displayState.zoom+10);applyDisplayZoom();}
-    else if(key===']'){displayState.zoom=Math.max(50,displayState.zoom-10);applyDisplayZoom();}
+    else if(/^[1-5]$/.test(key)){displayState.speed=Number(key);if(displayState.scrolling)startDisplayScroll();}
+    else if(key==='['){displayState.zoom=Math.max(50,displayState.zoom-10);applyDisplayZoom();}
+    else if(key===']'){displayState.zoom=Math.min(400,displayState.zoom+10);applyDisplayZoom();}
     sendDisplayMirrorState();
   }
   function renderDisplayTimer(){
@@ -3565,7 +3573,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     const token=getStoredAuth()?.token||'';
     if(!token){ document.body.innerHTML='<div class="auth-gate"><div class="auth-card"><div class="auth-brand">SSG PROGRAM GUIDE BUILDER<small>CONTROL LOCKED</small></div><p class="auth-sub">This control window requires an active signed-in session.</p></div></div>'; return; }
     openPresenterChannel();
-    document.body.innerHTML=`<div class="control-shell"><div class="control-body"><div class="control-left"><div class="control-timer-pane"><div id="controlPreviewTimer" class="display-timer"><div id="controlPreviewTimerSmall" class="display-timer-small">TIMER</div><div id="controlPreviewTimerName" class="display-timer-name">No active timer</div><div id="controlPreviewTimerClock" class="display-timer-clock">00:00:00</div><div id="controlPreviewOvertime" class="display-overtime">OVERTIME</div></div></div><div class="control-control-pane"><div class="control-top"><div><h2>SSG PROGRAM GUIDE BUILDER — CONTROL / TIMER</h2><div id="controlTarget" class="control-target">0 → DISPLAY</div></div><div><button class="btn small" onclick="window.close()">Close</button></div></div><div id="controlList" class="control-list"><div class="card"><div style="font-size:12px;color:#68737e">Loading program...</div></div></div><div class="control-hint">Keyboard shortcuts in this Control window also control the Display: Space = play/pause, 1–9 = speed, [ / ] = zoom, 0 = switch target.</div></div></div><aside class="control-preview-pane"><div id="controlPreviewScreen" class="control-preview-screen"><div style="color:#aaa;font-size:14px;padding:30px">Loading program...</div></div></aside></div></div>`;
+    document.body.innerHTML=`<div class="control-shell"><div class="control-body"><div class="control-left"><div class="control-timer-pane"><div id="controlPreviewTimer" class="display-timer"><div id="controlPreviewTimerSmall" class="display-timer-small">TIMER</div><div id="controlPreviewTimerName" class="display-timer-name">No active timer</div><div id="controlPreviewTimerClock" class="display-timer-clock">00:00:00</div><div id="controlPreviewOvertime" class="display-overtime">OVERTIME</div></div></div><div class="control-control-pane"><div class="control-top"><div><h2>SSG PROGRAM GUIDE BUILDER — CONTROL / TIMER</h2><div id="controlTarget" class="control-target">0 → DISPLAY</div></div><div><button class="btn small" onclick="window.close()">Close</button></div></div><div id="controlList" class="control-list"><div class="card"><div style="font-size:12px;color:#68737e">Loading program...</div></div></div><div class="control-hint">Keyboard shortcuts in this Control window also control the Display: Space = play/pause, 1–5 = speed, [ = zoom out, ] = zoom in, 0 = switch target.</div></div></div><aside class="control-preview-pane"><div id="controlPreviewScreen" class="control-preview-screen"><div style="color:#aaa;font-size:14px;padding:30px">Loading program...</div></div></aside></div></div>`;
     window.addEventListener('message',e=>{const d=e.data||{};if(!d||d.ssgPresenter!==true)return;if(d.type==='guide'&&d.guide){controlState.guide=d.guide;prepareTimers();renderControl();renderControlPreview();}if(d.type==='targetState'){controlState.target=d.target;renderControlTarget();}if(d.type==='displayMirrorState'){applyControlPreviewMirror(d.payload||{});}if(d.type==='timerState'){controlPreviewState.timer=d.payload||null;renderControlPreviewTimer();}if(d.type==='activeItem'){controlPreviewState.activeItemId=d.payload?.itemId||'';setControlPreviewActiveItem(controlPreviewState.activeItemId);}});
     // Load the selected saved guide directly in the control window as well.
     if(APP_CONFIG.guideId){
@@ -3585,7 +3593,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
       }
       // Control window can operate the Display directly with the same
       // keyboard shortcuts used by the Display window.
-      if(key===' '||key==='['||key===']'||/^[1-9]$/.test(key)){
+      if(key===' '||key==='['||key===']'||/^[1-5]$/.test(key)){
         e.preventDefault();
         e.stopPropagation();
         const commandId=presenterCommandId();
