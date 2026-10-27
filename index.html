@@ -1429,6 +1429,7 @@ function getStoredAuth(){
             <button data-page="prompt" onclick="showPage('prompt')">Live Windows</button>
             ${state.auth?.role==='admin'?'<button data-page="admin" onclick="showPage(\'admin\')">Officer Requests</button>':''}
           </nav>
+          <div class="sidebar-help-wrap"><button type="button" class="sidebar-help-button" onclick="showSiteHelp()" aria-label="Help and feature guide"><span aria-hidden="true">?</span> Help & Feature Guide</button></div>
           <div class="sidebar-foot">Independent Apps Script database.<br>Does not use TALAAN or Event Tracker data.</div>
         </aside>
         <main class="main">
@@ -1441,9 +1442,32 @@ function getStoredAuth(){
             <section id="page-admin" class="page"></section>
           </div>
         </main>
+        <div id="siteHelpModal" class="site-help-overlay" role="dialog" aria-modal="true" aria-labelledby="siteHelpTitle" hidden>
+          <div class="site-help-card">
+            <div class="site-help-head"><div><div class="ssg-eyebrow">SSG PROGRAM OPERATOR TOOL</div><h2 id="siteHelpTitle">Help & Feature Guide</h2><p>Quick instructions for the main tools and live prompters.</p></div><button class="btn small" type="button" onclick="closeSiteHelp()" aria-label="Close help">✕</button></div>
+            <div class="site-help-content">
+              <section><h3>Dashboard & Saved Guides</h3><ul><li>Use the dashboard to open Program Guides, Program Sequence, or Lyric Prompter.</li><li>Search saved guides by title or date. Open to continue editing, or Preview to inspect without editing.</li><li>Officer/admin accounts can manage saved guides. View-only accounts can browse, preview, follow an online operator, and open Host View.</li></ul></section>
+              <section><h3>Program Guides / Program Flow</h3><ul><li>Create sections and items in the order they will be presented. Use clear section and item titles.</li><li>Changes are saved automatically when auto-save is enabled; check the save-status label before leaving the page.</li><li>Preview the guide before sending it to a display. Use the presenter controls to play/pause, move between items, adjust scroll speed, change text size/width, and switch the stage theme.</li></ul></section>
+              <section><h3>Program Sequence</h3><ul><li>Build a take-based sequence and organize items in presentation order. Add or rename tabs/blocks as needed.</li><li>Use the preview to check the sequence before presenting. Keep the active take/item label visible for the operator and crew.</li><li>Use the live prompter controls to play/pause, move to the previous/next item, jump to top, adjust speed, and change text size or line width.</li></ul></section>
+              <section><h3>Lyric Prompter</h3><ul><li><b>Text Lyrics:</b> add tabs and blocks, then enter lyrics in the order they will be sung.</li><li><b>Image Lyrics:</b> add or select lyric images and arrange them in presentation order.</li><li><b>Video Lyrics:</b> currently marked WIP and may not be available yet.</li><li>Preview before sending to the lyric display. Use Play/Pause and speed controls for automatic scrolling; use manual navigation when needed.</li></ul></section>
+              <section><h3>Live Windows, Host View & Follow Operator</h3><ul><li>Use Live Windows to open the presenter/display windows for the selected guide.</li><li>Host View is a readable, scrollable document for the host and does not use the operator timer controls.</li><li>View-only users can select Follow Online Operator to watch the active operator's prompt and timer. This mode is read-only; local controls are disabled.</li><li>Use fullscreen for display mode. Press Esc to exit fullscreen; use Ctrl+Alt+F to enter fullscreen again where supported.</li></ul></section>
+              <section><h3>Keyboard shortcuts (where supported)</h3><ul><li><b>Space:</b> play/pause auto-scroll.</li><li><b>1–9:</b> choose a scroll-speed preset; <b>0:</b> pause.</li><li><b>Arrow keys:</b> move between blocks or manually scroll, depending on the active prompter.</li><li><b>P:</b> toggle stage theme; <b>[ / ]:</b> decrease/increase text size; <b>- / =:</b> narrow/widen line width; <b>T:</b> jump to top when paused.</li></ul></section>
+            </div>
+          </div>
+        </div>
       </div>`;
   }
 
+
+  function showSiteHelp(){
+    const modal=document.getElementById('siteHelpModal');if(!modal)return;
+    modal.hidden=false;document.body.classList.add('site-help-open');
+    const closeOnBackdrop=e=>{if(e.target===modal)closeSiteHelp();};
+    modal.addEventListener('click',closeOnBackdrop,{once:false});
+    const onKey=e=>{if(e.key==='Escape'){closeSiteHelp();document.removeEventListener('keydown',onKey);}};
+    document.addEventListener('keydown',onKey);
+  }
+  function closeSiteHelp(){const modal=document.getElementById('siteHelpModal');if(modal){modal.hidden=true;document.body.classList.remove('site-help-open');}}
 
   function toggleSsgMobileNav(){
     const sidebar=document.querySelector('.sidebar');
@@ -1596,7 +1620,7 @@ function getStoredAuth(){
         <section class="ssg-dashboard-panel">
           <div class="ssg-section-title"><div><h2>Recently opened</h2><p>Pick up where you left off.</p></div><button class="ssg-text-link" type="button" onclick="openSavedGuidesFromHome()">View all →</button></div>
           <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="homeSearch" placeholder="Search guides by title…" value="${escAttr(window.homeSearchValue||'')}" oninput="window.homeSearchValue=this.value;renderHome()"></div>
-          <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button></div>`}</div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
+          <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button>${['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small danger" onclick="deleteGuideClient('${escAttr(g.id)}')">Delete</button>`:''}</div>`}</div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
         </section>
         <section class="ssg-dashboard-panel">
           <div class="ssg-section-title"><div><h2>Quick access</h2><p>Supporting tools for your program.</p></div></div>
@@ -1610,7 +1634,7 @@ function getStoredAuth(){
       <section class="ssg-dashboard-panel ssg-saved-guides-section" id="savedGuidesSection" style="margin-top:26px">
         <div class="ssg-section-title"><div><h2>Saved Guides & Sequences</h2><p>${isViewer?'View all saved program guides and sequences.':'Open and manage all your saved program guides and sequences.'}</p></div></div>
         <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="savedGuideSearch" placeholder="Search saved guides by title…" aria-label="Search saved guides" oninput="filterSavedGuides(this.value)"></div>
-          <div class="guide-list" id="savedGuideList">${all.length?all.map(g=>`<div class="guide-row" data-saved-title="${escAttr(String(g.title||'').toLowerCase())}"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button></div>`}</div>`).join(''):`<div class="empty">No saved guides yet.<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div>
+          <div class="guide-list" id="savedGuideList">${all.length?all.map(g=>`<div class="guide-row" data-saved-title="${escAttr(String(g.title||'').toLowerCase())}"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button>${['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small danger" onclick="deleteGuideClient('${escAttr(g.id)}')">Delete</button>`:''}</div>`}</div>`).join(''):`<div class="empty">No saved guides yet.<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div>
         </div>
       </section>
       <div id="operatorFollowModal" class="operator-follow-modal" role="dialog" aria-modal="true" aria-labelledby="operatorFollowTitle"><div class="operator-follow-card"><h3 id="operatorFollowTitle">Follow an online operator</h3><p style="font-size:13px;color:#596675;margin:0">Choose an operator currently running this guide. Your window is view-only; keyboard and timer controls are disabled.</p><div id="operatorFollowList" class="operator-follow-list"><div class="operator-follow-empty">Checking online operators…</div></div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn" type="button" onclick="closeOperatorFollowModal()">Close</button></div></div></div>`;
@@ -1789,7 +1813,7 @@ function getStoredAuth(){
     if(!g.sections[0].items)g.sections[0].items=[];
     state.guide=g;
     $('page-editor').innerHTML=`
-      <div class="toolbar"><div class="toolbar-left"><button class="btn" onclick="createBlankGuide()">Switch to Program Flow</button><button class="btn" type="button" aria-label="Program Sequence keyboard guide" title="Keyboard function guide" onclick="showSequenceKeyboardGuide()" style="width:36px;min-width:36px;padding:8px 0;font-weight:900;font-size:16px">?</button></div><div class="toolbar-right"><span id="guideSaveStatus" class="save-status">Not saved yet</span><button class="btn primary" onclick="saveGuideClient()">Save Sequence</button></div></div>
+      <div class="toolbar"><div class="toolbar-left"><button class="btn" onclick="createBlankGuide()">Switch to Program Flow</button></div><div class="toolbar-right"><span id="guideSaveStatus" class="save-status">Not saved yet</span><button class="btn primary" onclick="saveGuideClient()">Save Sequence</button></div></div>
       <div class="editor-workspace sequence-editor-workspace">
         <div class="editor-pane">
           <div class="card"><div class="section-header"><strong>Program Sequence Information</strong><span style="font-size:10px;color:var(--muted)">Take-based live sequence. No TRT.</span></div>
@@ -2618,6 +2642,24 @@ function broadcastGuideToPresenter(){
  .sidebar,#ssgMobileNav,.nav button,.btn,.ssg-tool-card,#ssgMobileNavBackdrop{transition:none!important}
 }
 
+
+/* Help drawer and safe, compact sidebar action */
+.sidebar-help-wrap{padding:10px 12px 4px;margin-top:auto}
+.sidebar-help-button{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:11px 12px;border:1px solid var(--line,#dbe3ee);border-radius:12px;background:var(--surface,#fff);color:var(--text,#172033);font:inherit;font-weight:650;cursor:pointer;transition:background .18s ease,transform .18s ease,border-color .18s ease}
+.sidebar-help-button span{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#2868b2;color:white;font-weight:800}
+.sidebar-help-button:hover{background:var(--surface-soft,#f1f6fc);transform:translateY(-1px)}
+.site-help-overlay[hidden]{display:none!important}
+.site-help-overlay{position:fixed;inset:0;z-index:10050;background:rgba(12,20,36,.48);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:18px}
+.site-help-card{width:min(960px,100%);max-height:min(88vh,900px);overflow:hidden;display:flex;flex-direction:column;background:var(--surface,#fff);color:var(--text,#172033);border:1px solid var(--line,#dbe3ee);border-radius:20px;box-shadow:0 24px 80px rgba(0,0,0,.24)}
+.site-help-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:22px 24px 16px;border-bottom:1px solid var(--line,#dbe3ee)}
+.site-help-head h2{margin:5px 0;font-size:24px}.site-help-head p{margin:0;color:var(--muted,#65738a);font-size:13px}
+.site-help-content{padding:18px 24px 24px;overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.site-help-content section{border:1px solid var(--line,#dbe3ee);border-radius:13px;padding:14px 16px}
+.site-help-content h3{font-size:14px;margin:0 0 8px;color:var(--primary,#2868b2)}
+.site-help-content ul{margin:0;padding-left:18px;color:var(--muted,#586579);font-size:12.5px;line-height:1.6}
+.site-help-content li+li{margin-top:5px}
+body.site-help-open{overflow:hidden}
+@media(max-width:650px){.site-help-overlay{padding:8px}.site-help-card{max-height:94vh;border-radius:14px}.site-help-head{padding:16px}.site-help-head h2{font-size:20px}.site-help-content{grid-template-columns:1fr;padding:12px 14px 18px;gap:10px}.sidebar-help-wrap{padding-bottom:10px}}
 </style></head><body>${docContent}</body></html>`;
       const blob=new Blob(['\ufeff',docHtml],{type:'application/msword;charset=utf-8'});downloadBlobFile(blob,exportFileBase(guide)+'.doc');
       showToast('Downloaded. Upload the .doc file to Google Drive and open it with Google Docs.');
@@ -2843,11 +2885,11 @@ function broadcastGuideToPresenter(){
     const loop=(now)=>{
       if(!state.lyrics.scrolling)return;
       const area=$('lyricPreviewScroll');if(!area){stopLyricScroll();return;}
-      const dt=Math.max(0,now-last||0);last=now;
+      const dt=Math.min(50,Math.max(0,now-last||0));last=now;
       const speed=speedTable[Math.max(1,Math.min(5,Number(state.lyrics.speed)||3))-1];
       const max=Math.max(0,area.scrollHeight-area.clientHeight);
       pos=Math.min(max,pos+(speed*dt/1000));
-      area.scrollTop=Math.round(pos);
+      area.scrollTop=pos;
       if(pos>=max){stopLyricScroll();return;}
       state.lyrics.raf=requestAnimationFrame(loop);
     };
@@ -3540,7 +3582,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     } else { el.scrollIntoView({behavior:'smooth',block:'center'}); }
   }
   function toggleDisplayScroll(){displayState.scrolling=!displayState.scrolling; if(displayState.scrolling)startDisplayScroll(); else stopDisplayScroll();}
-  function startDisplayScroll(){stopDisplayScroll();displayState.scrolling=true;sendDisplayMirrorState();const speedSteps=[65,80,100,120,150];let lastFrame=0,lastSync=0;const loop=(now)=>{if(!displayState.scrolling)return;const area=$('displayContent');if(area){const dt=lastFrame?Math.max(0,now-lastFrame):0;lastFrame=now;const speed=speedSteps[Math.max(1,Math.min(5,Number(displayState.speed)||1)-1)];area.scrollTop+=speed*dt/1000;if(now-lastSync>1000){lastSync=now;sendDisplayMirrorState();}}displayState.raf=requestAnimationFrame(loop)};displayState.raf=requestAnimationFrame(loop)}
+  function startDisplayScroll(){stopDisplayScroll();displayState.scrolling=true;sendDisplayMirrorState();const speedSteps=[65,80,100,120,150];let lastFrame=0,lastSync=0;const loop=(now)=>{if(!displayState.scrolling)return;const area=$('displayContent');if(area){const dt=lastFrame?Math.min(50,Math.max(0,now-lastFrame)):0;lastFrame=now;const speed=speedSteps[Math.max(1,Math.min(5,Number(displayState.speed)||1)-1)];area.scrollTop+=speed*dt/1000;if(now-lastSync>1000){lastSync=now;sendDisplayMirrorState();}}displayState.raf=requestAnimationFrame(loop)};displayState.raf=requestAnimationFrame(loop)}
   function stopDisplayScroll(){if(displayState.raf)cancelAnimationFrame(displayState.raf);displayState.raf=null;sendDisplayMirrorState();}
   function sendDisplayMirrorState(){
     if(new URLSearchParams(location.search).get('viewOnly')==='1')return;
