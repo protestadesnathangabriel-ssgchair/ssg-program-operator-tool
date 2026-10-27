@@ -1429,7 +1429,6 @@ function getStoredAuth(){
             <button data-page="prompt" onclick="showPage('prompt')">Live Windows</button>
             ${state.auth?.role==='admin'?'<button data-page="admin" onclick="showPage(\'admin\')">Officer Requests</button>':''}
           </nav>
-          <div class="sidebar-help-wrap"><button type="button" class="sidebar-help-button" onclick="showSiteHelp()" aria-label="Help and feature guide"><span aria-hidden="true">?</span> Help & Feature Guide</button></div>
           <div class="sidebar-foot">Independent Apps Script database.<br>Does not use TALAAN or Event Tracker data.</div>
         </aside>
         <main class="main">
@@ -1442,32 +1441,10 @@ function getStoredAuth(){
             <section id="page-admin" class="page"></section>
           </div>
         </main>
-        <div id="siteHelpModal" class="site-help-overlay" role="dialog" aria-modal="true" aria-labelledby="siteHelpTitle" hidden>
-          <div class="site-help-card">
-            <div class="site-help-head"><div><div class="ssg-eyebrow">SSG PROGRAM OPERATOR TOOL</div><h2 id="siteHelpTitle">Help & Feature Guide</h2><p>Quick instructions for the main tools and live prompters.</p></div><button class="btn small" type="button" onclick="closeSiteHelp()" aria-label="Close help">✕</button></div>
-            <div class="site-help-content">
-              <section><h3>Dashboard & Saved Guides</h3><ul><li>Use the dashboard to open Program Guides, Program Sequence, or Lyric Prompter.</li><li>Search saved guides by title or date. Open to continue editing, or Preview to inspect without editing.</li><li>Officer/admin accounts can manage saved guides. View-only accounts can browse, preview, follow an online operator, and open Host View.</li></ul></section>
-              <section><h3>Program Guides / Program Flow</h3><ul><li>Create sections and items in the order they will be presented. Use clear section and item titles.</li><li>Changes are saved automatically when auto-save is enabled; check the save-status label before leaving the page.</li><li>Preview the guide before sending it to a display. Use the presenter controls to play/pause, move between items, adjust scroll speed, change text size/width, and switch the stage theme.</li></ul></section>
-              <section><h3>Program Sequence</h3><ul><li>Build a take-based sequence and organize items in presentation order. Add or rename tabs/blocks as needed.</li><li>Use the preview to check the sequence before presenting. Keep the active take/item label visible for the operator and crew.</li><li>Use the live prompter controls to play/pause, move to the previous/next item, jump to top, adjust speed, and change text size or line width.</li></ul></section>
-              <section><h3>Lyric Prompter</h3><ul><li><b>Text Lyrics:</b> add tabs and blocks, then enter lyrics in the order they will be sung.</li><li><b>Image Lyrics:</b> add or select lyric images and arrange them in presentation order.</li><li><b>Video Lyrics:</b> currently marked WIP and may not be available yet.</li><li>Preview before sending to the lyric display. Use Play/Pause and speed controls for automatic scrolling; use manual navigation when needed.</li></ul></section>
-              <section><h3>Live Windows, Host View & Follow Operator</h3><ul><li>Use Live Windows to open the presenter/display windows for the selected guide.</li><li>Host View is a readable, scrollable document for the host and does not use the operator timer controls.</li><li>View-only users can select Follow Online Operator to watch the active operator's prompt and timer. This mode is read-only; local controls are disabled.</li><li>Use fullscreen for display mode. Press Esc to exit fullscreen; use Ctrl+Alt+F to enter fullscreen again where supported.</li></ul></section>
-              <section><h3>Keyboard shortcuts (where supported)</h3><ul><li><b>Space:</b> play/pause auto-scroll.</li><li><b>1–9:</b> choose a scroll-speed preset; <b>0:</b> pause.</li><li><b>Arrow keys:</b> move between blocks or manually scroll, depending on the active prompter.</li><li><b>P:</b> toggle stage theme; <b>[ / ]:</b> decrease/increase text size; <b>- / =:</b> narrow/widen line width; <b>T:</b> jump to top when paused.</li></ul></section>
-            </div>
-          </div>
-        </div>
+
       </div>`;
   }
 
-
-  function showSiteHelp(){
-    const modal=document.getElementById('siteHelpModal');if(!modal)return;
-    modal.hidden=false;document.body.classList.add('site-help-open');
-    const closeOnBackdrop=e=>{if(e.target===modal)closeSiteHelp();};
-    modal.addEventListener('click',closeOnBackdrop,{once:false});
-    const onKey=e=>{if(e.key==='Escape'){closeSiteHelp();document.removeEventListener('keydown',onKey);}};
-    document.addEventListener('keydown',onKey);
-  }
-  function closeSiteHelp(){const modal=document.getElementById('siteHelpModal');if(modal){modal.hidden=true;document.body.classList.remove('site-help-open');}}
 
   function toggleSsgMobileNav(){
     const sidebar=document.querySelector('.sidebar');
@@ -2648,17 +2625,6 @@ function broadcastGuideToPresenter(){
 .sidebar-help-button{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:11px 12px;border:1px solid var(--line,#dbe3ee);border-radius:12px;background:var(--surface,#fff);color:var(--text,#172033);font:inherit;font-weight:650;cursor:pointer;transition:background .18s ease,transform .18s ease,border-color .18s ease}
 .sidebar-help-button span{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#2868b2;color:white;font-weight:800}
 .sidebar-help-button:hover{background:var(--surface-soft,#f1f6fc);transform:translateY(-1px)}
-.site-help-overlay[hidden]{display:none!important}
-.site-help-overlay{position:fixed;inset:0;z-index:10050;background:rgba(12,20,36,.48);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:18px}
-.site-help-card{width:min(960px,100%);max-height:min(88vh,900px);overflow:hidden;display:flex;flex-direction:column;background:var(--surface,#fff);color:var(--text,#172033);border:1px solid var(--line,#dbe3ee);border-radius:20px;box-shadow:0 24px 80px rgba(0,0,0,.24)}
-.site-help-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:22px 24px 16px;border-bottom:1px solid var(--line,#dbe3ee)}
-.site-help-head h2{margin:5px 0;font-size:24px}.site-help-head p{margin:0;color:var(--muted,#65738a);font-size:13px}
-.site-help-content{padding:18px 24px 24px;overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.site-help-content section{border:1px solid var(--line,#dbe3ee);border-radius:13px;padding:14px 16px}
-.site-help-content h3{font-size:14px;margin:0 0 8px;color:var(--primary,#2868b2)}
-.site-help-content ul{margin:0;padding-left:18px;color:var(--muted,#586579);font-size:12.5px;line-height:1.6}
-.site-help-content li+li{margin-top:5px}
-body.site-help-open{overflow:hidden}
 @media(max-width:650px){.site-help-overlay{padding:8px}.site-help-card{max-height:94vh;border-radius:14px}.site-help-head{padding:16px}.site-help-head h2{font-size:20px}.site-help-content{grid-template-columns:1fr;padding:12px 14px 18px;gap:10px}.sidebar-help-wrap{padding-bottom:10px}}
 </style></head><body>${docContent}</body></html>`;
       const blob=new Blob(['\ufeff',docHtml],{type:'application/msword;charset=utf-8'});downloadBlobFile(blob,exportFileBase(guide)+'.doc');
@@ -3425,7 +3391,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
         if(guide&&guide.id){displayState.guide=guide;renderDisplay();if(!followUid){controlState.guide=guide;prepareTimers();renderControl();}subscribeDisplayedGuide(APP_CONFIG.guideId,'display');}
       }).withFailureHandler(function(err){console.warn('Display guide load failed:',err);}).apiCall('getGuide',[APP_CONFIG.guideId],token);
     }
-    if(!viewOnly)setTimeout(()=>{const area=$('displayContent');if(area){let mirrorScrollTimer=null;area.addEventListener('scroll',()=>{if(mirrorScrollTimer!==null)return;mirrorScrollTimer=setTimeout(()=>{mirrorScrollTimer=null;sendDisplayMirrorState();},120);},{passive:true});sendDisplayMirrorState();}},250);
+    if(!viewOnly)setTimeout(()=>{const area=$('displayContent');if(area){let mirrorScrollTimer=null;area.addEventListener('scroll',()=>{if(mirrorScrollTimer!==null)return;mirrorScrollTimer=setTimeout(()=>{mirrorScrollTimer=null;sendDisplayMirrorState();},400);},{passive:true});sendDisplayMirrorState();}},250);
     if(viewOnly&&followUid){initFollowOperator(followUid);setInterval(()=>{if(displayState.timer)renderDisplayTimer();},250);const title=document.querySelector('.display-controls');if(title)title.textContent='LIVE OPERATOR VIEW · READ ONLY';const key=$('displayKey');if(key)key.textContent='VIEW-ONLY · FOLLOWING ONLINE OPERATOR';const heading=document.querySelector('.control-top h2');if(heading)heading.textContent='LIVE OPERATOR STATUS';const status=$('controlList');if(status)status.innerHTML='<div class="operator-follow-empty">Connecting to the selected operator’s live display…</div>';const target=$('controlTarget');if(target)target.textContent='CONNECTING · READ ONLY';}
     else if(viewOnly){const title=document.querySelector('.display-controls');if(title)title.textContent='VIEW-ONLY DISPLAY';const key=$('displayKey');if(key)key.textContent='VIEW-ONLY';}
     if(!viewOnly){publishOperatorDisplayState();displayState.operatorPublishTimer=setInterval(publishOperatorDisplayState,2000);}
@@ -3582,7 +3548,35 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     } else { el.scrollIntoView({behavior:'smooth',block:'center'}); }
   }
   function toggleDisplayScroll(){displayState.scrolling=!displayState.scrolling; if(displayState.scrolling)startDisplayScroll(); else stopDisplayScroll();}
-  function startDisplayScroll(){stopDisplayScroll();displayState.scrolling=true;sendDisplayMirrorState();const speedSteps=[65,80,100,120,150];let lastFrame=0,lastSync=0;const loop=(now)=>{if(!displayState.scrolling)return;const area=$('displayContent');if(area){const dt=lastFrame?Math.min(50,Math.max(0,now-lastFrame)):0;lastFrame=now;const speed=speedSteps[Math.max(1,Math.min(5,Number(displayState.speed)||1)-1)];area.scrollTop+=speed*dt/1000;if(now-lastSync>1000){lastSync=now;sendDisplayMirrorState();}}displayState.raf=requestAnimationFrame(loop)};displayState.raf=requestAnimationFrame(loop)}
+  function startDisplayScroll(){
+    if(displayState.raf)cancelAnimationFrame(displayState.raf);
+    displayState.raf=null;
+    displayState.scrolling=true;
+    sendDisplayMirrorState();
+    const speedSteps=[65,80,100,120,150];
+    let lastFrame=0,lastSync=0,position=0;
+    const area=$('displayContent');
+    if(area)position=area.scrollTop;
+    const loop=(now)=>{
+      if(!displayState.scrolling)return;
+      const currentArea=$('displayContent');
+      if(!currentArea){stopDisplayScroll();return;}
+      if(!lastFrame)lastFrame=now;
+      // Preserve sub-pixel movement and account for delayed animation frames.
+      // The previous 50ms clamp silently discarded elapsed time, causing the
+      // scroll to slow down or appear to stall when the page was busy.
+      const dt=Math.min(100,Math.max(0,now-lastFrame));
+      lastFrame=now;
+      const speed=speedSteps[Math.max(1,Math.min(5,Number(displayState.speed)||3)-1)];
+      const max=Math.max(0,currentArea.scrollHeight-currentArea.clientHeight);
+      position=Math.min(max,position+speed*dt/1000);
+      currentArea.scrollTop=position;
+      if(now-lastSync>=1500){lastSync=now;sendDisplayMirrorState();}
+      if(position>=max){displayState.scrolling=false;displayState.raf=null;sendDisplayMirrorState();return;}
+      displayState.raf=requestAnimationFrame(loop);
+    };
+    displayState.raf=requestAnimationFrame(loop);
+  }
   function stopDisplayScroll(){if(displayState.raf)cancelAnimationFrame(displayState.raf);displayState.raf=null;sendDisplayMirrorState();}
   function sendDisplayMirrorState(){
     if(new URLSearchParams(location.search).get('viewOnly')==='1')return;
