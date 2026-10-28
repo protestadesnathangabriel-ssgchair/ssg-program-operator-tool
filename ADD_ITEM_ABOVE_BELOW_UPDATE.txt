@@ -1,0 +1,9 @@
+SSG PROGRAM OPERATOR TOOL — ADD ABOVE / BELOW UPDATE
+
+Added +↑ and +↓ buttons beside the drag handle for Program Flow items and Program Sequence takes.
+- +↑ inserts a blank item/take immediately above the selected row.
+- +↓ inserts a blank item/take immediately below the selected row.
+- Existing content stays in its original item; only a new blank row is inserted.
+- Uses the existing editor render, preview, autosave scheduling, and live presenter broadcast flows.
+
+Deployment: replace index.html in the existing GitHub repository. No Firebase rules or firebase-adapter.js changes required.

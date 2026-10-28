@@ -1,0 +1,15 @@
+PROGRAM GUIDE TO PROGRAM SEQUENCE + STANDALONE ITEMS UPDATE
+
+Changes in this build:
+- Added “Use as Sequence” to saved Program Guides for officer/admin accounts. It fetches the full saved guide and copies its items into a NEW Program Sequence; it does not modify the source guide.
+- Items are flattened in order: Section 1 items, Section 2 items, and so on, followed by standalone Program Items. Take numbering starts at 0 and continues without resetting at section boundaries.
+- Item Title maps to Sequence Title; item Start Time maps to the sequence time field; Participants / Details and Notes / Technical Instructions are combined into the existing sequence Input Text field.
+- Added Standalone Program Items to Program Guide editing. They can be added without a section, edited/reordered/removed, saved, and included in preview, copy/print output, display, and timer controls.
+- Updated Firebase guide normalization so standaloneItems persist in Firestore.
+
+Deployment:
+Replace the existing project files with the contents of this ZIP, commit/push to the same GitHub Pages repository, and wait for the Pages deployment to complete. No Firestore rules change is intended by this update.
+
+Validation performed:
+- JavaScript syntax checked for the inline application script and firebase-adapter.js.
+- This is not a live Firebase/browser end-to-end test; verify saving a guide with standalone items and converting a saved guide into a sequence in the deployed app.

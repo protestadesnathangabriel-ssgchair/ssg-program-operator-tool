@@ -1,0 +1,17 @@
+SSG PROGRAM OPERATOR TOOL — PROMPTER FULL-SCREEN SHORTCUT
+
+WHAT CHANGED
+- Host View, Program Display (including Follow Online Operator / viewer display), and Lyric Prompter Display now support browser full screen.
+- In any of those display windows, press Ctrl+Alt+F to enter full screen. The browser chrome (tabs/address bar) is hidden by browser full-screen mode.
+- Press Esc to exit full screen. Press Ctrl+Alt+F again to enter it again.
+- The shortcut is intentionally limited to prompter/display windows; it does not change the editor or control-panel window.
+
+BROWSER LIMITATION
+Browsers do not reliably allow a web page to force full screen automatically on page load. This build uses the explicit Ctrl+Alt+F keyboard gesture instead. It does not attempt to intercept Esc. If the browser or operating system reserves Ctrl+Alt+F, click/focus the prompter window and try again; the browser must support the Fullscreen API.
+
+DEPLOYMENT
+- If the True Live Cross-Account Sync build is already deployed, replace only index.html in the GitHub Pages repository root.
+- If that build has NOT been deployed yet, follow VIEW_ONLY_LIVE_MONITORING_DEPLOYMENT.txt and deploy index.html + firebase-adapter.js to GitHub and publish firestore.rules in Firebase Console. Do not upload firestore.rules to GitHub as part of the GitHub Pages deployment.
+
+VERIFICATION
+JavaScript syntax and ZIP integrity should be checked locally. Browser-level full-screen behavior must still be tested in Chrome on the actual display device.

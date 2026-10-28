@@ -1,0 +1,22 @@
+SSG PROGRAM OPERATOR TOOL — VIDEO LYRICS UPDATE
+
+WHAT CHANGED
+- Activated Video Lyrics in the Lyric Prompter navigation.
+- Search and select a song from the existing MCGI Lyrics Database.
+- Generates a title cue, one cue for each lyric line, omits common section headings (Verse/Chorus/Bridge/Intro/Outro and Roman numeral section labels), and ensures the final cue is “To God be the Glory”.
+- Cue text can be edited; line cues can be reordered or removed; extra cue lines can be added.
+- Includes all 11 supplied MP4 backgrounds and lightweight poster thumbnails.
+- Adds looping background video preview and a separate fullscreen Video Lyrics Prompter.
+- Previous/Next buttons and Left/Right arrows or PageUp/PageDown/Space advance cues. Escape exits fullscreen; Ctrl+Shift+F requests fullscreen, matching the existing app shortcut.
+- Existing Text Lyrics and its current prompter path are left in place.
+
+DEPLOYMENT
+1. Extract this ZIP.
+2. Upload/replace the project files in the SAME GitHub repository. Keep the video-backgrounds folder and its posters subfolder intact.
+3. Commit and push; wait for the GitHub Pages workflow to finish successfully.
+4. Open the site, sign in, choose Lyric Prompter > Video Lyrics, search for a song, select a result, choose a background, then open the prompter.
+
+NOTES
+- The video assets total about 173 MB. All individual MP4s are under GitHub's 100 MB single-file limit, but uploading the full folder may take time.
+- Videos are static GitHub Pages assets; no Firebase Storage or Firestore rules change is included.
+- JavaScript syntax was checked. The live lyrics search/backend and cross-window playback still need to be tested on the deployed site.

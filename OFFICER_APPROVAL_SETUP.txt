@@ -1,0 +1,27 @@
+SSG PROGRAM OPERATOR TOOL — OFFICER ACCESS APPROVAL UPDATE
+
+WHAT THIS UPDATE ADDS
+- An Officer Requests page visible only to accounts whose users/{Firebase Auth UID} document has role: "admin".
+- Admin can list officerAccessRequests and approve or reject pending requests inside the website.
+- Approve writes users/{applicant UID} with role: "officer" and marks the request approved in one Firestore batch.
+- Reject marks the request rejected.
+- Firestore rules allow an existing admin to grant only the officer role to another account. The first admin is still provisioned manually.
+
+DEPLOYMENT — BOTH GITHUB AND FIREBASE ARE REQUIRED
+1. GitHub repository root: replace index.html with the index.html in this package.
+2. GitHub repository root: replace firebase-adapter.js with the firebase-adapter.js in this package.
+3. Firebase Console > Firestore Database > Rules: replace the rules with firestore.rules from this package and click Publish.
+4. Wait for GitHub Pages deployment. Sign out and sign back in as the admin, then open Officer Requests from the left navigation.
+5. Test with a separate Google account: submit an Officer Access Request, then use the admin account to approve it. The applicant should refresh or sign in again.
+
+ADMIN ACCOUNT REQUIREMENT
+- In Firebase Authentication, identify the Google account's exact UID.
+- Firestore document path must be users/{EXACT_AUTH_UID}; inside that document set role to the string "admin".
+- Do not use an auto-generated document ID for the admin record. The app looks up users/{Firebase Auth UID}.
+- Keep the existing admin document in place. The rules intentionally do not allow an admin to grant admin role to another user through this UI.
+
+SECURITY / NOTES
+- Requests are stored at officerAccessRequests/{requesting UID}.
+- Approval grants role "officer", not "admin".
+- The app's client-side admin check only controls what is shown; Firestore Rules enforce access.
+- Syntax of inline JavaScript and firebase-adapter.js was checked. This package has not been tested against the live Firebase project. Publish the rules before testing the approval buttons; otherwise the writes will be denied.

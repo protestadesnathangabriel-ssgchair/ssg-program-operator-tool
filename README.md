@@ -5,7 +5,7 @@ This is a static-site migration build based on the supplied legacy `index.html` 
 ## Important scope and limitations
 
 - The app is static and can be hosted on GitHub Pages.
-- Google sign-in uses Firebase Authentication. Access is granted only when the signed-in Firebase user's `users/{uid}` Firestore document has `role: "officer"` or `role: "admin"`.
+- Google sign-in uses Firebase Authentication. Approved accounts whose `users/{uid}` document has `role: "officer"` or `role: "admin"` can edit. Other signed-in Google accounts get a read-only view of saved guides/sequences and can submit one officer-access request.
 - Firestore is the app database. The XLSX importer migrates `GUIDES` (including nested sections/items), both song-library tabs, `LYRICS_LIBRARY`, and `MEDIA_LIBRARY`.
 - The workbook's `MEDIA_LIBRARY` is empty, so Google Drive media search will be empty until a media index is imported separately.
 - Google Drive recursive indexing, automatic video-duration lookup, Google Docs/DOCX export, and server-side Apps Script behavior are not included in this Spark-only build. Cloud Functions require the Blaze plan, so this build does not use Functions.
@@ -95,6 +95,17 @@ To authorize another officer, repeat steps 1, 4–7 for that person. Only the pr
 4. Search a known song and a known lyric title.
 5. Check presenter/display/control modes using the app's built-in controls. They need the same browser origin and an active signed-in Firebase session.
 6. Check Firestore → Usage to watch free-quota usage.
+
+## Public view-only access, live operator monitoring, and officer requests
+
+- `guides` documents (including `PROGRAM_SEQUENCE` guides) are publicly readable by design. Only approved officers/admins can create, update, or delete them.
+- The view-only dashboard request form asks for the requester's full name and Production-Technical Team role. Requests are stored in `officerAccessRequests/{uid}` for admin review; submitting a request never grants a role. Approve separately by creating/updating `users/{uid}` with `role: "officer"`.
+- View-only users can open **Guide Preview**, **Independent Window Display**, and **Host View** for saved guides/sequences.
+- Independent Window Display has local-only keyboard/scroll and timer controls. It does not publish changes to an operator's live session or edit the saved guide.
+- **Follow Online Operator** lists approved operators actively publishing the selected guide. A viewer can follow one operator's current active item/take, timer, scroll position, and display state in real time. The follow window is read-only: it does not accept keyboard commands or operator-control actions.
+- An operator appears online while their normal live Window Display is open and publishing the selected guide's live state. Presence expires automatically after a short heartbeat timeout if the browser closes unexpectedly. The app writes these live records to `operatorSessions/{uid}`; signed-in users can read sessions, while only each approved officer can publish their own session.
+- Song, lyrics, and media libraries and `lineups` remain officer-only. Because saved guide documents are publicly readable, do not put private/personal information in guide content.
+- For this update, publish the full contents of `firestore.rules` in Firebase Console → Firestore Database → Rules, then replace only `index.html`, `firebase-adapter.js`, and `firestore.rules` in the GitHub Pages repository and commit the changes.
 
 ## Security and backup notes
 

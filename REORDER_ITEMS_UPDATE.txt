@@ -1,0 +1,16 @@
+SSG PROGRAM OPERATOR TOOL — REORDER ITEMS UPDATE
+
+What changed:
+- Program Flow Builder: program items can be rearranged by dragging the grip (⠿), or by using the up/down arrow buttons. Reordering is within the same section.
+- Program Sequence Builder: takes can be rearranged by dragging the grip (⠿), or by using the up/down arrow buttons.
+- The live preview, operator/presenter broadcast, and automatic save are refreshed after a reorder.
+- Existing item fields and custom cue/take numbers are preserved; only their order changes.
+
+Deployment:
+1. Download and extract this ZIP.
+2. Open the ssg-program-operator-tool-main folder.
+3. Replace the existing index.html in the GitHub repository with this ZIP's index.html.
+4. Commit/push the change and wait for GitHub Pages to finish deploying.
+5. Reload the website. Test the arrow buttons first; desktop browsers also support dragging the grip.
+
+No Firebase rules or firebase-adapter.js changes are required for this UI-only feature.

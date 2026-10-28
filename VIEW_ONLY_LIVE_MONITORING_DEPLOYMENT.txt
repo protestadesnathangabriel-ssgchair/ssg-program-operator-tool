@@ -1,0 +1,46 @@
+SSG PROGRAM OPERATOR TOOL — VIEW-ONLY LIVE OPERATOR MONITORING UPDATE
+
+CHANGES IN THIS UPDATE
+- Removed the Independent Display action from the viewer dashboard. Host View remains available.
+- Follow Online Operator opens a read-only live display for the selected online operator.
+- The viewer sees the program prompt, active item/take, timer, and shared display position/zoom state.
+- The followed operator's timer is visible and updates smoothly. Viewer timer/keyboard controls and the operator control panel are hidden/disabled; viewer actions cannot control the operator.
+- Guide Preview and Host View remain available to viewers.
+- Officer access requests and Firestore security model remain unchanged.
+
+DEPLOY IN THIS ORDER
+1. Back up the current GitHub repository files and current Firestore Rules text.
+2. If the rules from this bundle have not yet been published, open Firebase Console > Build > Firestore Database > Rules, replace the Rules editor with this bundle's firestore.rules, and click Publish. Do not upload firestore.rules to GitHub for the GitHub Pages deployment.
+3. Open GitHub repository: https://github.com/protestadesnathangabriel-ssgchair/ssg-program-operator-tool/
+4. Replace only these files in the repository root with the copies from this bundle:
+   - index.html
+   - firebase-adapter.js
+   Do not replace firestore.rules in GitHub. It is included in this ZIP only as the rules source for Firebase Console.
+5. Commit the two files to the branch used by GitHub Pages (normally main) and wait for deployment.
+6. Open https://protestadesnathangabriel-ssgchair.github.io/ssg-program-operator-tool/ and test with two separate Google accounts/browser profiles:
+   A. Approved officer: open the saved guide's live Window Display and operate the guide/timer.
+   B. Signed-in viewer: open the same guide, choose Follow Online Operator, select the officer, and verify prompt/item/take/timer/scroll/zoom updates.
+   C. Verify the viewer cannot start/pause/end the operator's timer or control the operator's live display.
+   D. Verify Guide Preview and Host View still open and Independent Display is no longer offered in the viewer dashboard.
+   E. Submit an officer request and verify the name + Production-Technical Team role appear in Firestore > Data > officerAccessRequests.
+
+VERIFICATION LIMITATION
+The code can be syntax-checked locally, but this bundle has not been connected to or tested against the live Firebase project or a Firestore Rules emulator here. The two-account test above is required after deployment. Follow Online Operator is available only while an approved officer's live Window Display is open and publishing state for that guide. Stale presence expires automatically.
+
+SECURITY NOTES
+- Saved guides are publicly readable under the current design. Do not put private information in guide content.
+- Submitting a request does not grant officer access. An admin must provision users/{uid} with role=officer.
+- Never change Firestore rules to allow unrestricted writes.
+
+
+CROSS-ACCOUNT LIVE EDITOR SYNC UPDATE
+- Replace index.html and firebase-adapter.js in the GitHub Pages repository root.
+- Publish the updated firestore.rules from this ZIP in Firebase Console > Firestore Database > Rules. Do not replace firestore.rules in GitHub for the Pages deployment.
+- Live editor draft synchronization uses the guideLiveDrafts collection and is separate from permanent saved guides. The guide must be saved once to have a stable guide ID. After that, editor changes publish after a short 120 ms debounce and appear on Host View / display / viewer subscriptions without waiting for the permanent auto-save.
+- This code has not been tested against the user's live Firebase project. Verify using two approved/officer and viewer accounts before relying on it for an event.
+
+
+PROMPTER FULL-SCREEN SHORTCUT UPDATE
+- Host View, Program Display (including viewer Follow Online Operator), and Lyric Prompter Display support Ctrl+Alt+F to enter browser full screen; Esc exits using the browser's native behavior.
+- If the True Live Cross-Account Sync build is already deployed, replace only index.html for this update. If not yet deployed, use the earlier steps above for index.html, firebase-adapter.js, and Firestore rules.
+- Browser security may block automatic full screen on page load, so full screen is entered by the keyboard gesture, not forced on open.

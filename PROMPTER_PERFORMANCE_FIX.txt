@@ -1,0 +1,25 @@
+SSG PROGRAM OPERATOR TOOL — PROMPTER PERFORMANCE FIX
+
+This update targets:
+- Lag/buffering when using keyboard controls and auto-scroll in Program Flow and Program Sequence.
+- Lyric Prompter scroll stutter/jumps after a brief pause.
+
+Code changes in index.html:
+- Program Flow/Sequence auto-scroll uses elapsed time instead of a fixed increment per animation frame, so speed is less dependent on display refresh rate.
+- The control-preview mirror sends large prompt/timer HTML only when that content changes, rather than repeatedly sending it with every scroll update.
+- Lyric display avoids rebuilding identical lyric markup on every incoming state message.
+- Lyric auto-scroll clamps unusually long animation-frame gaps to reduce sudden jumps after scheduling delays.
+
+DEPLOYMENT
+If the current True Live Cross-Account Sync / fullscreen build is already deployed, replace ONLY index.html in the GitHub Pages repository root with the index.html from this ZIP, then commit/push and wait for GitHub Pages to publish.
+Do not replace firebase-adapter.js or Firestore rules for this front-end performance patch. Do not upload firestore.rules to GitHub Pages.
+
+VALIDATION STATUS
+- Inline JavaScript syntax checked with Node.js.
+- ZIP integrity checked.
+- Actual Chrome/browser scroll smoothness and cross-account live behavior have not been physically tested from this environment; verify them in the deployed app before a live program.
+
+ADDITIONAL PROGRAM FLOW / PROGRAM SEQUENCE FIX
+- Live guide updates now re-render the display while preserving its current scroll position without restarting the active item's smooth-scroll animation on every incoming edit.
+- This specifically targets stutter/buffering when a live draft or guide update arrives while the operator is scrolling or following the active TAKE.
+- Keyboard shortcuts and speed-step values are unchanged.

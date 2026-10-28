@@ -1,0 +1,20 @@
+PROGRAM FLOW / PROGRAM SEQUENCE PROMPTER LAG FIX
+
+Observed symptom addressed:
+- Scroll begins at the selected speed, then slows after a short time.
+- Changing speed does not reliably restore smooth scrolling.
+
+Changes in index.html:
+- Avoid serializing the full prompt DOM (innerHTML) on every scroll/mirror update.
+- Serialize and send prompt HTML only after renderDisplay() changes the prompt markup.
+- Throttle scroll-driven mirror updates to at most about once every 120 ms.
+- Preserve the prior speed-9 elapsed-time fix and the lyric-prompter changes.
+
+Deployment:
+- If the True Live Cross-Account Sync build is already deployed, replace ONLY index.html in the GitHub Pages repository root.
+- Do not replace firebase-adapter.js or publish new Firestore rules for this patch.
+- After GitHub Pages deploys, hard-refresh the prompter window (Ctrl+F5) and test Program Flow and Program Sequence at speed 9, then change to another speed.
+
+Validation:
+- Local JavaScript syntax and ZIP integrity are checked.
+- This is not a claim that the live Chrome behavior has already been tested; verify it in the deployed app.

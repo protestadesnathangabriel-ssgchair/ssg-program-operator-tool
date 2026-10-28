@@ -1,0 +1,18 @@
+PROGRAM PROMPTER SPEED-9 FIX
+
+Purpose:
+- Program Flow and Program Sequence scroll loop previously capped elapsed frame time at 50 ms.
+  When rendering or live-sync work made a frame take longer than 50 ms, the loop discarded
+  the extra elapsed time, which made the apparent scroll speed drop.
+- The loop now uses the full elapsed frame time to preserve the selected speed.
+- Mirror state updates to the companion control preview are reduced from every 100 ms to
+  every 250 ms to lower cross-window messaging overhead during auto-scroll.
+
+Deployment:
+- If the current True Live Cross-Account Sync build is deployed, replace only index.html
+  in the GitHub Pages repository root with the index.html in this ZIP.
+- No firebase-adapter.js or Firestore rules changes are required for this specific patch.
+
+Validation:
+- JavaScript syntax and ZIP integrity should be checked before deployment.
+- Browser performance and the live deployed result must still be verified in Chrome.
