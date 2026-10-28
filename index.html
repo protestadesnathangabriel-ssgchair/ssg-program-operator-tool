@@ -1995,10 +1995,10 @@ function getStoredAuth(){
       results.innerHTML='<div class="media-result"><div class="media-result-meta">Searching Parent MCGI Music Department Drive...</div></div>';results.classList.add('show');
       mediaSearchTimers[itemCard.dataset.itemId]=setTimeout(()=>{const token=state.auth?.token||getStoredAuth()?.token||'';google.script.run.withSuccessHandler(files=>{
         files=files||[];if(!files.length){results.innerHTML='<div class="media-result"><div class="media-result-meta">No matching files found.</div></div>';return;}
-        results.innerHTML=files.map(f=>'<div class="media-result" data-file-id="'+escAttr(f.id)+'" data-file-name="'+escAttr(f.name)+'" data-file-url="'+escAttr(f.url)+'"><div class="media-result-name">'+esc(f.name)+'</div><div class="media-result-meta">'+esc(f.folder||'MCGI Music Department')+' · '+esc(f.mimeType||'File')+'</div></div>').join('');
+        results.innerHTML=files.map(f=>'<div class="media-result" data-file-id="'+escAttr(f.id)+'" data-file-name="'+escAttr(f.name)+'" data-file-url="'+escAttr(f.url)+'" data-mime-type="'+escAttr(f.mimeType||'')+'" data-duration-seconds="'+escAttr(f.durationSeconds||f.duration||f.trtSeconds||'')+'"><div class="media-result-name">'+esc(f.name)+'</div><div class="media-result-meta">'+esc(f.folder||'MCGI Music Department')+' · '+esc(f.mimeType||'File')+'</div></div>').join('');
         results.querySelectorAll('.media-result[data-file-id]').forEach(row=>row.addEventListener('click',()=>{
           input.value=row.dataset.fileName||'';itemCard.dataset.mediaUrl=row.dataset.fileUrl||'';results.classList.remove('show');if(selected){selected.style.display='flex';selected.querySelector('strong').textContent=input.value;}
-          autoFillVideoTrt(itemCard,row.dataset.fileId||'');
+          autoFillVideoTrt(itemCard,row.dataset.fileId||'',row.dataset.fileUrl||'',row.dataset.mimeType||'',row.dataset.durationSeconds||'');
           renderSequencePreview();
           scheduleGuideAutoSave();
         }));
@@ -2007,20 +2007,67 @@ function getStoredAuth(){
     input.addEventListener('focus',function(){if(this.value.trim().length>=2&&results.innerHTML)results.classList.add('show');});
     clearBtn?.addEventListener('click',()=>{input.value='';itemCard.dataset.mediaUrl='';if(selected)selected.style.display='none';results.classList.remove('show');results.innerHTML='';renderSequencePreview();scheduleGuideAutoSave();});
   }
-  function autoFillVideoTrt(itemCard,fileId){
-    if(!itemCard||!fileId)return;
+  function autoFillVideoTrt(itemCard,fileId,mediaUrl,mimeType,knownDuration){
+    if(!itemCard)return;
     const trtInput=itemCard.querySelector('.item-trt-input');
     if(!trtInput)return;
-    const token=state.auth?.token||getStoredAuth()?.token||'';
-    google.script.run.withSuccessHandler(result=>{
-      if(result?.success && Number.isFinite(Number(result.durationSeconds))){
-        trtInput.value=formatTrtSeconds(Number(result.durationSeconds));
-        recalculateEditorTimes();
-        showToast('TRT updated automatically from the selected video.');
+    const isMedia=/(audio|video|mp3|mp4|m4a|wav|mpeg|ogg|webm|quicktime)/i.test(String(mimeType||'')+' '+String(mediaUrl||'')+' '+String(itemCard.querySelector('.item-song-search')?.value||''));
+    if(!isMedia)return;
+    const requestId=(Number(itemCard.dataset.trtRequestId)||0)+1;
+    itemCard.dataset.trtRequestId=String(requestId);
+    const applyDuration=(seconds)=>{
+      if(!Number.isFinite(seconds)||seconds<=0||itemCard.dataset.trtRequestId!==String(requestId))return false;
+      trtInput.value=formatTrtSeconds(Math.round(seconds));
+      trtInput.dispatchEvent(new Event('input',{bubbles:true}));
+      recalculateEditorTimes();
+      showToast('TRT updated automatically from the selected media.');
+      return true;
+    };
+    const cached=Number(knownDuration);
+    if(Number.isFinite(cached)&&cached>0&&applyDuration(cached))return;
+    const url=String(mediaUrl||itemCard.dataset.mediaUrl||'').trim();
+    if(!url){showToast('Could not read media duration. Check that the selected MP3/MP4 has a playable link.');return;}
+    const candidates=[];
+    try{
+      const parsed=new URL(url,location.href);
+      const driveMatch=parsed.pathname.match(/\/file\/d\/([^/]+)/)||parsed.pathname.match(/\/d\/([^/]+)/);
+      const id=parsed.searchParams.get('id')||(driveMatch&&driveMatch[1]);
+      if(id&&/drive\\.google\\.com$/i.test(parsed.hostname)){
+        candidates.push('https://drive.google.com/uc?export=download&id='+encodeURIComponent(id));
+        candidates.push('https://drive.google.com/uc?id='+encodeURIComponent(id)+'&export=download');
       }
-    }).withFailureHandler(err=>{
-      console.warn('Video duration unavailable:',err);
-    }).apiCall('getMcgiMediaDuration',[fileId],token);
+      candidates.push(url);
+    }catch(_){candidates.push(url);}
+    const tryCandidate=(index)=>{
+      if(itemCard.dataset.trtRequestId!==String(requestId))return;
+      if(index>=candidates.length){
+        console.warn('Unable to read selected media duration. The URL may require Google Drive sign-in or may not be directly playable.');
+        showToast('Could not read TRT from this media link. If it is a restricted Drive file, enter TRT manually.');
+        return;
+      }
+      const candidate=candidates[index];
+      const ext=(candidate.split('?')[0].split('.').pop()||'').toLowerCase();
+      const video=/mp4|m4v|mov|webm|ogv/.test(ext)||/video/i.test(String(mimeType||''));
+      const media=document.createElement(video?'video':'audio');
+      let settled=false;
+      const cleanup=()=>{media.removeAttribute('src');try{media.load();}catch(_){}};
+      const fail=()=>{if(settled)return;settled=true;cleanup();tryCandidate(index+1);};
+      media.preload='metadata';
+      media.muted=true;
+      media.onloadedmetadata=()=>{
+        if(settled)return;settled=true;
+        const seconds=Number(media.duration);
+        cleanup();
+        if(!applyDuration(seconds))tryCandidate(index+1);
+      };
+      media.onerror=fail;
+      const timeout=setTimeout(()=>{if(!settled){settled=true;cleanup();tryCandidate(index+1);}},9000);
+      const oldLoaded=media.onloadedmetadata;
+      media.onloadedmetadata=()=>{clearTimeout(timeout);oldLoaded();};
+      media.src=candidate;
+      try{media.load();}catch(_){clearTimeout(timeout);fail();}
+    };
+    tryCandidate(0);
   }
 
   function syncGuide(){
@@ -2257,7 +2304,7 @@ function getStoredAuth(){
                 const strong=selected.querySelector('strong');
                 if(strong)strong.textContent=input.value;
               }
-              autoFillVideoTrt(itemCard,row.dataset.fileId||'');
+              autoFillVideoTrt(itemCard,row.dataset.fileId||'',row.dataset.fileUrl||'',row.dataset.mimeType||'',row.dataset.durationSeconds||'');
               renderLivePreview();
               scheduleGuideAutoSave();
             });

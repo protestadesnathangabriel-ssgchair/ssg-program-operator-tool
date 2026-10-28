@@ -260,7 +260,7 @@
       }
       case 'searchMcgiMedia': {
         const rows=await searchByTerms('mediaLibrary',a[0],['name','folder','mimeType','searchText'],100);
-        return rows.slice(0,30).map(r=>({id:r.id,name:r.name||r.title||'',mimeType:r.mimeType||'',url:r.url||'',modified:r.modified||'',folder:r.folder||''}));
+        return rows.slice(0,30).map(r=>({id:r.id,name:r.name||r.title||'',mimeType:r.mimeType||'',url:r.url||'',modified:r.modified||'',folder:r.folder||'',durationSeconds:Number(r.durationSeconds||r.duration||r.trtSeconds||0)||null}));
       }
       case 'getMcgiMediaDuration': return {success:false,durationSeconds:null,message:'Automatic Google Drive video-duration lookup is not available in the GitHub Pages + Spark configuration. Enter duration manually or use the media link.'};
       case 'warmupLibraries': return {success:true,message:'Firestore libraries are ready.'};
