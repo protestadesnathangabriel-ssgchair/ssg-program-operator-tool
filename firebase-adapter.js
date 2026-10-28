@@ -66,6 +66,7 @@
       title:String(s.title||`Section ${si+1}`),startTime:String(s.startTime||''),endTime:String(s.endTime||''),notes:String(s.notes||''),
       items:(Array.isArray(s.items)?s.items:[]).map((it,ii)=>({...it,id:String(it.id||('ITM_'+crypto.randomUUID().replace(/-/g,'').slice(0,14))),number:String(it.number||ii+1),title:String(it.title||`Program Item ${ii+1}`),trt:String(it.trt||it.duration||'')}))
     }));
+    out.standaloneItems=(Array.isArray(g.standaloneItems)?g.standaloneItems:[]).map((it,ii)=>({...it,id:String(it.id||('ITM_'+crypto.randomUUID().replace(/-/g,'').slice(0,14))),number:String(it.number||ii+1),title:String(it.title||`Program Item ${ii+1}`),trt:String(it.trt||it.duration||'')}));
     return out;
   }
   async function getGuide(id){

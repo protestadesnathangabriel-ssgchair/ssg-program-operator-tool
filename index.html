@@ -74,7 +74,7 @@
     .field{min-width:0}.field.full{grid-column:1/-1}.field label{display:block;font-size:11px;font-weight:800;color:#4f5b67;margin-bottom:5px}
     .section-card{border:1px solid #cfd8e1;border-radius:9px;padding:13px;background:#fbfcfd;margin-top:12px}
     .section-header,.item-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}.section-header strong{color:var(--blue);font-size:13px}.item-header strong{font-size:12px}
-    .item-card{border:1px solid #dde4ea;border-radius:8px;padding:12px;background:#fff;margin-top:10px}.item-card.ssg-dragging,.sequence-template-card.ssg-dragging{opacity:.42}.item-card.ssg-drop-target,.sequence-template-card.ssg-drop-target{outline:2px dashed #1687d9;outline-offset:3px}.item-card .form-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.item-reorder-tools{display:flex;align-items:center;gap:4px;flex-wrap:wrap}.item-reorder-tools .btn{min-width:30px;padding:4px 7px}.item-drag-handle,.sequence-drag-handle{cursor:grab;touch-action:none;font-weight:900;user-select:none}.item-drag-handle:active,.sequence-drag-handle:active{cursor:grabbing}
+    .item-card{border:1px solid #dde4ea;border-radius:8px;padding:12px;background:#fff;margin-top:10px}.standalone-items-panel{border:1px dashed #b8c5d2;border-radius:10px;padding:13px;margin-top:14px;background:#f8fafc}.standalone-items-root{display:flex;flex-direction:column;gap:8px}.item-card.ssg-dragging,.sequence-template-card.ssg-dragging{opacity:.42}.item-card.ssg-drop-target,.sequence-template-card.ssg-drop-target{outline:2px dashed #1687d9;outline-offset:3px}.item-card .form-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.item-reorder-tools{display:flex;align-items:center;gap:4px;flex-wrap:wrap}.item-reorder-tools .btn{min-width:30px;padding:4px 7px}.item-drag-handle,.sequence-drag-handle{cursor:grab;touch-action:none;font-weight:900;user-select:none}.item-drag-handle:active,.sequence-drag-handle:active{cursor:grabbing}
     .trt-preview{font-size:11px;color:var(--muted);padding:10px;border:1px dashed var(--line);border-radius:7px;background:#fafbfd}.time-auto{background:#f3f5f7;color:#69737d}.time-auto:disabled{opacity:1;cursor:not-allowed}
     .sticky-actions{position:sticky;bottom:0;z-index:10;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:10px -0px 0;margin-top:14px;display:flex;justify-content:flex-end;gap:8px}
     .editor-workspace{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);gap:14px;align-items:start}
@@ -937,7 +937,7 @@ function getStoredAuth(){
   function emptyItem(n){ return {id:uid('ITM'),number:String(n),title:'',startTime:'',endTime:'',trt:'',media:'',link:'',participants:'',notes:''}; }
   function emptySection(n){ return {id:uid('SEC'),title:'Section '+n,startTime:'',endTime:'',notes:'',_manualEnd:false,items:[emptyItem(1)]}; }
   function newBlankGuide(){
-    return {id:'',title:'',eventDate:'',organizersCallTime:'',formalStart:'',mainBgm:'',fileLink:'',ownerUsername:'SSG OFFICER',ownerName:'SSG Officer',sections:[emptySection(1)]};
+    return {id:'',title:'',eventDate:'',organizersCallTime:'',formalStart:'',mainBgm:'',fileLink:'',ownerUsername:'SSG OFFICER',ownerName:'SSG Officer',sections:[emptySection(1)],standaloneItems:[]};
   }
   function newBlankSequence(){
     return {id:'',type:'PROGRAM_SEQUENCE',title:'',eventDate:'',organizersCallTime:'',formalStart:'',mainBgm:'',fileLink:'',hosts:[],sections:[{id:uid('SEC'),title:'',startTime:'',endTime:'',notes:'',items:[]}]} ;
@@ -1043,8 +1043,16 @@ function getStoredAuth(){
     return [h,m,s].map(v=>String(v).padStart(2,'0')).join(':');
   }
 
+  function guideSectionsForDisplay(g){
+    const sections=(g?.sections||[]).slice();
+    const standalone=g?.standaloneItems||[];
+    if(standalone.length)sections.push({id:'STANDALONE_ITEMS',title:'Standalone Program Items',startTime:'',endTime:'',notes:'',items:standalone});
+    return sections;
+  }
+
   function hydrateGuideForEditor(g){
     if(!g)return g;
+    g.standaloneItems=Array.isArray(g.standaloneItems)?g.standaloneItems:[];
     g.sections=(g.sections||[]).map(function(sec,si){
       const out=Object.assign({},sec);
       out.items=(sec.items||[]).map(function(it){
@@ -1597,7 +1605,7 @@ function getStoredAuth(){
         <section class="ssg-dashboard-panel">
           <div class="ssg-section-title"><div><h2>Recently opened</h2><p>Pick up where you left off.</p></div><button class="ssg-text-link" type="button" onclick="openSavedGuidesFromHome()">View all →</button></div>
           <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="homeSearch" placeholder="Search guides by title…" value="${escAttr(window.homeSearchValue||'')}" oninput="window.homeSearchValue=this.value;renderHome()"></div>
-          <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button>${['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small danger" onclick="deleteGuideClient('${escAttr(g.id)}')">Delete</button>`:''}</div>`}</div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
+          <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button>${String(g.type||'PROGRAM_FLOW')!=='PROGRAM_SEQUENCE'&&['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small primary" onclick="useGuideAsSequence('${escAttr(g.id)}')">Use as Sequence</button>`:''}${['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small danger" onclick="deleteGuideClient('${escAttr(g.id)}')">Delete</button>`:''}</div>`}</div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
         </section>
         <section class="ssg-dashboard-panel">
           <div class="ssg-section-title"><div><h2>Quick access</h2><p>Supporting tools for your program.</p></div></div>
@@ -1692,6 +1700,36 @@ function getStoredAuth(){
   function createSequenceGuide(){ state.guide=newBlankSequence(); showPage('editor'); }
 
   function editGuide(id){ safeRun('getGuide',[id],guide=>{if(!guide){showToast('Guide not found.');return;}state.guide=guide;showPage('editor');}); }
+  function useGuideAsSequence(id){
+    if(!['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())){showToast('Officer access is required to create a Program Sequence.');return;}
+    safeRun('getGuide',[id],source=>{
+      if(!source){showToast('Saved Program Guide not found.');return;}
+      if(String(source.type||'PROGRAM_FLOW').toUpperCase()==='PROGRAM_SEQUENCE'){showToast('This saved item is already a Program Sequence.');return;}
+      const sourceItems=[];
+      (source.sections||[]).forEach(sec=>(sec.items||[]).forEach(item=>sourceItems.push(item)));
+      (source.standaloneItems||[]).forEach(item=>sourceItems.push(item));
+      const sequence=newBlankSequence();
+      sequence.id='';
+      sequence.type='PROGRAM_SEQUENCE';
+      sequence.title=String(source.title||'').toUpperCase();
+      sequence.eventDate=source.eventDate||'';
+      sequence.organizersCallTime=source.organizersCallTime||'';
+      sequence.formalStart=source.formalStart||'';
+      sequence.mainBgm=source.mainBgm||'';
+      sequence.fileLink=source.fileLink||'';
+      sequence.venue=source.venue||'';
+      sequence.hosts=[];
+      sequence.sections[0].items=sourceItems.map((item,index)=>{
+        const details=String(item.participants||'').trim();
+        const technical=String(item.notes||'').trim();
+        const combined=[details,technical].filter(Boolean).join(details&&technical?'\n':'');
+        return {id:uid('SEQ'),number:String(index),title:String(item.title||'').toUpperCase(),startTime:String(item.startTime||''),endTime:'',trt:'',media:'',mediaUrl:'',link:'',participants:combined,notes:''};
+      });
+      state.guide=sequence;
+      showPage('editor');
+      showToast(`Copied ${sourceItems.length} program item(s) into a new Program Sequence. The original Program Guide is unchanged.`);
+    });
+  }
   function deleteGuideClient(id){
     if(!confirm('Delete this saved guide and all of its sections/items?')) return;
     const previous=state.guides.slice();
@@ -1729,6 +1767,7 @@ function getStoredAuth(){
             </div>
           </div>
           <div id="sectionsRoot"></div>
+          <div class="standalone-items-panel"><div class="section-header"><strong>Standalone Program Items</strong><span style="font-size:10px;color:var(--muted)">Items here are not assigned to a section.</span></div><div class="standalone-items-root" id="standaloneItemsRoot"></div><div style="margin-top:10px"><button class="btn yellow" type="button" onclick="addStandaloneItem()">+ Add Program Item</button></div></div>
           <div class="toolbar" style="margin-top:12px"><div class="toolbar-left"><button class="btn yellow" onclick="addSection()">+ Add Section</button></div></div>
         </div>
 
@@ -2104,12 +2143,26 @@ function getStoredAuth(){
       }));
       return sec;
     });
+    const standaloneRoot=$('standaloneItemsRoot');
+    state.guide.standaloneItems=standaloneRoot?Array.from(standaloneRoot.querySelectorAll('.item-card')).map((item,idx)=>({
+      id:item.dataset.itemId,
+      number:item.querySelector('.item-number').value||String(idx+1),
+      title:item.querySelector('.item-title').value,
+      startTime:item.querySelector('.item-start').value,
+      endTime:item.querySelector('.item-end').value,
+      trt:item.querySelector('.item-trt-input').value,
+      media:item.querySelector('.item-song-search').value,
+      link:item.querySelector('.item-link').value,
+      mediaUrl:item.dataset.mediaUrl||'',
+      participants:item.querySelector('.item-participants').value,
+      notes:item.querySelector('.item-notes').value
+    })):Array.isArray(state.guide.standaloneItems)?state.guide.standaloneItems:[];
   }
 
   function renderSections(){
     const root=$('sectionsRoot'); if(!root)return;
     root.innerHTML='';
-    state.guide.sections.forEach((sec,sidx)=>{
+    (state.guide.sections||[]).forEach((sec,sidx)=>{
       const wrap=document.createElement('div');
       wrap.className='section-card';
       wrap.dataset.sectionId=sec.id;
@@ -2150,13 +2203,18 @@ function getStoredAuth(){
         });
       }
     });
+    const standaloneRoot=$('standaloneItemsRoot');
+    if(standaloneRoot){
+      standaloneRoot.innerHTML='';
+      (state.guide.standaloneItems||[]).forEach((item,iidx)=>standaloneRoot.appendChild(makeItemElement(item,iidx,true)));
+    }
     recalculateEditorTimes();
   }
 
-  function makeItemElement(item,iidx){
+  function makeItemElement(item,iidx,isStandalone=false){
     const trtValue=trtDisplay(item);
     const wrap=document.createElement('div');
-    wrap.className='item-card';
+    wrap.className='item-card'+(isStandalone?' standalone-item-card':'');
     wrap.dataset.itemId=item.id;
     wrap.innerHTML=`
       <div class="item-header"><strong>Program Item ${iidx+1}</strong><div class="item-reorder-tools"><button type="button" class="btn small item-drag-handle" draggable="true" title="Drag to reorder" aria-label="Drag to reorder program item">⠿</button><button type="button" class="btn small" title="Add program item above" aria-label="Add program item above" onclick="insertProgramItemRelative('${escAttr(item.id)}',-1)" style="font-weight:800">+↑</button><button type="button" class="btn small" title="Add program item below" aria-label="Add program item below" onclick="insertProgramItemRelative('${escAttr(item.id)}',1)" style="font-weight:800">+↓</button><button type="button" class="btn small" title="Move up" aria-label="Move program item up" onclick="moveProgramItem('${escAttr(item.id)}',-1)">↑</button><button type="button" class="btn small" title="Move down" aria-label="Move program item down" onclick="moveProgramItem('${escAttr(item.id)}',1)">↓</button><button class="btn small danger" onclick="removeItem('${escAttr(item.id)}')">Remove</button></div></div>
@@ -2164,8 +2222,8 @@ function getStoredAuth(){
         <div class="field"><label>Item Number / Cue</label><input class="item-number" value="${escAttr(item.number)}"></div>
         <div class="field" style="grid-column:span 2"><label>Item Title</label><input class="item-title" value="${escAttr(item.title)}"></div>
         <div class="field full song-picker"><label>MCGI Song / Media Search <span style="font-size:10px;color:var(--muted)">Library 1 → Library 2 fallback · audio / video / files</span></label><div class="media-picker-input"><input class="item-song-search" value="${escAttr(item.media)}" placeholder="Search MCGI song, media, or file..." autocomplete="off"></div><div class="song-picker-results"></div></div>
-        <div class="field"><label>Start Time (Auto)</label><input class="item-start time-input time-auto" value="${escAttr(item.startTime)}" readonly></div>
-        <div class="field"><label>End Time (Auto)</label><input class="item-end time-input time-auto" value="${escAttr(item.endTime)}" readonly></div>
+        <div class="field"><label>${isStandalone?'Start Time':'Start Time (Auto)'}</label><input class="item-start time-input ${isStandalone?'':'time-auto'}" value="${escAttr(item.startTime)}" ${isStandalone?'':'readonly'}></div>
+        <div class="field"><label>${isStandalone?'End Time':'End Time (Auto)'}</label><input class="item-end time-input ${isStandalone?'':'time-auto'}" value="${escAttr(item.endTime)}" ${isStandalone?'':'readonly'}></div>
         <div class="field"><label>TRT</label><input class="item-trt-input" value="${escAttr(trtValue)}" placeholder="5:31"></div>
         <div class="field full"><label>Link</label><input class="item-link" value="${escAttr(item.link)}" placeholder="Selected MCGI song link will appear here, or enter a URL manually."></div>
         <div class="field full"><label>Participants / Details</label><textarea class="item-participants">${esc(item.participants)}</textarea></div>
@@ -2358,6 +2416,7 @@ function getStoredAuth(){
               ${it.notes?`<div class="live-preview-note">NOTE: ${esc(it.notes)}</div>`:''}
             </div>`).join('')}
         </div>`).join('')}
+      ${(g.standaloneItems||[]).length?`<div class="live-preview-section"><h3>Standalone Program Items</h3>${(g.standaloneItems||[]).map((it,ii)=>`<div class="live-preview-item"><div class="live-preview-item-title">#${esc(it.number||String(ii+1))} ${esc(it.title||'Untitled Item')}</div><div class="live-preview-item-line">TIME: ${esc(it.startTime||'—')} – ${esc(it.endTime||'—')} · TRT: ${esc(trtDisplay(it)||'—')}</div>${it.participants?`<div class="live-preview-note">DETAILS: ${esc(it.participants)}</div>`:''}${it.notes?`<div class="live-preview-note">NOTE: ${esc(it.notes)}</div>`:''}</div>`).join('')}</div>`:''}
     `;
   }
   let guideAutoSaveTimer=null;
@@ -2518,13 +2577,14 @@ function broadcastGuideToPresenter(){
 
   function loadTemplateIntoEditor(){ safeRun('getCPFCTemplate',[],template=>{state.guide=clone(template||newBlankGuide());state.guide.id='';state.guide.type='PROGRAM_FLOW';renderEditor();showToast('CP/FC template loaded. You can edit it directly, then save it as your guide.');}); }
   function addSection(){ syncGuide(); state.guide.sections.push(emptySection(state.guide.sections.length+1)); renderSections(); renderLivePreview(); scheduleGuideAutoSave(); }
-  function removeSection(id){ syncGuide(); state.guide.sections=state.guide.sections.filter(s=>s.id!==id); if(!state.guide.sections.length)state.guide.sections=[emptySection(1)]; renderSections(); renderLivePreview(); scheduleGuideAutoSave(); }
+  function removeSection(id){ syncGuide(); state.guide.sections=state.guide.sections.filter(s=>s.id!==id); renderSections(); renderLivePreview(); scheduleGuideAutoSave(); }
   function addItem(sectionId){ syncGuide(); const s=state.guide.sections.find(x=>x.id===sectionId); if(!s)return; s.items.push(emptyItem(s.items.length+1)); renderSections(); renderLivePreview(); scheduleGuideAutoSave(); }
-  function moveProgramItem(itemId,delta){ syncGuide(); for(const sec of (state.guide.sections||[])){ const from=sec.items.findIndex(i=>String(i.id)===String(itemId)); if(from<0)continue; const to=from+Number(delta||0); if(to<0||to>=sec.items.length)return; const [item]=sec.items.splice(from,1); sec.items.splice(to,0,item); renderSections(); renderLivePreview(); scheduleGuideAutoSave(); broadcastGuideToPresenter(); return; } }
-  function insertProgramItemRelative(itemId,position){ syncGuide(); for(const sec of (state.guide.sections||[])){ const at=sec.items.findIndex(i=>String(i.id)===String(itemId)); if(at<0)continue; const insertAt=at+(Number(position)>0?1:0); sec.items.splice(insertAt,0,emptyItem(insertAt+1)); renderSections(); renderLivePreview(); scheduleGuideAutoSave(); broadcastGuideToPresenter(); return; } }
+  function addStandaloneItem(){ syncGuide(); if(!Array.isArray(state.guide.standaloneItems))state.guide.standaloneItems=[]; const item=emptyItem(state.guide.standaloneItems.length+1); item.startTime='';item.endTime='';state.guide.standaloneItems.push(item);renderSections();renderLivePreview();scheduleGuideAutoSave(); }
+  function moveProgramItem(itemId,delta){ syncGuide(); for(const sec of (state.guide.sections||[])){ const from=sec.items.findIndex(i=>String(i.id)===String(itemId)); if(from<0)continue; const to=from+Number(delta||0); if(to<0||to>=sec.items.length)return; const [item]=sec.items.splice(from,1); sec.items.splice(to,0,item); renderSections(); renderLivePreview(); scheduleGuideAutoSave(); broadcastGuideToPresenter(); return; } const standalone=state.guide.standaloneItems||[];const from=standalone.findIndex(i=>String(i.id)===String(itemId));const to=from+Number(delta||0);if(from<0||to<0||to>=standalone.length)return;const [item]=standalone.splice(from,1);standalone.splice(to,0,item);renderSections();renderLivePreview();scheduleGuideAutoSave();broadcastGuideToPresenter(); }
+  function insertProgramItemRelative(itemId,position){ syncGuide(); for(const sec of (state.guide.sections||[])){ const at=sec.items.findIndex(i=>String(i.id)===String(itemId)); if(at<0)continue; const insertAt=at+(Number(position)>0?1:0); sec.items.splice(insertAt,0,emptyItem(insertAt+1)); renderSections(); renderLivePreview(); scheduleGuideAutoSave(); broadcastGuideToPresenter(); return; } const standalone=state.guide.standaloneItems||[];const at=standalone.findIndex(i=>String(i.id)===String(itemId));if(at<0)return;const insertAt=at+(Number(position)>0?1:0);const item=emptyItem(insertAt+1);item.startTime='';item.endTime='';standalone.splice(insertAt,0,item);renderSections();renderLivePreview();scheduleGuideAutoSave();broadcastGuideToPresenter(); }
   function moveSequenceItem(itemId,delta){ syncSequenceGuide(); const items=state.guide.sections?.[0]?.items||[]; const from=items.findIndex(i=>String(i.id)===String(itemId)); const to=from+Number(delta||0); if(from<0||to<0||to>=items.length)return; const [item]=items.splice(from,1); items.splice(to,0,item); renderSequenceItems(); renderSequencePreview(); scheduleGuideAutoSave(); broadcastGuideToPresenter(); }
   function insertSequenceItemRelative(itemId,position){ syncSequenceGuide(); const items=state.guide.sections?.[0]?.items||[]; const at=items.findIndex(i=>String(i.id)===String(itemId)); if(at<0)return; const insertAt=at+(Number(position)>0?1:0); items.splice(insertAt,0,sequenceItem(insertAt)); renderSequenceItems(); renderSequencePreview(); scheduleGuideAutoSave(); broadcastGuideToPresenter(); }
-  function removeItem(itemId){ syncGuide(); state.guide.sections.forEach(s=>s.items=s.items.filter(i=>i.id!==itemId)); state.guide.sections.forEach(s=>s.items.forEach((i,idx)=>{if(!i.number)i.number=String(idx+1)})); renderSections(); renderLivePreview(); scheduleGuideAutoSave(); }
+  function removeItem(itemId){ syncGuide(); state.guide.sections.forEach(s=>s.items=s.items.filter(i=>i.id!==itemId)); state.guide.standaloneItems=(state.guide.standaloneItems||[]).filter(i=>i.id!==itemId); state.guide.sections.forEach(s=>s.items.forEach((i,idx)=>{if(!i.number)i.number=String(idx+1)})); renderSections(); renderLivePreview(); scheduleGuideAutoSave(); }
 
   function saveGuideClient(){
     if(!state.guide)return;
@@ -2595,7 +2655,7 @@ function broadcastGuideToPresenter(){
       const items=sequenceItems(g);
       return `<div class="sequence-prompt-preview"><div class="sequence-preview-header"><div class="sequence-preview-program-title">${esc(g.title||'')}</div><div class="sequence-preview-program-meta">${esc(g.eventDate||'')}</div><div class="sequence-preview-program-meta">${esc(g.venue||'')}</div></div>${items.map((it,ii)=>{const body=formatSequenceInputHtml([it.participants||'',it.notes||''].filter(Boolean).join(it.participants&&it.notes?'\n':''),false,g).replaceAll('sequence-format-oncam','sequence-preview-oncam').replaceAll('sequence-format-oncam-label','sequence-preview-oncam-label').replaceAll('sequence-format-oncam-name','sequence-preview-oncam-name').replaceAll('sequence-format-oncam-cont','sequence-preview-oncam-cont').replaceAll('sequence-format-line','sequence-preview-detail');return `<div class="sequence-preview-take"><div class="sequence-preview-takebar">[TAKE ${esc(it.number||String(ii))}]${it.startTime?' '+esc(it.startTime):''}</div>${it.title?`<div class="sequence-preview-spec">** ${esc(it.title)}</div>`:''}${body}</div>`;}).join('')}${items.length?'<div class="sequence-preview-end">** END OF PROGRAM</div>':''}${g.title?`<div class="sequence-preview-endnote">** END OF ${esc(g.title)}${g.eventDate?`<br>HERE (${esc(g.eventDate)})`:''} **</div>`:''}</div>`;
     }
-    return `<div class="preview-head"><div><div class="preview-title">${esc(g.title)}</div><div class="preview-meta">${esc(g.eventDate||'')} ${g.organizersCallTime?' · Call '+esc(g.organizersCallTime):''} ${g.formalStart?' · Start '+esc(g.formalStart):''}</div></div></div>${(g.sections||[]).map((s,si)=>`<div class="preview-section"><h3>${si+1}. ${esc(s.title)}</h3><div class="preview-section-meta">${esc((s.startTime||'—')+' – '+(s.endTime||'—'))}</div>${(s.items||[]).map((it,ii)=>`<div class="preview-item"><div class="preview-item-title">#${esc(it.number||String(ii+1))} ${esc(it.title)}</div><div class="preview-item-line">TIME: ${esc((it.startTime||'—')+' – '+(it.endTime||'—'))} · TRT: ${esc(trtDisplay(it)||'—')}</div>${it.media?`<div class="preview-item-line">MEDIA / FILE: ${esc(it.media)}</div>`:''}${it.link?`<div class="preview-item-line">LINK: ${esc(it.link)}</div>`:''}${it.participants?`<div class="preview-item-line">PARTICIPANTS / DETAILS: ${esc(it.participants)}</div>`:''}${it.notes?`<div class="preview-note">NOTE: ${esc(it.notes)}</div>`:''}</div>`).join('')}</div>`).join('')}`;
+    return `<div class="preview-head"><div><div class="preview-title">${esc(g.title)}</div><div class="preview-meta">${esc(g.eventDate||'')} ${g.organizersCallTime?' · Call '+esc(g.organizersCallTime):''} ${g.formalStart?' · Start '+esc(g.formalStart):''}</div></div></div>${guideSectionsForDisplay(g).map((s,si)=>`<div class="preview-section"><h3>${si+1}. ${esc(s.title)}</h3><div class="preview-section-meta">${esc((s.startTime||'—')+' – '+(s.endTime||'—'))}</div>${(s.items||[]).map((it,ii)=>`<div class="preview-item"><div class="preview-item-title">#${esc(it.number||String(ii+1))} ${esc(it.title)}</div><div class="preview-item-line">TIME: ${esc((it.startTime||'—')+' – '+(it.endTime||'—'))} · TRT: ${esc(trtDisplay(it)||'—')}</div>${it.media?`<div class="preview-item-line">MEDIA / FILE: ${esc(it.media)}</div>`:''}${it.link?`<div class="preview-item-line">LINK: ${esc(it.link)}</div>`:''}${it.participants?`<div class="preview-item-line">PARTICIPANTS / DETAILS: ${esc(it.participants)}</div>`:''}${it.notes?`<div class="preview-note">NOTE: ${esc(it.notes)}</div>`:''}</div>`).join('')}</div>`).join('')}`;
   }
 
   function copyGuideText(id){
@@ -2608,7 +2668,7 @@ function broadcastGuideToPresenter(){
     if(String(g.type||'PROGRAM_FLOW').toUpperCase()==='PROGRAM_SEQUENCE'){
       sequenceItems(g).forEach((it,ii)=>{lines.push('[TAKE '+(it.number||String(ii))+']');if(it.startTime)lines.push(it.startTime);if(it.title)lines.push('** '+it.title);if(it.participants)lines.push('ONCAM / DETAILS: '+it.participants);if(it.media)lines.push('- '+it.media);if(it.mediaUrl)lines.push('DRIVE LINK: '+it.mediaUrl);if(it.link)lines.push('EXTERNAL LINK: '+it.link);if(it.notes)lines.push('NOTE: '+it.notes);lines.push('');});
     }else{
-      (g.sections||[]).forEach((s,si)=>{lines.push((si+1)+'. '+s.title);if(s.startTime||s.endTime)lines.push('TIME: '+(s.startTime||'—')+' – '+(s.endTime||'—'));if(s.notes)lines.push('NOTE: '+s.notes);lines.push('');(s.items||[]).forEach((it,ii)=>{lines.push('#'+(it.number||String(ii+1))+' '+it.title);lines.push('TIME: '+(it.startTime||'—')+' – '+(it.endTime||'—'));const d=trtDisplay(it);if(d)lines.push('TRT: '+d);if(it.media)lines.push('MEDIA / FILE: '+it.media);if(it.mediaUrl)lines.push('DRIVE LINK: '+it.mediaUrl);if(it.link)lines.push('EXTERNAL LINK: '+it.link);if(it.participants)lines.push('PARTICIPANTS / DETAILS: '+it.participants);if(it.notes)lines.push('NOTES: '+it.notes);lines.push('');});});
+      guideSectionsForDisplay(g).forEach((s,si)=>{lines.push((si+1)+'. '+s.title);if(s.startTime||s.endTime)lines.push('TIME: '+(s.startTime||'—')+' – '+(s.endTime||'—'));if(s.notes)lines.push('NOTE: '+s.notes);lines.push('');(s.items||[]).forEach((it,ii)=>{lines.push('#'+(it.number||String(ii+1))+' '+it.title);lines.push('TIME: '+(it.startTime||'—')+' – '+(it.endTime||'—'));const d=trtDisplay(it);if(d)lines.push('TRT: '+d);if(it.media)lines.push('MEDIA / FILE: '+it.media);if(it.mediaUrl)lines.push('DRIVE LINK: '+it.mediaUrl);if(it.link)lines.push('EXTERNAL LINK: '+it.link);if(it.participants)lines.push('PARTICIPANTS / DETAILS: '+it.participants);if(it.notes)lines.push('NOTES: '+it.notes);lines.push('');});});
     }
     return lines.join('\n').replace(/\n{3,}/g,'\n\n').trim();
   }
@@ -3601,7 +3661,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
       const items=sequenceItems(g);
       $('displayZoomContent').innerHTML=`<div class="display-title sequence-display-header" style="color:#0878c8">${esc(g.title||'')}</div><div class="display-title sequence-display-header" style="font-size:clamp(15px,1.5vw,24px);margin-top:-6px">${esc(g.eventDate||'')}</div><div class="display-title sequence-display-header" style="font-size:clamp(15px,1.5vw,24px);margin-top:-6px">${esc(g.venue||'')}</div><div class="sequence-prompt-display">${items.map((it,ii)=>{const body=formatSequenceInputHtml([it.participants||'',it.notes||''].filter(Boolean).join(it.participants&&it.notes?'\n':''),false,g).replaceAll('sequence-format-oncam','sequence-display-oncam').replaceAll('sequence-format-oncam-label','sequence-display-oncam-label').replaceAll('sequence-format-oncam-name','sequence-display-oncam-name').replaceAll('sequence-format-oncam-cont','sequence-display-oncam-cont').replaceAll('sequence-format-line','sequence-display-detail');return `<div class="display-item sequence-display-item" data-item-id="${escAttr(it.id)}"><div class="sequence-display-take">[TAKE ${esc(it.number||String(ii))}]${it.startTime?' '+esc(it.startTime):''}</div>${it.title?`<div class="sequence-display-spec">** ${esc(it.title)}</div>`:''}${body}</div>`;}).join('')}${items.length?'<div class="sequence-display-end">** END OF PROGRAM</div>':''}${g.title?`<div class="sequence-display-endnote">** END OF ${esc(g.title)}${g.eventDate?`<br>HERE (${esc(g.eventDate)})`:''} **</div>`:''}</div>`;
     }else{
-      $('displayZoomContent').innerHTML=`<div class="display-title">${esc(g.title)}</div>${(g.sections||[]).map((s,si)=>`<section class="display-section"><div class="display-section-title">${si+1}. ${esc(s.title)}</div>${s.startTime||s.endTime?`<div class="display-section-time">${esc(s.startTime||'—')} – ${esc(s.endTime||'—')}</div>`:''}${(s.items||[]).map((it,ii)=>`<div class="display-item" data-item-id="${escAttr(it.id)}"><div class="display-item-title">#${esc(it.number||String(ii+1))} ${esc(it.title)}</div><div class="display-item-time">TIME: ${esc(it.startTime||'—')} – ${esc(it.endTime||'—')}</div><div class="display-item-trt">TRT: ${esc(trtDisplay(it)||'—')}</div>${it.notes?`<div class="display-item-note">NOTE: ${esc(it.notes)}</div>`:''}</div>`).join('')}</section>`).join('')}`;
+      $('displayZoomContent').innerHTML=`<div class="display-title">${esc(g.title)}</div>${guideSectionsForDisplay(g).map((s,si)=>`<section class="display-section"><div class="display-section-title">${si+1}. ${esc(s.title)}</div>${s.startTime||s.endTime?`<div class="display-section-time">${esc(s.startTime||'—')} – ${esc(s.endTime||'—')}</div>`:''}${(s.items||[]).map((it,ii)=>`<div class="display-item" data-item-id="${escAttr(it.id)}"><div class="display-item-title">#${esc(it.number||String(ii+1))} ${esc(it.title)}</div><div class="display-item-time">TIME: ${esc(it.startTime||'—')} – ${esc(it.endTime||'—')}</div><div class="display-item-trt">TRT: ${esc(trtDisplay(it)||'—')}</div>${it.notes?`<div class="display-item-note">NOTE: ${esc(it.notes)}</div>`:''}</div>`).join('')}</section>`).join('')}`;
     }
     applyDisplayZoom();
     // The prompt markup changed. Mark the mirror HTML dirty so it is serialized
@@ -3736,7 +3796,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
       const items=sequenceItems(g);
       root.innerHTML=`<div class="display-title sequence-display-header" style="color:#0878c8">${esc(g.title||'')}</div><div class="display-title sequence-display-header" style="font-size:clamp(15px,1.5vw,24px);margin-top:-6px">${esc(g.eventDate||'')}</div><div class="display-title sequence-display-header" style="font-size:clamp(15px,1.5vw,24px);margin-top:-6px">${esc(g.venue||'')}</div><div class="sequence-prompt-display">${items.map((it,ii)=>{const body=formatSequenceInputHtml([it.participants||'',it.notes||''].filter(Boolean).join(it.participants&&it.notes?'\n':''),false,g).replaceAll('sequence-format-oncam','sequence-display-oncam').replaceAll('sequence-format-oncam-label','sequence-display-oncam-label').replaceAll('sequence-format-oncam-name','sequence-display-oncam-name').replaceAll('sequence-format-oncam-cont','sequence-display-oncam-cont').replaceAll('sequence-format-line','sequence-display-detail');return `<div class="display-item sequence-display-item" data-item-id="${escAttr(it.id)}"><div class="sequence-display-take">[TAKE ${esc(it.number||String(ii))}]${it.startTime?' '+esc(it.startTime):''}</div>${it.title?`<div class="sequence-display-spec">** ${esc(it.title)}</div>`:''}${body}</div>`;}).join('')}${items.length?'<div class="sequence-display-end">** END OF PROGRAM</div>':''}${g.title?`<div class="sequence-display-endnote">** END OF ${esc(g.title)}${g.eventDate?`<br>HERE (${esc(g.eventDate)})`:''} **</div>`:''}</div>`;
     }else{
-      root.innerHTML=`<div class="display-title">${esc(g.title)}</div>${(g.sections||[]).map((ss,si)=>`<section class="display-section"><div class="display-section-title">${si+1}. ${esc(ss.title)}</div>${ss.startTime||ss.endTime?`<div class="display-section-time">${esc(ss.startTime||'—')} – ${esc(ss.endTime||'—')}</div>`:''}${(ss.items||[]).map((it,ii)=>`<div class="display-item" data-item-id="${escAttr(it.id)}"><div class="display-item-title">#${esc(it.number||String(ii+1))} ${esc(it.title)}</div><div class="display-item-time">TIME: ${esc(it.startTime||'—')} – ${esc(it.endTime||'—')}</div><div class="display-item-trt">TRT: ${esc(trtDisplay(it)||'—')}</div>${it.notes?`<div class="display-item-note">NOTE: ${esc(it.notes)}</div>`:''}</div>`).join('')}</section>`).join('')}`;
+      root.innerHTML=`<div class="display-title">${esc(g.title)}</div>${guideSectionsForDisplay(g).map((ss,si)=>`<section class="display-section"><div class="display-section-title">${si+1}. ${esc(ss.title)}</div>${ss.startTime||ss.endTime?`<div class="display-section-time">${esc(ss.startTime||'—')} – ${esc(ss.endTime||'—')}</div>`:''}${(ss.items||[]).map((it,ii)=>`<div class="display-item" data-item-id="${escAttr(it.id)}"><div class="display-item-title">#${esc(it.number||String(ii+1))} ${esc(it.title)}</div><div class="display-item-time">TIME: ${esc(it.startTime||'—')} – ${esc(it.endTime||'—')}</div><div class="display-item-trt">TRT: ${esc(trtDisplay(it)||'—')}</div>${it.notes?`<div class="display-item-note">NOTE: ${esc(it.notes)}</div>`:''}</div>`).join('')}</section>`).join('')}`;
     }
     if(stateObj) {
       const scroll=stateObj.scrollTop||0;
@@ -3844,7 +3904,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     if(String(controlState.guide?.type||'PROGRAM_FLOW').toUpperCase()==='PROGRAM_SEQUENCE'){
       const map={};sequenceItems(controlState.guide).forEach((it,idx)=>map[it.id]={itemId:it.id,itemNumber:it.number,title:it.title,scheduledTime:it.startTime,status:'idle',visible:idx===0,done:false});controlState.timers=map;clearInterval(controlState.interval);controlState.interval=setInterval(tickControl,500);tickControl();broadcastTimer();return;
     }
-    const map={};(controlState.guide?.sections||[]).forEach(s=>(s.items||[]).forEach(it=>{if(!map[it.id])map[it.id]={itemId:it.id,itemNumber:it.number,title:it.title,plannedMs:(parseTrtSeconds(it.trt||it.duration||'')!==null ? parseTrtSeconds(it.trt||it.duration||'') : durationSeconds(it.startTime,it.endTime))*1000,elapsedMs:0,status:'idle',startedAt:0,visible:false};}));controlState.timers=map;clearInterval(controlState.interval);controlState.interval=setInterval(tickControl,200);tickControl();
+    const map={};guideSectionsForDisplay(controlState.guide).forEach(s=>(s.items||[]).forEach(it=>{if(!map[it.id])map[it.id]={itemId:it.id,itemNumber:it.number,title:it.title,plannedMs:(parseTrtSeconds(it.trt||it.duration||'')!==null ? parseTrtSeconds(it.trt||it.duration||'') : durationSeconds(it.startTime,it.endTime))*1000,elapsedMs:0,status:'idle',startedAt:0,visible:false};}));controlState.timers=map;clearInterval(controlState.interval);controlState.interval=setInterval(tickControl,200);tickControl();
   }
   function renderControlTarget(){ const el=$('controlTarget');if(el)el.textContent='CONTROLS IN THIS WINDOW'; }
   function renderControl(){
@@ -3852,7 +3912,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     if(String(g.type||'PROGRAM_FLOW').toUpperCase()==='PROGRAM_SEQUENCE'){
       $('controlList').innerHTML=sequenceItems(g).map((it,ii)=>`<div class="control-item" id="ctl-${escAttr(it.id)}"><div class="control-item-top"><div class="control-item-title">[TAKE ${esc(it.number||String(ii))}] ${esc(it.title)}</div><div id="ctimer-${escAttr(it.id)}" class="control-timer">--:--:--</div></div><div class="control-scheduled">SCHEDULED: ${esc(it.startTime||'—')}</div><div class="control-actions"><button class="start" onclick="startTimer('${escAttr(it.id)}')">START</button><button class="end" onclick="endTimer('${escAttr(it.id)}')">DONE</button></div><div id="cover-${escAttr(it.id)}" class="control-overtime">OVERTIME</div></div>`).join('');updateAllControlTimerViews();renderControlTarget();return;
     }
-    $('controlList').innerHTML=(g.sections||[]).map((s,si)=>`<section class="control-section"><div class="control-section-head">${si+1}. ${esc(s.title)}<div class="control-section-time">${esc(s.startTime||'—')} – ${esc(s.endTime||'—')}</div></div>${(s.items||[]).map((it,ii)=>`<div class="control-item" id="ctl-${escAttr(it.id)}"><div class="control-item-top"><div class="control-item-title">#${esc(it.number||String(ii+1))} ${esc(it.title)}</div><div id="ctimer-${escAttr(it.id)}" class="control-timer">00:00:00</div></div><div class="control-actions"><button class="start" onclick="startTimer('${escAttr(it.id)}')">START</button><button class="pause" onclick="pauseTimer('${escAttr(it.id)}')">PAUSE</button><button class="end" onclick="endTimer('${escAttr(it.id)}')">END</button></div><div id="cover-${escAttr(it.id)}" class="control-overtime">OVERTIME</div></div>`).join('')}</section>`).join('');updateAllControlTimerViews();renderControlTarget();
+    $('controlList').innerHTML=guideSectionsForDisplay(g).map((s,si)=>`<section class="control-section"><div class="control-section-head">${si+1}. ${esc(s.title)}<div class="control-section-time">${esc(s.startTime||'—')} – ${esc(s.endTime||'—')}</div></div>${(s.items||[]).map((it,ii)=>`<div class="control-item" id="ctl-${escAttr(it.id)}"><div class="control-item-top"><div class="control-item-title">#${esc(it.number||String(ii+1))} ${esc(it.title)}</div><div id="ctimer-${escAttr(it.id)}" class="control-timer">00:00:00</div></div><div class="control-actions"><button class="start" onclick="startTimer('${escAttr(it.id)}')">START</button><button class="pause" onclick="pauseTimer('${escAttr(it.id)}')">PAUSE</button><button class="end" onclick="endTimer('${escAttr(it.id)}')">END</button></div><div id="cover-${escAttr(it.id)}" class="control-overtime">OVERTIME</div></div>`).join('')}</section>`).join('');updateAllControlTimerViews();renderControlTarget();
   }
   function startTimer(id){
     const t=controlState.timers[id];if(!t)return;
@@ -3888,7 +3948,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
     const guide=controlState.guide||displayState.guide;
     let sectionTitle='';
     if(String(guide?.type||'PROGRAM_FLOW').toUpperCase()!=='PROGRAM_SEQUENCE'){
-      for(const section of (guide?.sections||[])){if((section.items||[]).some(item=>String(item.id)===String(t.itemId))){sectionTitle=String(section.title||'');break;}}
+      for(const section of guideSectionsForDisplay(guide)){if((section.items||[]).some(item=>String(item.id)===String(t.itemId))){sectionTitle=String(section.title||'');break;}}
     }
     if(String(guide?.type||'PROGRAM_FLOW').toUpperCase()==='PROGRAM_SEQUENCE'){
       const st=sequenceStatus(t);return {mode:'sequence',visible:!!t.visible,itemId:t.itemId,itemNumber:t.itemNumber,title:t.title,sectionTitle,scheduledTime:t.scheduledTime,actualClock:sequenceClockNow().text,status:t.done?'done':st.status,deltaLabel:st.label,publishedAt:Date.now()};
