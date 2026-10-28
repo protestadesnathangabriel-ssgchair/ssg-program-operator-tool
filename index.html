@@ -74,7 +74,7 @@
     .field{min-width:0}.field.full{grid-column:1/-1}.field label{display:block;font-size:11px;font-weight:800;color:#4f5b67;margin-bottom:5px}
     .section-card{border:1px solid #cfd8e1;border-radius:9px;padding:13px;background:#fbfcfd;margin-top:12px}
     .section-header,.item-header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}.section-header strong{color:var(--blue);font-size:13px}.item-header strong{font-size:12px}
-    .item-card{border:1px solid #dde4ea;border-radius:8px;padding:12px;background:#fff;margin-top:10px}.item-card .form-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .item-card{border:1px solid #dde4ea;border-radius:8px;padding:12px;background:#fff;margin-top:10px}.item-card.ssg-dragging,.sequence-template-card.ssg-dragging{opacity:.42}.item-card.ssg-drop-target,.sequence-template-card.ssg-drop-target{outline:2px dashed #1687d9;outline-offset:3px}.item-card .form-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.item-reorder-tools{display:flex;align-items:center;gap:4px;flex-wrap:wrap}.item-reorder-tools .btn{min-width:30px;padding:4px 7px}.item-drag-handle,.sequence-drag-handle{cursor:grab;touch-action:none;font-weight:900;user-select:none}.item-drag-handle:active,.sequence-drag-handle:active{cursor:grabbing}
     .trt-preview{font-size:11px;color:var(--muted);padding:10px;border:1px dashed var(--line);border-radius:7px;background:#fafbfd}.time-auto{background:#f3f5f7;color:#69737d}.time-auto:disabled{opacity:1;cursor:not-allowed}
     .sticky-actions{position:sticky;bottom:0;z-index:10;background:rgba(255,255,255,.96);border-top:1px solid var(--line);padding:10px -0px 0;margin-top:14px;display:flex;justify-content:flex-end;gap:8px}
     .editor-workspace{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);gap:14px;align-items:start}
@@ -1947,7 +1947,7 @@ function getStoredAuth(){
     wrap.dataset.itemId=item.id;
     wrap.innerHTML=`
       <div class="sequence-template-take">
-        <span>[TAKE </span><input class="seq-number" value="${escAttr(item.number||String(idx))}" aria-label="Take number"><span>] </span>
+        <button type="button" class="btn small sequence-drag-handle" draggable="true" title="Drag to reorder take" aria-label="Drag to reorder take" style="margin-right:7px;background:transparent;border:0;color:#111;padding:2px 5px">⠿</button><button type="button" class="btn small" title="Move take up" aria-label="Move take up" onclick="moveSequenceItem('${escAttr(item.id)}',-1)" style="padding:2px 6px;margin-right:3px">↑</button><button type="button" class="btn small" title="Move take down" aria-label="Move take down" onclick="moveSequenceItem('${escAttr(item.id)}',1)" style="padding:2px 6px;margin-right:7px">↓</button><span>[TAKE </span><input class="seq-number" value="${escAttr(item.number||String(idx))}" aria-label="Take number"><span>] </span>
         <input class="seq-time" value="${escAttr(item.startTime)}" placeholder="INPUT TIME HERE" aria-label="Scheduled time">
         <button class="btn small sequence-template-remove" type="button" onclick="removeSequenceItem('${escAttr(item.id)}')">REMOVE</button>
       </div>
@@ -2159,7 +2159,7 @@ function getStoredAuth(){
     wrap.className='item-card';
     wrap.dataset.itemId=item.id;
     wrap.innerHTML=`
-      <div class="item-header"><strong>Program Item ${iidx+1}</strong><button class="btn small danger" onclick="removeItem('${escAttr(item.id)}')">Remove</button></div>
+      <div class="item-header"><strong>Program Item ${iidx+1}</strong><div class="item-reorder-tools"><button type="button" class="btn small item-drag-handle" draggable="true" title="Drag to reorder" aria-label="Drag to reorder program item">⠿</button><button type="button" class="btn small" title="Move up" aria-label="Move program item up" onclick="moveProgramItem('${escAttr(item.id)}',-1)">↑</button><button type="button" class="btn small" title="Move down" aria-label="Move program item down" onclick="moveProgramItem('${escAttr(item.id)}',1)">↓</button><button class="btn small danger" onclick="removeItem('${escAttr(item.id)}')">Remove</button></div></div>
       <div class="form-grid">
         <div class="field"><label>Item Number / Cue</label><input class="item-number" value="${escAttr(item.number)}"></div>
         <div class="field" style="grid-column:span 2"><label>Item Title</label><input class="item-title" value="${escAttr(item.title)}"></div>
@@ -2474,6 +2474,43 @@ function broadcastGuideToPresenter(){
     document.addEventListener('change',handle,true);
   }
 
+  // Reorder program items and sequence takes by dragging their grip. Arrow controls remain available on touch devices.
+  let ssgDraggedCard=null;
+  document.addEventListener('dragstart',function(e){
+    const handle=e.target.closest('.item-drag-handle,.sequence-drag-handle');
+    if(!handle)return;
+    const card=handle.closest('.item-card,.sequence-item');
+    if(!card)return;
+    ssgDraggedCard=card;
+    card.classList.add('ssg-dragging');
+    if(e.dataTransfer){e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',card.dataset.itemId||'');}catch(_){}}
+  });
+  document.addEventListener('dragover',function(e){
+    if(!ssgDraggedCard)return;
+    const target=e.target.closest('.item-card,.sequence-item');
+    if(!target||target===ssgDraggedCard||target.parentElement!==ssgDraggedCard.parentElement)return;
+    e.preventDefault();
+    if(e.dataTransfer)e.dataTransfer.dropEffect='move';
+    target.classList.add('ssg-drop-target');
+  });
+  document.addEventListener('dragleave',function(e){const target=e.target.closest('.item-card,.sequence-item');if(target)target.classList.remove('ssg-drop-target');});
+  document.addEventListener('drop',function(e){
+    if(!ssgDraggedCard)return;
+    const target=e.target.closest('.item-card,.sequence-item');
+    if(!target||target===ssgDraggedCard||target.parentElement!==ssgDraggedCard.parentElement)return;
+    e.preventDefault();
+    const rect=target.getBoundingClientRect();
+    const after=(e.clientY-rect.top)>rect.height/2;
+    target.parentElement.insertBefore(ssgDraggedCard,after?target.nextSibling:target);
+    const isSequence=ssgDraggedCard.classList.contains('sequence-item');
+    ssgDraggedCard.classList.remove('ssg-dragging');
+    document.querySelectorAll('.ssg-drop-target').forEach(el=>el.classList.remove('ssg-drop-target'));
+    ssgDraggedCard=null;
+    if(isSequence){syncSequenceGuide();renderSequenceItems();renderSequencePreview();scheduleGuideAutoSave();broadcastGuideToPresenter();}
+    else{syncGuide();renderSections();renderLivePreview();scheduleGuideAutoSave();broadcastGuideToPresenter();}
+  });
+  document.addEventListener('dragend',function(){if(ssgDraggedCard)ssgDraggedCard.classList.remove('ssg-dragging');ssgDraggedCard=null;document.querySelectorAll('.ssg-drop-target').forEach(el=>el.classList.remove('ssg-drop-target'));});
+
   document.addEventListener('click',function(e){
     if(e.target.closest('.media-picker,.song-picker')) return;
     document.querySelectorAll('.media-picker-results.show,.song-picker-results.show').forEach(function(el){el.classList.remove('show');});
@@ -2483,6 +2520,8 @@ function broadcastGuideToPresenter(){
   function addSection(){ syncGuide(); state.guide.sections.push(emptySection(state.guide.sections.length+1)); renderSections(); renderLivePreview(); scheduleGuideAutoSave(); }
   function removeSection(id){ syncGuide(); state.guide.sections=state.guide.sections.filter(s=>s.id!==id); if(!state.guide.sections.length)state.guide.sections=[emptySection(1)]; renderSections(); renderLivePreview(); scheduleGuideAutoSave(); }
   function addItem(sectionId){ syncGuide(); const s=state.guide.sections.find(x=>x.id===sectionId); if(!s)return; s.items.push(emptyItem(s.items.length+1)); renderSections(); renderLivePreview(); scheduleGuideAutoSave(); }
+  function moveProgramItem(itemId,delta){ syncGuide(); for(const sec of (state.guide.sections||[])){ const from=sec.items.findIndex(i=>String(i.id)===String(itemId)); if(from<0)continue; const to=from+Number(delta||0); if(to<0||to>=sec.items.length)return; const [item]=sec.items.splice(from,1); sec.items.splice(to,0,item); renderSections(); renderLivePreview(); scheduleGuideAutoSave(); broadcastGuideToPresenter(); return; } }
+  function moveSequenceItem(itemId,delta){ syncSequenceGuide(); const items=state.guide.sections?.[0]?.items||[]; const from=items.findIndex(i=>String(i.id)===String(itemId)); const to=from+Number(delta||0); if(from<0||to<0||to>=items.length)return; const [item]=items.splice(from,1); items.splice(to,0,item); renderSequenceItems(); renderSequencePreview(); scheduleGuideAutoSave(); broadcastGuideToPresenter(); }
   function removeItem(itemId){ syncGuide(); state.guide.sections.forEach(s=>s.items=s.items.filter(i=>i.id!==itemId)); state.guide.sections.forEach(s=>s.items.forEach((i,idx)=>{if(!i.number)i.number=String(idx+1)})); renderSections(); renderLivePreview(); scheduleGuideAutoSave(); }
 
   function saveGuideClient(){
