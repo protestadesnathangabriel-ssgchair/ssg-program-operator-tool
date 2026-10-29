@@ -24,3 +24,15 @@ Those features need separate implementation and/or a trusted server-side integra
 
 ## Before public production use
 The original UI was adapted from a large legacy app and a client-side adapter now covers its known API calls. Perform the README smoke test on the deployed site before using it for an event. Keep a local backup of the XLSX and the original Apps Script source.
+
+
+## View-only operator monitoring update (2026-10-25)
+
+- Request form uses full name + Production-Technical Team role and remains admin-reviewed.
+- Viewer dashboard includes Guide Preview, Follow Online Operator, and Host View. Independent Display has been removed from the viewer dashboard.
+- Follow Online Operator subscribes read-only to the selected officer's live display state and shows the prompt plus a smoothly updating timer; control-panel actions remain unavailable to viewers.
+- Added `operatorSessions/{uid}` Firestore presence/state records and corresponding rules.
+- JavaScript syntax checks passed. Live Firebase/Firestore Rules emulator testing and two-account browser testing have not been performed in this environment.
+
+
+Live draft sync update: added Firestore guideLiveDrafts publish/subscribe path so editor changes can reach Host View and display windows without waiting for permanent guide save. Publish updated Firestore rules in Firebase Console. Live Firebase behavior remains unverified until tested with separate accounts.
