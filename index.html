@@ -427,46 +427,7 @@
     .lyric-result{padding:10px;border-bottom:1px solid #edf0f3;cursor:pointer}.lyric-result:last-child{border-bottom:0}.lyric-result:hover{background:#f5f8fb}
     .lyric-result-name{font-weight:900;font-size:12px;color:#1d2b36}.lyric-result-meta{font-size:9px;color:var(--muted);margin-top:3px}.lyric-result-snippet{font-size:10px;color:#56616c;line-height:1.4;margin-top:5px}.lyric-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}.lyric-tag{font-size:8px;font-weight:900;border:1px solid #d7e0e7;border-radius:999px;padding:2px 5px;color:#52606c}
     .lyric-placeholder-page{padding:35px 20px;text-align:center;color:var(--muted);background:#fff;border:1px dashed var(--line);border-radius:9px}
-    .video-lyrics-workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,.9fr);gap:14px;align-items:start}
-    .video-lyrics-panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
-    .video-lyrics-kicker{font-size:10px;letter-spacing:.09em;font-weight:900;color:var(--muted);text-transform:uppercase;margin-bottom:7px}
-    .video-lyrics-search-row{display:flex;gap:8px;flex-wrap:wrap}.video-lyrics-search-row input{flex:1;min-width:180px}
-    .video-lyrics-template-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
-    .video-lyrics-template{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:#fff;padding:0;text-align:left;cursor:pointer;min-width:0}
-    .video-lyrics-template.active{border:2px solid var(--blue);box-shadow:0 0 0 2px rgba(37,99,235,.10)}
-    .video-lyrics-template img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#07111e;pointer-events:none}
-    .video-lyrics-template span{display:block;padding:7px;font-size:11px;font-weight:800;overflow-wrap:anywhere}
-    .video-lyrics-preview{position:relative;aspect-ratio:16/9;background:#050b14;border-radius:9px;overflow:hidden;color:#fff;display:grid;place-items:center}
-    .video-lyrics-preview video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-    .video-lyrics-preview:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.25) 55%,rgba(0,0,0,.55));pointer-events:none}
-    .video-lyrics-preview-text{position:relative;z-index:1;width:90%;text-align:center;font-size:clamp(16px,2.4vw,32px);font-weight:800;line-height:1.2;text-shadow:0 2px 8px #000,0 1px 2px #000;overflow-wrap:anywhere}
-    .video-lyrics-cue-list{display:flex;flex-direction:column;gap:7px;margin-top:12px;max-height:520px;overflow:auto}
-    .video-lyrics-cue{display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:8px;background:#fff}
-    .video-lyrics-cue.active{border-color:var(--blue);background:#f3f7ff}
-    .video-lyrics-cue-number{font-size:10px;font-weight:900;color:var(--muted);text-align:center}
-    .video-lyrics-cue input{width:100%;min-width:0;padding:8px;font-size:12px}
-    .video-lyrics-cue.final{background:#f7f8fa;border-style:dashed}
-    .video-lyrics-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
-    .video-lyrics-status{font-size:11px;color:var(--muted);line-height:1.5}
-    .video-lyrics-appearance-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:10px}
-    .video-lyrics-appearance-grid label{display:flex;flex-direction:column;gap:6px;min-width:0;font-size:12px;font-weight:750;color:#334155}
-    .video-lyrics-appearance-grid label.wide{grid-column:1/-1}
-    .video-lyrics-appearance-grid select,.video-lyrics-appearance-grid input:not([type=color]):not([type=file]){box-sizing:border-box;width:100%;min-width:0;min-height:40px;border:1px solid #d6deea;border-radius:9px;background:#fff;padding:8px 10px;font:inherit;color:#18243a}
-    .video-lyrics-appearance-grid input[type=color]{width:100%;height:40px;border:1px solid #d6deea;border-radius:9px;background:#fff;padding:4px}
-    .video-lyrics-appearance-grid input[type=file]{width:100%;max-width:100%;font-size:11px}
-    .video-lyrics-appearance-grid select:focus,.video-lyrics-appearance-grid input:focus{outline:2px solid #9cc2ff;outline-offset:1px}
-    @media(max-width:480px){.video-lyrics-appearance-grid{grid-template-columns:1fr}.video-lyrics-appearance-grid label.wide{grid-column:auto}}
-    @media(max-width:900px){.video-lyrics-workspace{grid-template-columns:1fr}.video-lyrics-template-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
-    .video-lyric-display-shell{background:#000;display:flex;align-items:center;justify-content:center}
-    .video-lyric-display-shell>video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.25s linear;will-change:opacity}.video-lyric-display-shell>video.is-fading-in{opacity:1}.video-lyric-display-shell>video.is-fading-out{opacity:0}
-    .video-lyric-display-shade{display:none}
-    .video-lyric-display-text{position:absolute;z-index:2;left:5vw;right:5vw;top:50%;transform:translateY(-50%);text-align:center;color:#fff;font-size:clamp(32px,5.2vw,92px);line-height:1.18;font-weight:800;white-space:pre-wrap;overflow-wrap:anywhere;text-shadow:0 3px 14px rgba(0,0,0,.95),0 1px 3px #000}
-    .video-lyric-display-info,.video-lyric-display-controls{display:none!important}
-    .video-lyric-display-controls{position:absolute;z-index:4;bottom:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:8px;border-radius:12px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);opacity:.15;transition:opacity .2s}
-    .video-lyric-display-shell:hover .video-lyric-display-controls,.video-lyric-display-controls:focus-within{opacity:1}
-    .video-lyric-display-controls button{border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;border-radius:7px;padding:9px 12px;font-weight:800;cursor:pointer}
-    .video-lyric-display-controls span{font-size:12px;min-width:55px;text-align:center}
     /* RESPONSIVE UI — MOBILE + TABLET ONLY
        Layout-only rules. Existing application behavior and desktop UI remain unchanged. */
     @media (min-width:721px) and (max-width:1000px){
@@ -858,7 +819,7 @@ html[data-ssg-layout="phone"] .ssg-dashboard-columns{grid-template-columns:minma
   // Browser security requires a user gesture; Ctrl+Shift+F is the explicit gesture.
   (function installPrompterFullscreenShortcut(){
     const mode = APP_CONFIG.mode;
-    if(!['host','display','lyric-display','video-lyric-display'].includes(mode)) return;
+    if(!['host','display','lyric-display'].includes(mode)) return;
     window.addEventListener('keydown', function(event){
       if(event.ctrlKey && event.shiftKey && !event.altKey && String(event.key||'').toLowerCase()==='f'){
         event.preventDefault();
@@ -1342,14 +1303,12 @@ function getStoredAuth(){
     if(APP_CONFIG.mode==='display') return initDisplay();
     if(APP_CONFIG.mode==='control') return initControl();
     if(APP_CONFIG.mode==='lyric-display') return initLyricDisplay();
-    if(APP_CONFIG.mode==='video-lyric-display') return initVideoLyricDisplay();
     initMain();
   }
 
   /* MAIN APP */
   function initMain(){
     openLyricChannel();
-    openVideoLyricChannel();
     showBootLoader();
     tryRestoreSession();
     window.addEventListener('message', onPresenterMessage);
@@ -1472,7 +1431,7 @@ function getStoredAuth(){
               <div class="lyric-subnav">
                 <button data-page="lyrics" onclick="showPage('lyrics');setLyricMode('text')">Text Lyrics</button>
                 <button data-page="lyrics" onclick="showPage('lyrics');setLyricMode('image')">Image Lyrics</button>
-                <button data-page="lyrics" onclick="showPage('lyrics');setLyricMode('video')">Video Lyrics</button>
+                <button class="wip" data-page="lyrics" onclick="showPage('lyrics');setLyricMode('video')">[WIP] Video Lyrics</button>
               </div>
             </div>
             <button data-page="prompt" onclick="showPage('prompt')">Live Windows</button>
@@ -2856,96 +2815,6 @@ function broadcastGuideToPresenter(){
   /* =========================================================
      LYRIC PROMPTER — TEXT LYRICS FIRST
   ========================================================= */
-  const VIDEO_LYRIC_TEMPLATES = [
-    {name:'Blue Orange Formal',file:'Blue Orange Formal.mp4'},
-    {name:'Blue Spotlights',file:'Blue Spotlights.mp4'},
-    {name:'Light Blue Zoom Flares',file:'Light Blue Zoom Flares.mp4'},
-    {name:'Green Lens',file:'Green Lens.mp4'},
-    {name:'Pink Lens',file:'Pink Lens.mp4'},
-    {name:'Sky',file:'Sky.mp4'}
-  ].map((x,i)=>({...x,id:i,url:'./video-backgrounds/'+encodeURIComponent(x.file),poster:'./video-backgrounds/posters/'+encodeURIComponent(x.file.replace(/\.mp4$/i,'.jpg'))}));
-  const VIDEO_LYRIC_CHANNEL='SSG_VIDEO_LYRICS_CUES_V1';
-  const VIDEO_LYRIC_STORAGE='SSG_VIDEO_LYRICS_PAYLOAD_V1';
-  const videoLyrics={songTitle:'',sourceId:'',sourceName:'',cues:[],activeCueIndex:0,templateIndex:1,displayWindow:null,settings:{fontFamily:'Arial, sans-serif',alignment:'center',fadeMs:400,fontWeight:800,fontSize:120,color:'#ffffff'},customFont:{name:'',url:''},lineup:[],activeSongIndex:-1,activeBlock:'Block 1'};
-  let videoLyricChannel=null;
-  function openVideoLyricChannel(){try{videoLyricChannel=new BroadcastChannel(VIDEO_LYRIC_CHANNEL);videoLyricChannel.onmessage=e=>{const d=e.data||{};if(!d||d.ssgVideoLyrics!==true)return;if(APP_CONFIG.mode==='video-lyric-display'&&d.type==='state')applyVideoLyricDisplayPayload(d.payload||{});if(APP_CONFIG.mode==='main'&&d.type==='ready')sendVideoLyricState();if(APP_CONFIG.mode==='main'&&d.type==='navigate'){if(d.direction==='prev')stepVideoLyrics(-1);if(d.direction==='next')stepVideoLyrics(1);}};}catch(e){videoLyricChannel=null;}}
-  function videoLyricPayload(){return {songTitle:videoLyrics.songTitle,sourceName:videoLyrics.sourceName,cues:videoLyrics.cues.map(c=>({text:String(c.text||''),kind:c.kind||'line'})),activeCueIndex:videoLyrics.activeCueIndex,templateIndex:videoLyrics.templateIndex,templateUrl:VIDEO_LYRIC_TEMPLATES[videoLyrics.templateIndex]?.url||VIDEO_LYRIC_TEMPLATES[0].url,settings:{...videoLyrics.settings},customFont:{...videoLyrics.customFont},lineup:videoLyrics.lineup.map(x=>({songTitle:x.songTitle,sourceName:x.sourceName,cues:x.cues.map(c=>({...c})),templateIndex:x.templateIndex,block:x.block})),activeSongIndex:videoLyrics.activeSongIndex,activeBlock:videoLyrics.activeBlock};}
-  function sendVideoLyricState(){const payload=videoLyricPayload();try{localStorage.setItem(VIDEO_LYRIC_STORAGE,JSON.stringify({ts:Date.now(),payload}));}catch(e){}try{videoLyricChannel?.postMessage({ssgVideoLyrics:true,type:'state',payload});}catch(e){}try{videoLyrics.displayWindow?.postMessage({ssgVideoLyrics:true,type:'state',payload},'*');}catch(e){}updateVideoLyricPreview();}
-  function stripLyricSectionHeadings(text){
-    const heading=/^(?:(?:verse|chorus|bridge|pre[- ]?chorus|refrain|intro|outro|interlude|instrumental|tag|ending|coda|repeat|vamp)(?:\s+(?:[ivxlcdm]+|\d+|one|two|three|four|five))?|[ivxlcdm]+|\[(?:verse|chorus|bridge|pre[- ]?chorus|refrain|intro|outro|interlude|instrumental|tag|ending|coda)(?:\s+[^\]]*)?\]|\((?:verse|chorus|bridge|pre[- ]?chorus|refrain|intro|outro|interlude|instrumental|tag|ending|coda)(?:\s+[^)]*)?\))\s*[:.)-]?$/i;
-    return String(text||'').replace(/\r/g,'').split('\n').map(x=>x.trim()).filter(x=>x&&!heading.test(x)&&!/^[-_=*]{2,}$/.test(x));
-  }
-  function generateVideoLyricCues(title,content){
-    const titleText=String(title||'Untitled Song').trim()||'Untitled Song';
-    const lines=stripLyricSectionHeadings(content);
-    const cues=[{text:titleText,kind:'title'},...lines.map(text=>({text,kind:'line'}))];
-    if(!cues.some(c=>c.text.trim().toLowerCase()==='to god be the glory'))cues.push({text:'To God be the Glory',kind:'final'});
-    else {const existing=cues.findIndex(c=>c.text.trim().toLowerCase()==='to god be the glory');if(existing!==cues.length-1){const last=cues.splice(existing,1)[0];last.kind='final';cues.push(last);}}
-    return cues;
-  }
-  function openVideoLyricsSearch(){const modal=document.createElement('div');modal.id='videoLyricSearchModal';modal.className='modal-backdrop show';modal.innerHTML=`<div class="modal lyric-search-modal"><div class="modal-head"><strong>Search Lyrics for Video Cues</strong><button class="btn small" onclick="closeVideoLyricsSearch()">×</button></div><div class="modal-body"><div class="video-lyrics-search-row"><input id="videoLyricSearchInput" placeholder="Search song title, hymn number, or lyrics…" onkeydown="if(event.key==='Enter')searchVideoLyricsLibrary()"><button class="btn primary" onclick="searchVideoLyricsLibrary()">Search lyrics</button></div><p class="video-lyrics-status">Select a result to generate one cue per lyric line. Section labels such as Verse, Chorus, Bridge, I, and II are excluded.</p><div id="videoLyricResults" class="lyric-results"><div class="guest-empty">Search the MCGI Lyrics Database to begin.</div></div></div></div>`;document.body.appendChild(modal);setTimeout(()=>$('videoLyricSearchInput')?.focus(),40);}
-  function closeVideoLyricsSearch(){document.getElementById('videoLyricSearchModal')?.remove();}
-  let videoLyricSearchSeq=0;
-  function searchVideoLyricsLibrary(){const q=$('videoLyricSearchInput')?.value.trim()||'';const box=$('videoLyricResults');if(!box)return;if(q.length<2){box.innerHTML='<div class="guest-empty">Type at least 2 characters.</div>';return;}const seq=++videoLyricSearchSeq;box.innerHTML='<div class="guest-empty">Searching MCGI Lyrics Database…</div>';safeRun('searchMcgiLyrics',[q],results=>{if(seq!==videoLyricSearchSeq)return;if(!results?.length){box.innerHTML='<div class="guest-empty">No matching lyrics found.</div>';return;}box.innerHTML=results.map(r=>`<div class="lyric-result" onclick="selectVideoLyricResult('${escAttr(r.id)}','${escAttr(r.name||'')}')"><div class="lyric-result-name">${esc(r.name||'Untitled')}</div><div class="lyric-result-meta">${esc(r.path||'MCGI Lyrics Database')} · ${esc(r.modified||'')}</div><div class="lyric-result-snippet">${esc(r.snippet||'')}</div></div>`).join('');});}
-  function selectVideoLyricResult(id,name){safeRun('getMcgiLyric',[id],r=>{if(!r)return;const songTitle=String(r.name||name||'Untitled Song');const cues=generateVideoLyricCues(songTitle,r.content||'');const existing=videoLyrics.lineup.findIndex(x=>String(x.sourceId)===String(r.id||id));if(existing>=0){videoLyrics.activeSongIndex=existing;loadVideoLyricSong(existing);showToast('Song already in lineup; selected it.');}else{videoLyrics.lineup.push({sourceId:r.id||id,songTitle,sourceName:r.name||name||'',cues,templateIndex:videoLyrics.templateIndex,block:videoLyrics.activeBlock||'Block 1'});videoLyrics.activeSongIndex=videoLyrics.lineup.length-1;loadVideoLyricSong(videoLyrics.activeSongIndex);showToast('Added '+songTitle+' to lineup.');}closeVideoLyricsSearch();renderVideoLyricsPage();sendVideoLyricState();});}
-  function saveActiveVideoLyricSong(){if(videoLyrics.activeSongIndex<0||!videoLyrics.lineup[videoLyrics.activeSongIndex])return;const x=videoLyrics.lineup[videoLyrics.activeSongIndex];Object.assign(x,{songTitle:videoLyrics.songTitle,sourceId:videoLyrics.sourceId,sourceName:videoLyrics.sourceName,cues:videoLyrics.cues.map(c=>({...c})),templateIndex:videoLyrics.templateIndex,block:videoLyrics.activeBlock});}
-  function loadVideoLyricSong(index){const x=videoLyrics.lineup[index];if(!x)return;videoLyrics.activeSongIndex=index;videoLyrics.songTitle=x.songTitle;videoLyrics.sourceId=x.sourceId;videoLyrics.sourceName=x.sourceName;videoLyrics.cues=x.cues.map(c=>({...c}));videoLyrics.activeCueIndex=0;videoLyrics.templateIndex=Number.isInteger(x.templateIndex)?x.templateIndex:videoLyrics.templateIndex;videoLyrics.activeBlock=x.block||'Block 1';}
-  function selectVideoLyricSong(index){saveActiveVideoLyricSong();loadVideoLyricSong(index);renderVideoLyricsPage();sendVideoLyricState();}
-  function removeVideoLyricSong(index){if(index<0||index>=videoLyrics.lineup.length)return;videoLyrics.lineup.splice(index,1);if(!videoLyrics.lineup.length){videoLyrics.activeSongIndex=-1;videoLyrics.songTitle='';videoLyrics.sourceId='';videoLyrics.sourceName='';videoLyrics.cues=[];videoLyrics.activeCueIndex=0;}else{loadVideoLyricSong(Math.max(0,Math.min(index,videoLyrics.lineup.length-1)));}renderVideoLyricsPage();sendVideoLyricState();}
-  function setVideoLyricBlock(){const v=prompt('Block name:',videoLyrics.activeBlock||'Block 1');if(v&&v.trim()){videoLyrics.activeBlock=v.trim();saveActiveVideoLyricSong();renderVideoLyricsPage();sendVideoLyricState();}}
-  function loadVideoLyricCustomFont(input){const file=input?.files?.[0];if(!file)return;if(file.size>10*1024*1024){showToast('Font file must be 10 MB or smaller.');input.value='';return;}if(!/\.(ttf|otf|woff|woff2)$/i.test(file.name)){showToast('Choose a TTF, OTF, WOFF, or WOFF2 font file.');input.value='';return;}const url=URL.createObjectURL(file);const name='SSGCustomFont_'+file.name.replace(/[^a-z0-9]/gi,'_');videoLyrics.customFont={name,url};videoLyrics.settings.fontFamily='\''+name+'\', sans-serif';saveActiveVideoLyricSong();sendVideoLyricState();renderVideoLyricsPage();showToast('Custom font loaded for this browser session.');}
-  function setVideoLyricSetting(key,value){if(key==='fadeMs')value=Math.max(0,Math.min(5000,Number(value)||0));if(key==='fontSize')value=Math.max(12,Math.min(240,Number(value)||12));if(key==='fontWeight')value=Number(value)||400;videoLyrics.settings[key]=value;updateVideoLyricPreview();sendVideoLyricState();}
-  function stepVideoLyrics(delta){if(!videoLyrics.cues.length)return;let next=videoLyrics.activeCueIndex+delta;if(next<0&&videoLyrics.activeSongIndex>0){saveActiveVideoLyricSong();loadVideoLyricSong(videoLyrics.activeSongIndex-1);videoLyrics.activeCueIndex=videoLyrics.cues.length-1;renderVideoLyricsPage();sendVideoLyricState();return;}if(next>=videoLyrics.cues.length&&videoLyrics.activeSongIndex<videoLyrics.lineup.length-1){saveActiveVideoLyricSong();loadVideoLyricSong(videoLyrics.activeSongIndex+1);videoLyrics.activeCueIndex=0;renderVideoLyricsPage();sendVideoLyricState();return;}setVideoLyricCue(next);}
-  function updateVideoLyricPreview(){const v=$('videoLyricsPreviewVideo'),t=$('videoLyricsPreviewText'),label=$('videoLyricsTemplateStatus');const template=VIDEO_LYRIC_TEMPLATES[videoLyrics.templateIndex]||VIDEO_LYRIC_TEMPLATES[0],st=videoLyrics.settings||{};if(v&&v.dataset.template!==template.url){v.src=template.url;v.dataset.template=template.url;v.load();const play=v.play();if(play&&play.catch)play.catch(()=>{});}if(t){t.textContent=videoLyrics.cues[videoLyrics.activeCueIndex]?.text||'Select lyrics to preview your cues';t.style.fontFamily=st.fontFamily||'Arial, sans-serif';t.style.textAlign=st.alignment||'center';t.style.fontWeight=String(st.fontWeight||400);t.style.fontSize=(Number(st.fontSize)||120)+'px';t.style.color=st.color||'#ffffff';t.style.transition='opacity '+Math.max(0,Number(st.fadeMs)||0)+'ms ease';}if(label)label.textContent=template.name+' · looping video background';}
-  function chooseVideoLyricTemplate(index){videoLyrics.templateIndex=Math.max(0,Math.min(VIDEO_LYRIC_TEMPLATES.length-1,Number(index)||0));saveActiveVideoLyricSong();renderVideoLyricsPage();sendVideoLyricState();}
-  function setVideoLyricCue(index){if(!videoLyrics.cues.length)return;videoLyrics.activeCueIndex=Math.max(0,Math.min(videoLyrics.cues.length-1,Number(index)||0));saveActiveVideoLyricSong();renderVideoLyricsPage();sendVideoLyricState();}
-  function editVideoLyricCue(index,value){if(!videoLyrics.cues[index])return;videoLyrics.cues[index].text=value;if(index===0)videoLyrics.songTitle=value;saveActiveVideoLyricSong();updateVideoLyricPreview();sendVideoLyricState();}
-  function removeVideoLyricCue(index){if(index===0||index===videoLyrics.cues.length-1){showToast('The cue title and final cue are kept.');return;}videoLyrics.cues.splice(index,1);videoLyrics.activeCueIndex=Math.min(videoLyrics.activeCueIndex,videoLyrics.cues.length-1);renderVideoLyricsPage();sendVideoLyricState();}
-  function addVideoLyricCue(){const finalIndex=Math.max(1,videoLyrics.cues.length-1);videoLyrics.cues.splice(finalIndex,0,{text:'New lyric line',kind:'line'});videoLyrics.activeCueIndex=finalIndex;renderVideoLyricsPage();sendVideoLyricState();}
-  function moveVideoLyricCue(index,delta){const to=index+delta;if(index<=0||index>=videoLyrics.cues.length-1||to<=0||to>=videoLyrics.cues.length-1)return;const [cue]=videoLyrics.cues.splice(index,1);videoLyrics.cues.splice(to,0,cue);videoLyrics.activeCueIndex=to;renderVideoLyricsPage();sendVideoLyricState();}
-  function openVideoLyricsPrompter(){saveActiveVideoLyricSong();if(!videoLyrics.cues.length){showToast('Search and select a song first.');return;}const base=location.origin+location.pathname;const opened=openPrompterDestination(base+'?mode=video-lyric-display','SSG_VIDEO_LYRICS_PROMPTER','popup=yes,resizable=yes,scrollbars=no,width=1400,height=800');if(opened?.sameTab){sendVideoLyricState();return;}if(opened?.window&&!opened.window.closed){videoLyrics.displayWindow=opened.window;sendVideoLyricState();try{opened.window.focus();}catch(e){}}else showToast('Allow pop-ups for this site to open the fullscreen prompter.');}
-  function renderVideoLyricsPage(){const page=$('page-lyrics');if(!page)return;const selected=VIDEO_LYRIC_TEMPLATES[videoLyrics.templateIndex]||VIDEO_LYRIC_TEMPLATES[0];page.innerHTML=`
-    <div class="toolbar"><div class="toolbar-left"><button class="btn primary" onclick="openVideoLyricsPrompter()"><span>▣</span> Open Video Lyrics Prompter</button><button class="btn" onclick="openVideoLyricsSearch()">+ Add Song to Lineup</button><button class="btn" onclick="setVideoLyricBlock()">Set Block</button><button class="btn" onclick="addVideoLyricCue()">+ Add Cue</button></div><div class="toolbar-right"><span class="btn small">${videoLyrics.cues.length?videoLyrics.cues.length+' cues':'No song selected'}</span></div></div>
-    <div class="video-lyrics-workspace"><div class="video-lyrics-panel"><div class="video-lyrics-kicker">01 · Song and cues</div><h2 style="margin:0 0 5px">${esc(videoLyrics.songTitle||'Prepare Video Lyrics')}</h2><p class="video-lyrics-status">Search for a song to create a title cue, one cue per lyric line, and the required final cue. Edit lines directly before sending them to the display.</p><div class="video-lyrics-actions"><button class="btn primary" onclick="openVideoLyricsSearch()">Add song from lyrics database</button><button class="btn" onclick="setVideoLyricBlock()">Block: ${esc(videoLyrics.activeBlock||'Block 1')}</button></div><div class="video-lyrics-cue-list" style="max-height:190px">${videoLyrics.lineup.map((x,i)=>`<div class="video-lyrics-cue ${i===videoLyrics.activeSongIndex?'active':''}"><div class="video-lyrics-cue-number">${esc(x.block||'Block 1')}</div><div><strong>${esc(x.songTitle)}</strong><div class="video-lyrics-status">${x.cues.length} cues</div></div><div style="display:flex;gap:3px"><button class="btn small" onclick="selectVideoLyricSong(${i})">Select</button><button class="btn small danger" onclick="removeVideoLyricSong(${i})">×</button></div></div>`).join('')||'<div class="lyric-placeholder-page">No songs in lineup yet. Add songs using the lyrics database.</div>'}</div><div class="video-lyrics-cue-list">${videoLyrics.cues.length?videoLyrics.cues.map((c,i)=>`<div class="video-lyrics-cue ${i===videoLyrics.activeCueIndex?'active':''} ${c.kind==='final'?'final':''}"><div class="video-lyrics-cue-number">${c.kind==='title'?'TITLE':c.kind==='final'?'FINAL':String(i).padStart(2,'0')}</div><input aria-label="Cue ${i+1}" value="${escAttr(c.text)}" onchange="editVideoLyricCue(${i},this.value)" onfocus="videoLyrics.activeCueIndex=${i};updateVideoLyricPreview()" ${c.kind==='final'?'readonly':''}><div style="display:flex;gap:3px;align-items:center"><button class="btn small" title="Use this cue" onclick="setVideoLyricCue(${i})">▶</button>${c.kind==='line'?`<button class="btn small" title="Move up" onclick="moveVideoLyricCue(${i},-1)">↑</button><button class="btn small" title="Move down" onclick="moveVideoLyricCue(${i},1)">↓</button><button class="btn small danger" title="Remove cue" onclick="removeVideoLyricCue(${i})">×</button>`:''}</div></div>`).join(''):'<div class="lyric-placeholder-page">Search and select a song to generate cue lines.</div>'}</div><div class="video-lyrics-actions"><button class="btn" onclick="stepVideoLyrics(-1)">‹ Previous</button><button class="btn" onclick="stepVideoLyrics(1)">Next ›</button></div></div>
-    <div class="video-lyrics-panel"><div class="video-lyrics-kicker">02 · Appearance</div><div class="video-lyrics-appearance-grid"><label>Font <select onchange="setVideoLyricSetting('fontFamily',this.value)"><option value="Arial, sans-serif" ${videoLyrics.settings.fontFamily==='Arial, sans-serif'?'selected':''}>Arial</option><option value="Inter, sans-serif" ${videoLyrics.settings.fontFamily==='Inter, sans-serif'?'selected':''}>Inter</option><option value="Georgia, serif" ${videoLyrics.settings.fontFamily==='Georgia, serif'?'selected':''}>Georgia</option><option value="Verdana, sans-serif" ${videoLyrics.settings.fontFamily==='Verdana, sans-serif'?'selected':''}>Verdana</option><option value="'Times New Roman', serif" ${videoLyrics.settings.fontFamily==="'Times New Roman', serif"?'selected':''}>Times New Roman</option></select></label><label>Custom font <input type="file" accept=".ttf,.otf,.woff,.woff2" onchange="loadVideoLyricCustomFont(this)"></label><label>Alignment <select onchange="setVideoLyricSetting('alignment',this.value)"><option value="left" ${videoLyrics.settings.alignment==='left'?'selected':''}>Left</option><option value="center" ${videoLyrics.settings.alignment==='center'?'selected':''}>Center</option><option value="right" ${videoLyrics.settings.alignment==='right'?'selected':''}>Right</option></select></label><label>Weight <select onchange="setVideoLyricSetting('fontWeight',this.value)"><option value="400" ${Number(videoLyrics.settings.fontWeight)===400?'selected':''}>Regular</option><option value="500" ${Number(videoLyrics.settings.fontWeight)===500?'selected':''}>Medium</option><option value="600" ${Number(videoLyrics.settings.fontWeight)===600?'selected':''}>Semibold</option><option value="700" ${Number(videoLyrics.settings.fontWeight)===700?'selected':''}>Bold</option><option value="800" ${Number(videoLyrics.settings.fontWeight)===800?'selected':''}>Extra bold</option><option value="900" ${Number(videoLyrics.settings.fontWeight)===900?'selected':''}>Black</option></select></label><label>Font size (px) <input type="number" min="12" max="240" value="${Number(videoLyrics.settings.fontSize)||120}" oninput="setVideoLyricSetting('fontSize',this.value)"></label><label>Text color <input type="color" value="${videoLyrics.settings.color||'#ffffff'}" oninput="setVideoLyricSetting('color',this.value)"></label><label class="wide">Lyrics fade duration (ms) <input type="number" min="0" max="5000" step="50" value="${Number(videoLyrics.settings.fadeMs??400)}" oninput="setVideoLyricSetting('fadeMs',this.value)"></label></div><div class="video-lyrics-kicker" style="margin-top:16px">03 · Video background</div><div class="video-lyrics-preview"><video id="videoLyricsPreviewVideo" muted autoplay loop playsinline preload="none"></video><div id="videoLyricsPreviewText" class="video-lyrics-preview-text">${esc(videoLyrics.cues[videoLyrics.activeCueIndex]?.text||'Your lyric cue preview')}</div></div><div id="videoLyricsTemplateStatus" class="video-lyrics-status" style="margin-top:7px">${esc(selected.name)} · looping video background</div><div class="video-lyrics-template-grid">${VIDEO_LYRIC_TEMPLATES.map((t,i)=>`<button class="video-lyrics-template ${i===videoLyrics.templateIndex?'active':''}" onclick="chooseVideoLyricTemplate(${i})" aria-label="Choose ${escAttr(t.name)}"><img loading="lazy" src="${escAttr(t.poster)}" alt="${escAttr(t.name)} video preview"><span>${esc(t.name)}</span></button>`).join('')}</div><p class="video-lyrics-status" style="margin-top:10px">Background videos load on demand in the preview and fullscreen output. The lyric cue is kept separate from the background.</p></div></div>`;updateVideoLyricPreview();}
-  function initVideoLyricDisplay(){openVideoLyricChannel();document.body.innerHTML=`<div class="lyric-display-shell video-lyric-display-shell"><video id="videoLyricDisplayVideoA" class="video-bg-a" autoplay muted playsinline preload="auto"></video><video id="videoLyricDisplayVideoB" class="video-bg-b" muted playsinline preload="auto"></video><div id="videoLyricDisplayText" class="video-lyric-display-text"></div></div>`;try{const raw=localStorage.getItem(VIDEO_LYRIC_STORAGE);if(raw){const saved=JSON.parse(raw);if(saved?.payload)applyVideoLyricDisplayPayload(saved.payload);}}catch(e){}window.addEventListener('storage',e=>{if(e.key===VIDEO_LYRIC_STORAGE&&e.newValue){try{applyVideoLyricDisplayPayload(JSON.parse(e.newValue).payload||{});}catch(err){}}});window.addEventListener('message',e=>{const d=e.data||{};if(d.ssgVideoLyrics===true&&d.type==='state')applyVideoLyricDisplayPayload(d.payload||{});});window.addEventListener('keydown',e=>{if(e.repeat)return;if(e.key==='ArrowRight'||e.key==='PageDown'||e.code==='Space'){e.preventDefault();videoDisplayNext();}else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();videoDisplayPrev();}else if(e.key==='Escape'){try{if(document.fullscreenElement)document.exitFullscreen();}catch(err){}}else if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='f'){e.preventDefault();document.documentElement.requestFullscreen?.().catch(()=>{});}});try{document.documentElement.requestFullscreen?.().catch(()=>{});}catch(e){}setTimeout(()=>{try{videoLyricChannel?.postMessage({ssgVideoLyrics:true,type:'ready'});}catch(e){}},150);}
-  let videoDisplayPayload={cues:[],activeCueIndex:0,templateUrl:'',songTitle:'',settings:{},lineup:[],activeSongIndex:0};let videoLoopTimer=null;let videoFadeBusy=false;let activeVideoLayer='A';
-  let lastDisplayCueKey='';
-  function applyVideoLyricDisplayPayload(p){
-    videoDisplayPayload=p||videoDisplayPayload;
-    const t=$('videoLyricDisplayText');
-    const cues=p.cues||[];const cue=cues[Number(p.activeCueIndex)||0];const st=p.settings||{};
-    if(p.customFont?.url&&p.customFont?.name){let fs=$('videoLyricCustomFontStyle');if(!fs){fs=document.createElement('style');fs.id='videoLyricCustomFontStyle';document.head.appendChild(fs);}fs.textContent='@font-face{font-family:\''+String(p.customFont.name).replace(/[^a-z0-9_]/gi,'')+'\';src:url("'+String(p.customFont.url).replace(/"/g,'')+'") format("woff2")}';}
-    if(t){
-      const cueKey=String(p.activeSongIndex??0)+'|'+String(p.activeCueIndex??0)+'|'+String(cue?.text||'');
-      t.style.fontFamily=st.fontFamily||'Arial, sans-serif';t.style.textAlign=st.alignment||'center';t.style.fontWeight=String(st.fontWeight||400);t.style.fontSize=(Number(st.fontSize)||120)+'px';t.style.color=st.color||'#ffffff';
-      const fade=Math.max(0,Math.min(5000,Number(st.fadeMs)||0));t.style.transition='opacity '+fade+'ms ease';
-      if(cueKey!==lastDisplayCueKey){lastDisplayCueKey=cueKey;t.style.opacity='0';if(fade===0){t.textContent=cue?.text||'';t.style.opacity='1';}else{setTimeout(()=>{if(!t.isConnected||lastDisplayCueKey!==cueKey)return;t.textContent=cue?.text||'';requestAnimationFrame(()=>requestAnimationFrame(()=>{if(lastDisplayCueKey===cueKey)t.style.opacity='1';}));},fade);}}
-      else {t.textContent=cue?.text||'';t.style.opacity='1';}
-    }
-    const url=p.templateUrl;
-    if(url){const a=$('videoLyricDisplayVideoA'),b=$('videoLyricDisplayVideoB');const active=activeVideoLayer==='A'?a:b;if(active&&active.dataset.url!==url){clearTimeout(videoLoopTimer);videoFadeBusy=false;const other=activeVideoLayer==='A'?b:a;if(other){other.pause();other.className='';other.style.opacity='0';other.removeAttribute('src');other.removeAttribute('data-url');other.load();}active.dataset.url=url;active.src=url;active.loop=false;active.classList.remove('is-fading-out');active.classList.add('is-fading-in');active.currentTime=0;active.play().catch(()=>{});scheduleVideoCrossfade(active);}}
-  }
-  function scheduleVideoCrossfade(v){clearTimeout(videoLoopTimer);if(!v)return;const check=()=>{if(!v.isConnected||!v.duration||!Number.isFinite(v.duration)){videoLoopTimer=setTimeout(check,250);return;}if(v.duration-v.currentTime<=2.4&&!videoFadeBusy){startVideoCrossfade(v);}else videoLoopTimer=setTimeout(check,100);};videoLoopTimer=setTimeout(check,250);}
-  function startVideoCrossfade(active){
-    if(videoFadeBusy||!active||!active.dataset.url)return;videoFadeBusy=true;
-    const next=activeVideoLayer==='A'?'B':'A';const incoming=next==='A'?$('videoLyricDisplayVideoA'):$('videoLyricDisplayVideoB');
-    if(!incoming){videoFadeBusy=false;return;}
-    incoming.pause();incoming.className='';incoming.style.opacity='0';incoming.src=active.currentSrc||active.src;incoming.dataset.url=active.dataset.url;incoming.loop=false;
-    const begin=()=>{
-      incoming.removeEventListener('canplay',begin);incoming.currentTime=0;
-      const playPromise=incoming.play();
-      if(playPromise&&playPromise.then){playPromise.then(()=>{
-        requestAnimationFrame(()=>{incoming.classList.add('is-fading-in');active.classList.remove('is-fading-in');active.classList.add('is-fading-out');});
-        setTimeout(()=>{active.pause();active.classList.remove('is-fading-out');active.style.opacity='0';incoming.classList.remove('is-fading-out');incoming.classList.add('is-fading-in');incoming.style.opacity='';activeVideoLayer=next;videoFadeBusy=false;scheduleVideoCrossfade(incoming);},1250);
-      }).catch(()=>{videoFadeBusy=false;scheduleVideoCrossfade(active);});}
-      else {incoming.classList.add('is-fading-in');active.classList.add('is-fading-out');setTimeout(()=>{active.pause();active.classList.remove('is-fading-out');active.style.opacity='0';activeVideoLayer=next;videoFadeBusy=false;scheduleVideoCrossfade(incoming);},1250);}
-    };
-    incoming.addEventListener('canplay',begin,{once:true});incoming.load();
-    if(incoming.readyState>=3)begin();
-  }
-  function videoDisplayPrev(){try{videoLyricChannel?.postMessage({ssgVideoLyrics:true,type:'navigate',direction:'prev'});}catch(e){}}
-  function videoDisplayNext(){try{videoLyricChannel?.postMessage({ssgVideoLyrics:true,type:'navigate',direction:'next'});}catch(e){}}
   let lyricMode='text';
   function ensureLyricsState(){
     if(!state.lyrics.tabs.length){
@@ -3085,7 +2954,7 @@ function broadcastGuideToPresenter(){
     ensureLyricsState();
     const page=$('page-lyrics');if(!page)return;
     if(lyricMode==='image'){page.innerHTML='<div class="lyric-placeholder-page"><b>Image Lyrics</b><br><br>The image-lyrics workspace is reserved for the next module. Text Lyrics is ready now.</div>';return;}
-    if(lyricMode==='video'){renderVideoLyricsPage();return;}
+    if(lyricMode==='video'){page.innerHTML='<div class="lyric-placeholder-page"><b>[WIP] Video Lyrics</b><br><br>Video Lyrics is currently marked WIP.</div>';return;}
     const tab=activeLyricTab();
     page.innerHTML=`
       <div class="toolbar"><div class="toolbar-left"><button class="btn primary" onclick="sendLyricToPrompter()">Send to Prompter <span style="font-size:10px">(&#96;)</span></button><button class="btn" onclick="openLyricSearch(${state.lyrics.activeBlockIndex})">+ Add Lyrics</button><button class="btn" onclick="refreshLyricLibrary()">Reload Library</button><button class="btn yellow" onclick="saveCurrentLyricLineup()">Save Lineup</button><button class="btn" onclick="loadSavedLyricLineup()">Load Lineup</button></div><div class="toolbar-right"><span id="lyricThemeLabel" class="btn small">BLACK · ARIAL BOLD</span></div></div>

@@ -13,16 +13,10 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // Users can read their own role. Admins can grant only the officer role to another account.
-    // The first admin account must still be provisioned manually by the project owner.
+    // Roles are provisioned manually by the project owner only.
     match /users/{uid} {
       allow read: if signedIn() && request.auth.uid == uid;
-      allow create, update: if isAdmin()
-        && uid != request.auth.uid
-        && request.resource.data.role == 'officer'
-        && request.resource.data.approvedBy == request.auth.uid
-        && request.resource.data.keys().hasOnly(['role','name','email','teamRole','approvedAt','approvedBy']);
-      allow delete: if false;
+      allow create, update, delete: if false;
     }
 
     // Saved program guides and program sequences are publicly readable.
@@ -46,31 +40,6 @@ service cloud.firestore {
       allow read, create, update, delete: if isOfficer();
     }
 
-    // Live editor drafts are separate from permanent saved guides. Signed-in users
-    // may follow the current draft; only approved officers may publish it.
-    match /guideLiveDrafts/{guideId} {
-      allow read: if signedIn();
-      allow create, update: if isOfficer()
-        && request.resource.data.guideId == guideId
-        && request.resource.data.updatedBy == request.auth.uid
-        && request.resource.data.state is map;
-      allow delete: if isAdmin();
-    }
-
-    // Online operator presence and current display state. Signed-in viewers may read;
-    // each approved operator can only publish their own session document.
-    match /operatorSessions/{uid} {
-      allow read: if signedIn();
-      allow create, update: if isOfficer()
-        && request.auth.uid == uid
-        && request.resource.data.uid == uid
-        && request.resource.data.guideId is string
-        && request.resource.data.operatorName is string
-        && request.resource.data.online is bool
-        && request.resource.data.state is map;
-      allow delete: if isOfficer() && request.auth.uid == uid;
-    }
-
     // A signed-in non-officer may submit one request document using their own UID.
     // Only admins can review or change requests. The client cannot approve itself.
     match /officerAccessRequests/{uid} {
@@ -78,16 +47,14 @@ service cloud.firestore {
         && request.auth.uid == uid
         && !isOfficer()
         && !exists(/databases/$(database)/documents/officerAccessRequests/$(uid))
-        && request.resource.data.keys().hasAll(['uid', 'email', 'name', 'teamRole', 'status', 'requestedAt'])
-        && request.resource.data.keys().hasOnly(['uid', 'email', 'name', 'teamRole', 'status', 'requestedAt'])
+        && request.resource.data.keys().hasAll(['uid', 'email', 'name', 'reason', 'status', 'requestedAt'])
+        && request.resource.data.keys().hasOnly(['uid', 'email', 'name', 'reason', 'status', 'requestedAt'])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 200
-        && request.resource.data.teamRole is string
-        && request.resource.data.teamRole.size() > 0
-        && request.resource.data.teamRole.size() <= 200
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() <= 1000
         && request.resource.data.status == 'pending'
         && request.resource.data.requestedAt == request.time;
       allow read, update, delete: if isAdmin();
