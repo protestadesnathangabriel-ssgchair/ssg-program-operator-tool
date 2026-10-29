@@ -3707,7 +3707,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
   function currentOperatorDisplayState(){const area=$('displayContent');const max=area?Math.max(1,area.scrollHeight-area.clientHeight):1;return {activeItemId:displayState.activeItemId||'',scrollTop:area?area.scrollTop:0,scrollRatio:area?Math.max(0,Math.min(1,area.scrollTop/max)):0,zoom:displayState.zoom||100,scrolling:!!displayState.scrolling,speed:displayState.speed||3,timer:displayState.timer||null,target:displayState.target||'display',sentAt:Date.now()};}
   function publishOperatorDisplayState(){if(APP_CONFIG.mode!=='display'||new URLSearchParams(location.search).get('viewOnly')==='1'||!APP_CONFIG.guideId)return;const payload={guideId:APP_CONFIG.guideId,state:currentOperatorDisplayState()};try{google.script.run.withFailureHandler(e=>console.warn('Operator live-state publish failed:',e)).apiCall('publishOperatorState',[payload],getStoredAuth()?.token||'');}catch(e){console.warn(e);}}
   // Viewer-only smoothing state. This intentionally does not modify the operator auto-scroll engine.
-  const followScrollSync={raf:0,targetRatio:0,lastRatio:null,lastSentAt:0,receivedAt:0,velocity:0,lastFrame:0,guideId:''};
+  const followScrollSync={raf:0,targetRatio:0,lastRatio:null,lastSentAt:0,lastAppliedSentAt:0,receivedAt:0,velocity:0,lastFrame:0,guideId:''};
   function stopFollowScrollSmoothing(){if(followScrollSync.raf)cancelAnimationFrame(followScrollSync.raf);followScrollSync.raf=0;followScrollSync.lastFrame=0;}
   function startFollowScrollSmoothing(){
     if(followScrollSync.raf)return;
@@ -3734,8 +3734,14 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
   }
   function applyFollowedOperatorState(session){
     if(!session){const status=$('controlList');if(status)status.innerHTML='<div class="operator-follow-empty">Operator is offline or has stopped sharing this guide. Waiting for the live session to return…</div>';const target=$('controlTarget');if(target)target.textContent='OPERATOR OFFLINE · READ ONLY';return;}
+    const st=session.state||{};
+    // Network writes may complete out of order. Ignore an older operator snapshot so
+    // it cannot rewind the viewer's prompt, active item, or timer.
+    const incomingSentAt=Number(st.sentAt)||0;
+    if(incomingSentAt && followScrollSync.lastAppliedSentAt && incomingSentAt<followScrollSync.lastAppliedSentAt)return;
+    if(incomingSentAt)followScrollSync.lastAppliedSentAt=incomingSentAt;
     const status=$('controlList');if(status)status.innerHTML=`<div class="operator-follow-empty"><strong>LIVE · ${esc(session.operatorName||'Selected operator')}</strong><br>Following the operator’s current display state. Keyboard and timer controls are disabled in this window.</div>`;const target=$('controlTarget');if(target)target.textContent='LIVE OPERATOR · READ ONLY';
-    const st=session.state||{};displayState.activeItemId=String(st.activeItemId||'');displayState.timer=st.timer||null;displayState.timerReceivedAt=Date.now();displayState.zoom=Number(st.zoom)||100;displayState.scrolling=!!st.scrolling;displayState.speed=Math.max(1,Math.min(5,Number(st.speed)||3));displayState.target=st.target||'display';
+    displayState.activeItemId=String(st.activeItemId||'');displayState.timer=st.timer||null;displayState.timerReceivedAt=Date.now();displayState.zoom=Number(st.zoom)||100;displayState.scrolling=!!st.scrolling;displayState.speed=Math.max(1,Math.min(5,Number(st.speed)||3));displayState.target=st.target||'display';
     applyDisplayZoom();document.querySelectorAll('#displayZoomContent .display-item').forEach(el=>el.classList.toggle('active',el.dataset.itemId===displayState.activeItemId));renderDisplayTimer();const area=$('displayContent');if(area){area.style.scrollBehavior='auto';const max=Math.max(0,area.scrollHeight-area.clientHeight);const now=performance.now();const incomingRatio=Number.isFinite(Number(st.scrollRatio))?Math.max(0,Math.min(1,Number(st.scrollRatio))):(max?Math.max(0,Math.min(1,(Number(st.scrollTop)||0)/max)):0);const sentAt=Number(st.sentAt)||Date.now();if(followScrollSync.lastRatio!==null){const dt=Math.max(30,Math.min(1000,sentAt-followScrollSync.lastSentAt));const raw=(incomingRatio-followScrollSync.lastRatio)/dt;followScrollSync.velocity=Math.max(-0.0018,Math.min(0.0018,raw));}else{followScrollSync.velocity=0;}followScrollSync.lastRatio=incomingRatio;followScrollSync.lastSentAt=sentAt;followScrollSync.targetRatio=incomingRatio;followScrollSync.receivedAt=now;startFollowScrollSmoothing();}
     const key=$('displayKey');if(key)key.textContent='VIEW-ONLY · FOLLOWING '+String(session.operatorName||'OPERATOR').toUpperCase();
   }
