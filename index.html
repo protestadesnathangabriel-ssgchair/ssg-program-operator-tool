@@ -850,6 +850,29 @@ html[data-ssg-layout="phone"] .ssg-dashboard-columns{grid-template-columns:minma
  .sidebar.ssg-mobile-open~#ssgMobileNavBackdrop{opacity:1;visibility:visible;pointer-events:auto}
 }
 </style>
+
+<style id="ssg-share-guide-page">
+  body.ssg-share-page{background:#f4f6fb;color:#172554}
+  .ssg-share-wrap{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at top left,#e8edff 0,transparent 38%),#f5f7fc}
+  .ssg-share-card{width:min(720px,100%);background:#fff;border:1px solid #dce3f2;border-radius:22px;box-shadow:0 24px 70px rgba(24,38,92,.10);overflow:hidden}
+  .ssg-share-brand{padding:22px 26px;background:#101e52;color:#fff;display:flex;align-items:center;gap:12px}
+  .ssg-share-mark{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#f3c400;color:#14204e;font-weight:900;letter-spacing:-1px}
+  .ssg-share-brand strong{display:block;font-size:14px;letter-spacing:.04em}.ssg-share-brand small{display:block;margin-top:4px;color:#d8def5;font-size:11px}
+  .ssg-share-content{padding:clamp(22px,5vw,38px)}
+  .ssg-share-eyebrow{font-size:11px;font-weight:800;letter-spacing:.13em;color:#68749a;text-transform:uppercase}
+  .ssg-share-title{font-size:clamp(25px,4vw,36px);line-height:1.15;letter-spacing:-.035em;margin:10px 0 12px;color:#172554;overflow-wrap:anywhere}
+  .ssg-share-meta{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px}
+  .ssg-share-chip{border:1px solid #e0e6f2;background:#f8faff;color:#4c587d;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:700}
+  .ssg-share-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .ssg-share-action{border:1px solid #dce2f0;background:#fff;color:#172554;border-radius:13px;padding:16px 12px;text-align:left;min-height:110px;display:flex;flex-direction:column;justify-content:space-between;gap:15px;font-weight:800;transition:transform .15s,border-color .15s,box-shadow .15s}
+  .ssg-share-action:hover{transform:translateY(-2px);border-color:#9eaddd;box-shadow:0 8px 22px #1b2c6812}
+  .ssg-share-action.primary{background:#172554;border-color:#172554;color:#fff}
+  .ssg-share-action .ssg-share-icon{font-size:23px;line-height:1}.ssg-share-action small{display:block;font-size:11px;line-height:1.4;font-weight:500;opacity:.76;margin-top:5px}
+  .ssg-share-note{font-size:12px;line-height:1.55;color:#737d9b;margin:20px 0 0}
+  .ssg-share-error{padding:24px;color:#5b6687;text-align:center}
+  @media(max-width:560px){.ssg-share-wrap{padding:12px}.ssg-share-brand{padding:18px}.ssg-share-content{padding:22px 18px}.ssg-share-actions{grid-template-columns:1fr}.ssg-share-action{min-height:unset;flex-direction:row;align-items:center;padding:14px}.ssg-share-action .ssg-share-icon{width:34px;flex:0 0 34px}.ssg-share-action span:last-child{flex:1}}
+</style>
+
 </head>
 <body>
 <script>
@@ -1615,13 +1638,61 @@ function getStoredAuth(){
   function loadGuides(openId){
     showToast('Loading guides...');
     safeRun('getGuides',[],guides=>{
-      state.guides=guides||[]; hideToast(); renderHome();
+      state.guides=guides||[]; hideToast();
+      if(APP_CONFIG.mode==='share' && APP_CONFIG.guideId){
+        const shared=state.guides.find(g=>String(g.id)===String(APP_CONFIG.guideId));
+        if(shared){renderSharedGuideLanding(shared);return;}
+        safeRun('getGuide',[APP_CONFIG.guideId],guide=>{
+          if(guide&&guide.id)renderSharedGuideLanding(guide);
+          else renderSharedGuideError('This program may have been deleted or you may not have permission to view it.');
+        });
+        return;
+      }
+      renderHome();
       if(openId){
         const match=state.guides.find(g=>String(g.id)===String(openId));
         if(match) editGuide(match.id);
       }
     });
   }
+  function shareGuideLink(guideId){
+    if(!guideId)return;
+    const base=(state.bootstrap?.appUrl||APP_CONFIG.appUrl||location.origin+location.pathname).split('?')[0];
+    const url=base+'?mode=share&guideId='+encodeURIComponent(guideId);
+    const done=()=>showToast('Share link copied. Send it to anyone who needs this program.');
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(done).catch(()=>showShareLinkFallback(url));}
+    else showShareLinkFallback(url);
+  }
+  function showShareLinkFallback(url){
+    const box=document.createElement('div');box.className='operator-follow-modal show';box.innerHTML=`<div class="operator-follow-card"><h3>Share program link</h3><p style="font-size:13px;color:#596675">Copy this link and send it to your hosts or production team.</p><input id="ssgShareLinkInput" readonly value="${escAttr(url)}" style="margin:8px 0 12px"><div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" type="button" id="ssgShareClose">Close</button><button class="btn primary" type="button" id="ssgShareCopy">Select link</button></div></div>`;
+    document.body.appendChild(box);box.querySelector('#ssgShareClose').onclick=()=>box.remove();box.querySelector('#ssgShareCopy').onclick=()=>{const input=box.querySelector('#ssgShareLinkInput');input.focus();input.select();try{document.execCommand('copy');showToast('Share link copied.');}catch(e){};};
+    const input=box.querySelector('#ssgShareLinkInput');input.focus();input.select();
+  }
+  function renderSharedGuideLanding(guide){
+    document.body.classList.add('ssg-share-page');
+    const isOfficer=['officer','admin'].includes(String(state.auth?.role||'').toLowerCase());
+    const isSequence=String(guide.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE';
+    const base=(state.bootstrap?.appUrl||APP_CONFIG.appUrl||location.origin+location.pathname).split('?')[0];
+    const meta=[isSequence?'Program sequence':'Program guide',guide.eventDate||'Date not set'].map(x=>`<span class="ssg-share-chip">${esc(x)}</span>`).join('');
+    $('mainApp').innerHTML=`<main class="ssg-share-wrap"><article class="ssg-share-card"><header class="ssg-share-brand"><div class="ssg-share-mark">SSG</div><div><strong>SSG PROGRAM OPERATOR TOOL</strong><small>SHARED PROGRAM</small></div></header><section class="ssg-share-content"><div class="ssg-share-eyebrow">Program block</div><h1 class="ssg-share-title">${esc(guide.title||'Untitled program')}</h1><div class="ssg-share-meta">${meta}</div><div class="ssg-share-actions"><button class="ssg-share-action" type="button" onclick="openSharedGuideView('host','${escAttr(guide.id)}')"><span class="ssg-share-icon">▤</span><span>Open as Host View<small>Readable, scrollable program guide</small></span></button><button class="ssg-share-action primary" type="button" onclick="openSharedGuideView('prompt','${escAttr(guide.id)}')"><span class="ssg-share-icon">▣</span><span>Open as Prompt View<small>View the program prompt and timer</small></span></button><button class="ssg-share-action" type="button" onclick="openSharedGuideView('edit','${escAttr(guide.id)}')"><span class="ssg-share-icon">✎</span><span>Edit program<small>${isOfficer?'Open the program editor':'Officer account required'}</small></span></button></div><p class="ssg-share-note">Anyone signed in with Google can open the read-only views. Editing is restricted to approved officers and administrators.</p></section></article></main>`;
+  }
+  function renderSharedGuideError(message){
+    document.body.classList.add('ssg-share-page');
+    $('mainApp').innerHTML=`<main class="ssg-share-wrap"><section class="ssg-share-card"><header class="ssg-share-brand"><div class="ssg-share-mark">SSG</div><div><strong>SSG PROGRAM OPERATOR TOOL</strong><small>SHARED PROGRAM</small></div></header><div class="ssg-share-error"><h2>Program unavailable</h2><p>${esc(message||'Unable to load this program.')}</p><button class="btn" onclick="location.href=(APP_CONFIG.appUrl||location.pathname).split('?')[0]">Open SSG Tool</button></div></section></main>`;
+  }
+  function openSharedGuideView(action,guideId){
+    const base=(state.bootstrap?.appUrl||APP_CONFIG.appUrl||location.origin+location.pathname).split('?')[0];
+    if(action==='edit'){
+      if(!['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())){showToast('Editing requires an approved Officer or Admin account.');return;}
+      location.href=base+'?mode=main&guideId='+encodeURIComponent(guideId);return;
+    }
+    const url=action==='host'?base+'?mode=host&guideId='+encodeURIComponent(guideId):base+'?mode=display&viewOnly=1&guideId='+encodeURIComponent(guideId);
+    const name=action==='host'?'SSG_PROGRAM_HOST_VIEW':'SSG_PROGRAM_SHARED_PROMPT';
+    const features=action==='host'?'popup=yes,resizable=yes,scrollbars=yes,width=1100,height=850':'popup=yes,resizable=yes,scrollbars=yes,width=1280,height=800';
+    const opened=openPrompterDestination(url,name,features);
+    if(!opened.sameTab){try{if(opened.window&&!opened.window.closed)opened.window.focus();}catch(e){}}
+  }
+
   function hideToast(){ $('toast').classList.remove('show'); }
 
           let homeGuideTab='mine';
@@ -1646,7 +1717,7 @@ function getStoredAuth(){
         <section class="ssg-dashboard-panel">
           <div class="ssg-section-title"><div><h2>Recently opened</h2><p>Pick up where you left off.</p></div><button class="ssg-text-link" type="button" onclick="openSavedGuidesFromHome()">View all →</button></div>
           <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="homeSearch" placeholder="Search guides by title…" value="${escAttr(window.homeSearchValue||'')}" oninput="window.homeSearchValue=this.value;renderHome()"></div>
-          <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button>${String(g.type||'PROGRAM_FLOW')!=='PROGRAM_SEQUENCE'&&['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small primary" onclick="useGuideAsSequence('${escAttr(g.id)}')">Use as Sequence</button>`:''}${['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small danger" onclick="deleteGuideClient('${escAttr(g.id)}')">Delete</button>`:''}</div>`}</div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
+          <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="shareGuideLink('${escAttr(g.id)}')">Share link</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="shareGuideLink('${escAttr(g.id)}')">Share link</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button>${String(g.type||'PROGRAM_FLOW')!=='PROGRAM_SEQUENCE'&&['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small primary" onclick="useGuideAsSequence('${escAttr(g.id)}')">Use as Sequence</button>`:''}${['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small danger" onclick="deleteGuideClient('${escAttr(g.id)}')">Delete</button>`:''}</div>`}</div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
         </section>
         <section class="ssg-dashboard-panel">
           <div class="ssg-section-title"><div><h2>Quick access</h2><p>Supporting tools for your program.</p></div></div>
@@ -1660,7 +1731,7 @@ function getStoredAuth(){
       <section class="ssg-dashboard-panel ssg-saved-guides-section" id="savedGuidesSection" style="margin-top:26px">
         <div class="ssg-section-title"><div><h2>Saved Guides & Sequences</h2><p>${isViewer?'View all saved program guides and sequences.':'Open and manage all your saved program guides and sequences.'}</p></div></div>
         <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="savedGuideSearch" placeholder="Search saved guides by title…" aria-label="Search saved guides" oninput="filterSavedGuides(this.value)"></div>
-          <div class="guide-list" id="savedGuideList">${all.length?all.map(g=>`<div class="guide-row" data-saved-title="${escAttr(String(g.title||'').toLowerCase())}"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button>${['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small danger" onclick="deleteGuideClient('${escAttr(g.id)}')">Delete</button>`:''}</div>`}</div>`).join(''):`<div class="empty">No saved guides yet.<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div>
+          <div class="guide-list" id="savedGuideList">${all.length?all.map(g=>`<div class="guide-row" data-saved-title="${escAttr(String(g.title||'').toLowerCase())}"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="shareGuideLink('${escAttr(g.id)}')">Share link</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="shareGuideLink('${escAttr(g.id)}')">Share link</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button>${['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small danger" onclick="deleteGuideClient('${escAttr(g.id)}')">Delete</button>`:''}</div>`}</div>`).join(''):`<div class="empty">No saved guides yet.<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div>
         </div>
       </section>
       <div id="operatorFollowModal" class="operator-follow-modal" role="dialog" aria-modal="true" aria-labelledby="operatorFollowTitle"><div class="operator-follow-card"><h3 id="operatorFollowTitle">Follow an online operator</h3><p style="font-size:13px;color:#596675;margin:0">Choose an operator currently running this guide. Your window is view-only; keyboard and timer controls are disabled.</p><div id="operatorFollowList" class="operator-follow-list"><div class="operator-follow-empty">Checking online operators…</div></div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn" type="button" onclick="closeOperatorFollowModal()">Close</button></div></div></div>`;
