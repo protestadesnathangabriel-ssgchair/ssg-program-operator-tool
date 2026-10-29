@@ -3229,7 +3229,7 @@ function broadcastGuideToPresenter(){
     const loop=(now)=>{
       if(!state.lyrics.scrolling)return;
       const area=$('lyricPreviewScroll');if(!area){stopLyricScroll();return;}
-      const dt=Math.min(50,Math.max(0,now-last||0));last=now;
+      const dt=Math.min(250,Math.max(0,now-last||0));last=now;
       const speed=speedTable[Math.max(1,Math.min(5,Number(state.lyrics.speed)||3))-1];
       const max=Math.max(0,area.scrollHeight-area.clientHeight);
       pos=Math.min(max,pos+(speed*dt/1000));
@@ -3239,7 +3239,7 @@ function broadcastGuideToPresenter(){
     };
     state.lyrics.raf=requestAnimationFrame(loop);
   }
-  function stopLyricScroll(){if(state.lyrics.raf)cancelAnimationFrame(state.lyrics.raf);state.lyrics.raf=null;state.lyrics.scrolling=false;}
+  function stopLyricScroll(){if(state.lyrics.raf)cancelAnimationFrame(state.lyrics.raf);state.lyrics.raf=null;const area=$('lyricPreviewScroll');if(area)state.lyrics.scrollPosition=area.scrollTop;state.lyrics.scrolling=false;}
   function updateLyricPlayButton(){const b=$('lyricPlayBtn');if(b)b.textContent=state.lyrics.scrolling?'PAUSE':'PLAY';}
   function prevLyricBlock(){syncLyricInputs();const tab=activeLyricTab();if(!tab)return;state.lyrics.activeBlockIndex=Math.max(0,state.lyrics.activeBlockIndex-1);state.lyrics.scrolling=false;renderLyricsPage();sendLyricState();}
   function nextLyricBlock(){syncLyricInputs();const tab=activeLyricTab();if(!tab)return;state.lyrics.activeBlockIndex=Math.min(tab.blocks.length-1,state.lyrics.activeBlockIndex+1);state.lyrics.scrolling=false;renderLyricsPage();sendLyricState();}
@@ -3422,15 +3422,17 @@ function broadcastGuideToPresenter(){
       if(!displayLyricState.scrolling)return;
       const area=$('lyricDisplayScroll');
       if(!area){stopDisplayLyricScroll();return;}
-      // Clamp long frame gaps (e.g. browser scheduling hiccups) so one delayed
-      // animation frame cannot create a visible sudden jump in lyric scrolling.
+      // Use elapsed frame time instead of a 50ms clamp. The old clamp discarded
+      // elapsed time during busy frames, causing the prompt to permanently fall
+      // behind its intended position and appear to stutter. Bound only extreme
+      // background-tab gaps to avoid a large catch-up jump.
       const rawDt=Math.max(0,now-displayLyricState.lastScrollTime||0);
-      const dt=Math.min(rawDt,50);
+      const dt=Math.min(rawDt,250);
       displayLyricState.lastScrollTime=now;
       const speed=speedTable[Math.max(1,Math.min(5,Number(displayLyricState.speed)||3))-1];
       const max=Math.max(0,area.scrollHeight-area.clientHeight);
       displayLyricState.scrollPosition=Math.min(max,displayLyricState.scrollPosition+(speed*dt/1000));
-      area.scrollTop=Math.round(displayLyricState.scrollPosition);
+      area.scrollTop=displayLyricState.scrollPosition;
       if(displayLyricState.scrollPosition>=max){
         displayLyricState.scrollPosition=max;
         area.scrollTop=max;
@@ -3944,19 +3946,20 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
       // Preserve sub-pixel movement and account for delayed animation frames.
       // The previous 50ms clamp silently discarded elapsed time, causing the
       // scroll to slow down or appear to stall when the page was busy.
-      const dt=Math.min(100,Math.max(0,now-lastFrame));
+      const dt=Math.min(250,Math.max(0,now-lastFrame));
       lastFrame=now;
       const speed=speedSteps[Math.max(1,Math.min(5,Number(displayState.speed)||3)-1)];
       const max=Math.max(0,currentArea.scrollHeight-currentArea.clientHeight);
       position=Math.min(max,position+speed*dt/1000);
       currentArea.scrollTop=position;
+      displayState.scrollPosition=position;
       if(now-lastSync>=1500){lastSync=now;sendDisplayMirrorState();}
       if(position>=max){displayState.scrolling=false;displayState.raf=null;sendDisplayMirrorState();return;}
       displayState.raf=requestAnimationFrame(loop);
     };
     displayState.raf=requestAnimationFrame(loop);
   }
-  function stopDisplayScroll(){if(displayState.raf)cancelAnimationFrame(displayState.raf);displayState.raf=null;sendDisplayMirrorState();}
+  function stopDisplayScroll(){if(displayState.raf)cancelAnimationFrame(displayState.raf);displayState.raf=null;const area=$('displayContent');if(area)displayState.scrollPosition=area.scrollTop;sendDisplayMirrorState();}
   function sendDisplayMirrorState(){
     if(new URLSearchParams(location.search).get('viewOnly')==='1')return;
     const area=document.getElementById('displayContent');
