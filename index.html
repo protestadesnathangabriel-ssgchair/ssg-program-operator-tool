@@ -3997,7 +3997,7 @@ function promptGuide(id){ safeRun('getGuide',[id],guide=>{state.guide=guide;show
       }
     } else { el.scrollIntoView({behavior:displayState.scrolling?'auto':'smooth',block:'center'}); }
   }
-  function toggleDisplayScroll(){displayState.scrolling=!displayState.scrolling; if(displayState.scrolling)startDisplayScroll(); else stopDisplayScroll();}
+  function toggleDisplayScroll(){displayState.scrolling=!displayState.scrolling; if(displayState.scrolling)startDisplayScroll(); else stopDisplayScroll(); publishOperatorDisplayState();}
   function startDisplayScroll(){
     if(displayState.raf)cancelAnimationFrame(displayState.raf);
     displayState.raf=null;
