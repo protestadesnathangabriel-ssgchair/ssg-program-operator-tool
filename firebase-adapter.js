@@ -12,6 +12,7 @@
   let authReadyResolve;
   const authReady = new Promise(resolve => { authReadyResolve = resolve; });
   auth.onAuthStateChanged(user => authReadyResolve(user));
+  async function ensureViewerAuth(){ await authReady; if(!auth.currentUser) await auth.signInAnonymously(); return auth.currentUser; }
 
   function err(message, code='APP_ERROR'){ const e=new Error(message); e.code=code; return e; }
   async function currentAccess(){
@@ -320,7 +321,7 @@
     listOnlineOperators:(guideId,onNext,onError)=>{
       let unsubscribe=null,cancelled=false;
       const fail=typeof onError==='function'?onError:(e=>console.error('Operator list error:',e));
-      Promise.resolve().then(currentAccess).then(()=>{
+      Promise.resolve().then(ensureViewerAuth).then(()=>{
         if(cancelled)return;
         unsubscribe=db.collection('operatorSessions').where('guideId','==',String(guideId)).onSnapshot(snap=>{
           const now=Date.now();
@@ -333,7 +334,7 @@
     subscribeOperatorSession:(uid,onNext,onError)=>{
       let unsubscribe=null,cancelled=false;
       const fail=typeof onError==='function'?onError:(e=>console.error('Operator session error:',e));
-      Promise.resolve().then(currentAccess).then(()=>{
+      Promise.resolve().then(ensureViewerAuth).then(()=>{
         if(cancelled)return;
         unsubscribe=db.collection('operatorSessions').doc(String(uid)).onSnapshot(snap=>{
           if(!snap.exists){if(typeof onNext==='function')onNext(null);return;}
