@@ -348,7 +348,8 @@
     subscribeGuide:(guideId,onNext,onError)=>{
       let unsubscribe=null, cancelled=false;
       const fail=typeof onError==='function'?onError:(e=>console.error('Guide live-sync error:',e));
-      Promise.resolve().then(currentAccess).then(()=>{
+      // Saved guides are intentionally public read-only per Firestore Rules.
+      Promise.resolve().then(()=>{
         if(cancelled)return;
         unsubscribe=db.collection('guides').doc(String(guideId)).onSnapshot(snap=>{
           if(!snap.exists){fail(err('This program guide was deleted or is no longer available.','GUIDE_NOT_FOUND'));return;}
