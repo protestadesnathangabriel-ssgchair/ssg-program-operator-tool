@@ -919,7 +919,6 @@ html[data-ssg-layout="phone"] .ssg-dashboard-columns{grid-template-columns:minma
 <script src="./firebase-adapter.js"></script>
 <script src="./program-flow-export.js"></script>
 <script src="./onsite-tech-view.js"></script>
-<script src="./guest-tech.js"></script>
 <script>
   const AUTH_STORAGE_KEY = 'SSG_PF_AUTH_V1';
   const state = {
@@ -952,6 +951,7 @@ html[data-ssg-layout="phone"] .ssg-dashboard-columns{grid-template-columns:minma
   function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
   function showToast(message){ const el=$('toast'); el.textContent=message; el.classList.add('show'); clearTimeout(showToast._t); showToast._t=setTimeout(()=>el.classList.remove('show'),2600); }
   function handleAuthFailure(message){
+    SSGTech.close();
     console.error(message);
     try{ localStorage.removeItem(AUTH_STORAGE_KEY); }catch(err){}
     state.auth=null;
@@ -1426,8 +1426,7 @@ function getStoredAuth(){
 
   function tryRestoreSession(){
     window.SSGFirebase.onReady(async user => {
-      if(new URLSearchParams(location.search).has("techGuest")){ SSGGuest.open(); return; }
-      if(!user || user.isAnonymous){ if(APP_CONFIG.mode==='share' && APP_CONFIG.guideId) showLoginGate(); else SSGGuest.open(); return; }
+      if(!user){ showLoginGate(); return; }
       try {
         const session = await window.SSGFirebase.validateCurrentUser();
         if(session && session.success){
@@ -1442,7 +1441,6 @@ function getStoredAuth(){
   }
 
         function startAuthenticatedApp(){
-    SSGGuest.leave();
     document.body.classList.remove('auth-locked');
     // Enter the app immediately. Non-critical data loads in the background.
     renderShell();
@@ -1606,6 +1604,7 @@ function getStoredAuth(){
   }
 
   function showPage(page){
+    if(page==='tech' && !state.auth?.token){showLoginGate();return;}
     if(page==='admin' && state.auth?.role!=='admin'){showToast('Administrator access is required.');return;}
     if(state.page==='tech' && page!=='tech') SSGTech.close();
     state.page=page;
@@ -1613,7 +1612,7 @@ function getStoredAuth(){
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     $('page-'+page).classList.add('active');
     $('pageTitle').textContent=pageInfo[page][0]; $('pageSubtitle').textContent=pageInfo[page][1];
-    if(page==='tech') {SSGTech.open($('page-tech'),state.guides||[],window.SSGFirebase);if(['officer','admin'].includes(state.auth?.role))SSGGuest.sharing($('page-tech'));}
+    if(page==='tech') SSGTech.open($('page-tech'),state.guides||[],window.SSGFirebase);
     if(page==='home') renderHome();
     if(page==='editor' || page==='sequence') renderEditor();
     if(page==='prompt') renderPromptPage();
