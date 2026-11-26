@@ -1011,7 +1011,15 @@ function getStoredAuth(){
   function newBlankSequence(){
     return {id:'',type:'PROGRAM_SEQUENCE',title:'',eventDate:'',organizersCallTime:'',formalStart:'',mainBgm:'',fileLink:'',hosts:[],sections:[{id:uid('SEC'),title:'',startTime:'',endTime:'',notes:'',items:[]}]} ;
   }
-  function sequenceItems(g){ return (g?.sections?.[0]?.items)||[]; }
+  function sequenceCaps(value){return String(value??'').replace(/(?:https?:\/\/|www\.)[^\s<>]+|[\w.+-]+@[\w.-]+\.[a-z]{2,}|[^\s]+/gi,part=>/^(?:https?:\/\/|www\.)/i.test(part)||/^[\w.+-]+@[\w.-]+\.[a-z]{2,}$/i.test(part)?part:part.toUpperCase());}
+  function normalizeSequenceText(g){
+    if(String(g?.type||'').toUpperCase()!=='PROGRAM_SEQUENCE')return g;
+    for(const k of ['title','venue','organizersCallTime','formalStart','mainBgm'])if(typeof g[k]==='string')g[k]=sequenceCaps(g[k]);
+    for(const h of g.hosts||[])if(typeof h.name==='string')h.name=sequenceCaps(h.name);
+    for(const sec of g.sections||[])for(const it of sec.items||[])for(const k of ['number','title','startTime','media','participants','notes'])if(typeof it[k]==='string')it[k]=sequenceCaps(it[k]);
+    return g;
+  }
+  function sequenceItems(g){ normalizeSequenceText(g); return (g?.sections?.[0]?.items)||[]; }
   function sequenceItem(n){ return {id:uid('SEQ'),number:String(n),title:'',startTime:'',endTime:'',trt:'',media:'',mediaUrl:'',link:'',participants:'',notes:''}; }
 
 
@@ -1953,9 +1961,9 @@ function getStoredAuth(){
   function syncSequenceGuide(){
     if(!state.guide)return;
     state.guide.type='PROGRAM_SEQUENCE';
-    state.guide.title=String($('sTitle')?.value||'').toUpperCase();
+    state.guide.title=sequenceCaps($('sTitle')?.value||'');
     state.guide.eventDate=$('sDate')?.value||'';
-    state.guide.venue=String($('sVenue')?.value||'').toUpperCase();
+    state.guide.venue=sequenceCaps($('sVenue')?.value||'');
     state.guide.organizersCallTime=$('sCall')?.value||'';
     state.guide.formalStart=$('sStart')?.value||'';
     state.guide.mainBgm=$('sBgm')?.value||'';
@@ -1968,22 +1976,24 @@ function getStoredAuth(){
     sec.items=Array.from(document.querySelectorAll('.sequence-item')).map((card,idx)=>({
       id:card.dataset.itemId,
       number:card.querySelector('.seq-number').value||String(idx),
-      title:String(card.querySelector('.seq-title').value||'').toUpperCase(),
+      title:sequenceCaps(card.querySelector('.seq-title').value||''),
       startTime:card.querySelector('.seq-time').value||'',
       endTime:'',
       trt:'',
-      media:String(card.querySelector('.seq-media').value||'').toUpperCase(),
+      media:sequenceCaps(card.querySelector('.seq-media').value||''),
       mediaUrl:card.dataset.mediaUrl||'',
-      link:String(card.querySelector('.seq-link').value||'').toUpperCase(),
+      link:String(card.querySelector('.seq-link').value||''),
       participants:'',
       notes:String(card.querySelector('.seq-unified-input').value||'')
     }));
     state.guide.sections=[sec];
+    normalizeSequenceText(state.guide);
   }
 
   function renderSequenceEditor(){
     const g=state.guide||newBlankSequence();
     g.type='PROGRAM_SEQUENCE';
+    normalizeSequenceText(g);
     if(!g.sections?.length)g.sections=[{id:uid('SEC'),title:'',startTime:'',endTime:'',notes:'',items:[]}];
     if(!g.sections[0].items)g.sections[0].items=[];
     state.guide=g;
@@ -2680,6 +2690,11 @@ function broadcastGuideToPresenter(){
       if(!state.guide)return;
       try{
         if(String(state.guide.type||'PROGRAM_FLOW').toUpperCase()==='PROGRAM_SEQUENCE'){
+          if(e.isComposing)return;
+          if(target.matches('#sTitle,#sVenue,#sCall,#sStart,#sBgm,.seq-host-name,.seq-number,.seq-time,.seq-title,.seq-media,.seq-unified-input')){
+            const old=target.value, next=sequenceCaps(old);
+            if(old!==next){const a=target.selectionStart,b=target.selectionEnd;target.value=next;if(a!==null&&b!==null)target.setSelectionRange(sequenceCaps(old.slice(0,a)).length,sequenceCaps(old.slice(0,b)).length);}
+          }
           syncSequenceGuide();
           renderSequencePreview();
           scheduleGuideAutoSave(); broadcastGuideToPresenter();
@@ -2692,6 +2707,7 @@ function broadcastGuideToPresenter(){
     };
     document.addEventListener('input',handle,true);
     document.addEventListener('change',handle,true);
+    document.addEventListener('compositionend',handle,true);
   }
 
   // Reorder program items and sequence takes by dragging their grip. Arrow controls remain available on touch devices.
@@ -2821,17 +2837,20 @@ function broadcastGuideToPresenter(){
 
   function copyGuideText(id){
     const finish=(guide)=>{const text=buildText(guide);navigator.clipboard?.writeText(text).then(()=>showToast('Copied.')).catch(()=>fallbackCopy(text));};
-    if(id) safeRun('getGuide',[id],finish); else finish(state.previewGuide||state.guide);
+    if(state.previewGuide?.type==='PROGRAM_SEQUENCE'&&String(state.previewGuide.id||'')===String(id||''))finish(state.previewGuide);
+    else if(id) safeRun('getGuide',[id],finish); else finish(state.previewGuide||state.guide);
   }
   function fallbackCopy(text){const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();showToast('Copied.');}
   function buildText(g){
+    normalizeSequenceText(g);
     let lines=[g.title||'TECH GUIDE','']; if(g.eventDate)lines.push('Event Date: '+g.eventDate); if(g.organizersCallTime)lines.push('Organizers’ Call Time: '+g.organizersCallTime); if(g.formalStart)lines.push('Formal Start: '+g.formalStart); if(g.mainBgm)lines.push('Main BGM: '+g.mainBgm); if(g.fileLink)lines.push('General File Link: '+g.fileLink); lines.push('');
     if(String(g.type||'PROGRAM_FLOW').toUpperCase()==='PROGRAM_SEQUENCE'){
       sequenceItems(g).forEach((it,ii)=>{lines.push('[TAKE '+(it.number||String(ii))+']');if(it.startTime)lines.push(it.startTime);if(it.title)lines.push('** '+it.title);if(it.participants)lines.push('ONCAM / DETAILS: '+it.participants);if(it.media)lines.push('- '+it.media);if(it.mediaUrl)lines.push('DRIVE LINK: '+it.mediaUrl);if(it.link)lines.push('EXTERNAL LINK: '+it.link);if(it.notes)lines.push('NOTE: '+it.notes);lines.push('');});
     }else{
       guideSectionsForDisplay(g).forEach((s,si)=>{lines.push((si+1)+'. '+s.title);if(s.startTime||s.endTime)lines.push('TIME: '+(s.startTime||'—')+' – '+(s.endTime||'—'));if(s.notes)lines.push('NOTE: '+s.notes);lines.push('');(s.items||[]).forEach((it,ii)=>{lines.push('#'+(it.number||String(ii+1))+' '+it.title);lines.push('TIME: '+(it.startTime||'—')+' – '+(it.endTime||'—'));const d=trtDisplay(it);if(d)lines.push('TRT: '+d);if(it.media)lines.push('MEDIA / FILE: '+it.media);if(it.mediaUrl)lines.push('DRIVE LINK: '+it.mediaUrl);if(it.link)lines.push('EXTERNAL LINK: '+it.link);if(it.participants)lines.push('PARTICIPANTS / DETAILS: '+it.participants);if(it.notes)lines.push('NOTES: '+it.notes);lines.push('');});});
     }
-    return lines.join('\n').replace(/\n{3,}/g,'\n\n').trim();
+    const result=lines.join('\n').replace(/\n{3,}/g,'\n\n').trim();
+    return g.type==='PROGRAM_SEQUENCE'?sequenceCaps(result):result;
   }
 
   function exportGuideClient(id){
