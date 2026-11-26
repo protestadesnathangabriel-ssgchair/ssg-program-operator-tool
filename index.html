@@ -919,6 +919,7 @@ html[data-ssg-layout="phone"] .ssg-dashboard-columns{grid-template-columns:minma
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="./firebase-adapter.js"></script>
 <script src="./program-flow-export.js"></script>
+<script src="./program-sequence-export.js"></script>
 <script src="./onsite-tech-view.js"></script>
 <script>
   const AUTH_STORAGE_KEY = 'SSG_PF_AUTH_V1';
@@ -1936,6 +1937,19 @@ function getStoredAuth(){
     try{if(!state.guide||String(state.guide.type||'PROGRAM_FLOW').toUpperCase()!=='PROGRAM_FLOW')return;syncGuide();const bytes=SSGFlowWord.build(state.guide,{paper:$('flowWordPaper').value,orientation:$('flowWordOrientation').value});const name=($('flowWordName').value.trim().replace(/[\\/:*?"<>|]/g,'-').replace(/\.docx$/i,'')||'Program Flow')+'.docx';downloadBlobFile(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),name);$('flowWordModal').remove();}catch(e){console.error(e);showToast('Word export failed. Please try again.');}
   }
 
+  function sequenceWordRuns(text,g){
+    const host=document.createElement('div');host.innerHTML=formatSequenceInputHtml(text,false,g);
+    return Array.from(host.children).map(line=>{const out=[];function walk(node,style){if(node.nodeType===3){out.push({...style,text:node.nodeValue});return;}if(node.nodeType!==1)return;const next={...style}, c=node.classList;if(c.contains('sequence-format-oncam-label'))next.color='00B050';if(c.contains('sequence-format-oncam-name'))out.push({...style,text:' '});if(c.contains('sequence-tech-instruction')){next.color='E51919';next.italic=true;}if(c.contains('sequence-host-instruction')){next.color='000000';next.highlight=true;next.italic=true;}if(c.contains('sequence-host-name')){const m=node.getAttribute('style')?.match(/#([0-9a-f]{6})/i);if(m)next.color=m[1];}Array.from(node.childNodes).forEach(n=>walk(n,next));}walk(line,{});return out;});
+  }
+  function openSequenceWordExport(){
+    if(state.guide?.type!=='PROGRAM_SEQUENCE')return;
+    $('sequenceWordModal')?.remove();
+    document.body.insertAdjacentHTML('beforeend',`<div id="sequenceWordModal" class="modal-backdrop show" role="dialog" aria-modal="true" aria-label="Export Program Sequence"><div class="modal" style="max-width:480px"><div class="modal-head"><strong>Export Program Sequence to Word</strong><button class="btn small" onclick="$('sequenceWordModal').remove()">Close</button></div><div class="modal-body"><div class="form-grid"><div class="field full"><label for="seqWordName">Filename (.docx)</label><input id="seqWordName" value="${escAttr($('sTitle')?.value||state.guide.title||'Program Sequence')} - Program Sequence"></div><div class="field"><label for="seqWordPaper">Paper size</label><select id="seqWordPaper"><option value="letter">Letter</option><option value="a4">A4</option><option value="folio">Long (8.5 × 13)</option><option value="legal">Legal</option></select></div><div class="field"><label for="seqWordOrientation">Orientation</label><select id="seqWordOrientation"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></div><div class="field"><label for="seqWordColumns">Columns</label><select id="seqWordColumns"><option>1</option><option selected>2</option><option>3</option></select></div><div class="field"><label for="seqWordBackground">Background</label><select id="seqWordBackground"><option value="black">Black</option><option value="white">White</option></select></div><div class="field"><label for="seqWordFont">Font</label><select id="seqWordFont"><option>Tahoma</option><option>Arial</option><option>Calibri</option><option>Verdana</option></select></div><div class="field"><label for="seqWordSize">Font size (pt)</label><select id="seqWordSize">${[8,9,10,11,12,13,14,16,18].map(n=>`<option ${n===12?'selected':''}>${n}</option>`).join('')}</select></div></div></div><div class="modal-foot"><button class="btn primary" onclick="downloadSequenceWord()">Export Word Document</button></div></div></div>`);
+  }
+  function downloadSequenceWord(){
+    try{if(state.guide?.type!=='PROGRAM_SEQUENCE')return;syncSequenceGuide();const bytes=SSGSequenceWord.build(state.guide,{paper:$('seqWordPaper').value,orientation:$('seqWordOrientation').value,columns:$('seqWordColumns').value,background:$('seqWordBackground').value,font:$('seqWordFont').value,size:$('seqWordSize').value},sequenceWordRuns);const name=($('seqWordName').value.trim().replace(/[\\/:*?"<>|]/g,'-').replace(/\.docx$/i,'')||'Program Sequence')+'.docx';downloadBlobFile(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),name);$('sequenceWordModal').remove();}catch(e){console.error(e);showToast('Sequence Word export failed. Please try again.');}
+  }
+
   function syncSequenceGuide(){
     if(!state.guide)return;
     state.guide.type='PROGRAM_SEQUENCE';
@@ -2000,7 +2014,7 @@ function getStoredAuth(){
         </div>
       </div>
       <div id="sequenceKeyboardGuideModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Program Sequence keyboard function guide" onclick="if(event.target===this)hideSequenceKeyboardGuide()"><div class="modal" style="max-width:620px"><div class="modal-head"><strong>PROGRAM SEQUENCE — KEYBOARD GUIDE</strong><button class="btn small" type="button" onclick="hideSequenceKeyboardGuide()">CLOSE</button></div><div class="modal-body" style="font-size:13px;line-height:1.6"><p><b>// ... //</b> — Toggles bold formatting for the text between the markers. The same <b>//</b> marker toggles it back off.</p><p><b>***text***</b> — Formats the text between the three-asterisk markers in red, bold, and italic.</p><p><b>***</b> on a line by itself — Toggles the existing technical-instruction formatting for following lines until toggled off with another standalone <b>***</b>.</p><p><b>TECH: text</b> — Formats that line as a technical instruction.</p><p><b>[text]</b> — Applies the existing green-highlighted host instruction formatting to the text inside brackets.</p><p><b>HOST NAME: text</b> — Uses the configured host color when the name matches a host configured above.</p><p style="color:var(--muted);font-size:11px;margin-bottom:0">These are the formatting patterns already supported by the current Program Sequence HTML. No new shortcuts are added.</p></div></div></div>
-      <div class="sticky-actions"><button class="btn" onclick="previewCurrentGuide()">Full Preview</button><button class="btn" onclick="promptCurrentGuide()">Open Prompt</button><button class="btn primary" onclick="saveGuideClient()">Save Sequence</button></div>`;
+      <div class="sticky-actions"><button class="btn" onclick="previewCurrentGuide()">Full Preview</button><button class="btn" onclick="promptCurrentGuide()">Open Prompt</button><button class="btn" type="button" onclick="openSequenceWordExport()">Export to Word</button><button class="btn primary" onclick="saveGuideClient()">Save Sequence</button></div>`;
     renderSequenceItems();
     renderSequencePreview();
     setupSequencePreviewListener();
