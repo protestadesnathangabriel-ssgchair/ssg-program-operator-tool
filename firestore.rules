@@ -25,10 +25,11 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Saved program guides and program sequences are publicly readable.
+    // Saved guides remain readable to signed-in viewers; guests need explicit sharing.
     // Only approved officers/admins may change or delete them.
     match /guides/{guideId} {
-      allow read: if true;
+      allow get: if signedIn() || guestEnabled(guideId);
+      allow list: if signedIn();
       allow create, update, delete: if isOfficer();
     }
 
@@ -46,10 +47,25 @@ service cloud.firestore {
       allow read, create, update, delete: if isOfficer();
     }
 
+    function guestEnabled(id) {
+      return exists(/databases/$(database)/documents/guides/$(id))
+        && exists(/databases/$(database)/documents/techSharing/$(id))
+        && get(/databases/$(database)/documents/techSharing/$(id)).data.mode in ['link','listed'];
+    }
+    match /techSharing/{id} {
+      allow get: if isOfficer() || resource.data.mode in ['link','listed'];
+      allow list: if isOfficer() || resource.data.mode == 'listed';
+      allow create, update: if isOfficer() && request.resource.data.keys().hasOnly(['mode','title','eventDate'])
+        && request.resource.data.mode in ['disabled','link','listed']
+        && request.resource.data.title is string && request.resource.data.eventDate is string
+        && exists(/databases/$(database)/documents/guides/$(id));
+      allow delete: if isOfficer();
+    }
     // Live editor drafts are separate from permanent saved guides. Signed-in users
     // may follow the current draft; only approved officers may publish it.
     match /guideLiveDrafts/{guideId} {
-      allow read: if signedIn();
+      allow get: if signedIn() || guestEnabled(guideId);
+      allow list: if signedIn();
       allow create, update: if isOfficer()
         && request.resource.data.guideId == guideId
         && request.resource.data.updatedBy == request.auth.uid

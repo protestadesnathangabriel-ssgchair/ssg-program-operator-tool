@@ -243,7 +243,7 @@
       }
       case 'deleteGuide': {
         const id=String(a[0]||''); if(!id) throw err('Guide ID is required.');
-        await db.collection('guides').doc(id).delete();
+        const batch=db.batch(); batch.delete(db.collection('guides').doc(id)); batch.delete(db.collection('techSharing').doc(id)); await batch.commit();
         return {success:true,message:'Guide deleted successfully.'};
       }
       case 'getCPFCTemplate': return getCPFCTemplate();
@@ -309,6 +309,11 @@
   window.google.script=window.google.script||{};
   Object.defineProperty(window.google.script,'run',{configurable:true,get:makeRunner});
   window.SSGFirebase={
+    techSharing: async id=>{await requireOfficer(); const d=await db.collection('techSharing').doc(id).get();return d.exists?d.data().mode:'disabled';},
+    setTechSharing: async (id,mode)=>{await requireOfficer();if(!['disabled','link','listed'].includes(mode))throw Error('Invalid sharing mode');const g=await getGuide(id);if(!g||String(g.type||'PROGRAM_FLOW')!=='PROGRAM_FLOW')throw Error('Program Flow required');await db.collection('techSharing').doc(id).set({mode,title:g.title||'',eventDate:g.eventDate||''});},
+    guestList:(next,fail)=>db.collection('techSharing').where('mode','==','listed').onSnapshot(s=>next(s.docs.map(d=>({id:d.id,...d.data()}))),fail),
+    guestPermission:(id,next,fail)=>db.collection('techSharing').doc(id).onSnapshot(s=>{if(!s.metadata.fromCache)next(s.exists&&['link','listed'].includes(s.data().mode));},fail),
+    guestDraft:(id,next,fail)=>db.collection('guideLiveDrafts').doc(id).onSnapshot(s=>{const r=s.data();next(r?.state?{...r.state,id,_liveDraftUpdatedAt:r.updatedAt?.toMillis?.()||0}:null);},fail),
     // Keep the known-working Firebase popup sign-in flow. Redirect sign-in on
     // GitHub Pages can fail on mobile browsers that block third-party storage.
     signIn:async()=>{
