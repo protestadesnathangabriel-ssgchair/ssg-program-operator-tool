@@ -65,6 +65,7 @@
     out.sections=(Array.isArray(g.sections)?g.sections:[]).map((s,si)=>({
       id:String(s.id||('SEC_'+crypto.randomUUID().replace(/-/g,'').slice(0,14))),
       title:String(s.title||`Section ${si+1}`),startTime:String(s.startTime||''),endTime:String(s.endTime||''),notes:String(s.notes||''),
+      ...(/^#[0-9a-f]{6}$/i.test(s.color||'')?{color:s.color}:{}),
       items:(Array.isArray(s.items)?s.items:[]).map((it,ii)=>({...it,id:String(it.id||('ITM_'+crypto.randomUUID().replace(/-/g,'').slice(0,14))),number:String(it.number||ii+1),title:String(it.title||`Program Item ${ii+1}`),trt:String(it.trt||it.duration||'')}))
     }));
     out.standaloneItems=(Array.isArray(g.standaloneItems)?g.standaloneItems:[]).map((it,ii)=>({...it,id:String(it.id||('ITM_'+crypto.randomUUID().replace(/-/g,'').slice(0,14))),number:String(it.number||ii+1),title:String(it.title||`Program Item ${ii+1}`),trt:String(it.trt||it.duration||'')}));

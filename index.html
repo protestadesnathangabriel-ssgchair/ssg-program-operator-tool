@@ -917,6 +917,7 @@ html[data-ssg-layout="phone"] .ssg-dashboard-columns{grid-template-columns:minma
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="./firebase-adapter.js"></script>
+<script src="./program-flow-export.js"></script>
 <script>
   const AUTH_STORAGE_KEY = 'SSG_PF_AUTH_V1';
   const state = {
@@ -1874,7 +1875,7 @@ function getStoredAuth(){
           <button class="btn" onclick="createBlankGuide()">Blank</button><button class="btn" onclick="loadTemplateIntoEditor()">Use CP/FC Template</button><span id="guideSaveStatus" class="save-status">Not saved yet</span>
         </div>
         <div class="toolbar-right">
-          <button class="btn primary" onclick="saveGuideClient()">Save Guide</button>
+          <button class="btn" type="button" onclick="openFlowWordExport()">Export to Word</button><button class="btn primary" onclick="saveGuideClient()">Save Guide</button>
         </div>
       </div>
 
@@ -1915,6 +1916,15 @@ function getStoredAuth(){
     updateGuideSaveStatus(state.guide?.updatedAt ? `Saved ${state.guide.updatedAt}` : "Not saved yet");
   }
 
+
+  function openFlowWordExport(){
+    if(!state.guide||String(state.guide.type||'PROGRAM_FLOW').toUpperCase()!=='PROGRAM_FLOW')return;
+    syncGuide(); $('flowWordModal')?.remove();
+    document.body.insertAdjacentHTML('beforeend',`<div id="flowWordModal" class="modal-backdrop show" role="dialog" aria-modal="true" aria-label="Export Program Flow"><div class="modal" style="max-width:480px"><div class="modal-head"><strong>Export Program Flow to Word</strong><button class="btn small" onclick="$('flowWordModal').remove()">Close</button></div><div class="modal-body"><div class="form-grid"><div class="field full"><label for="flowWordName">Filename (.docx)</label><input id="flowWordName" value="${escAttr(state.guide.title||'Program Flow')} - Program Flow"></div><div class="field full"><label for="flowWordPaper">Paper size</label><select id="flowWordPaper"><option value="a4">A4</option><option value="letter">Short bond paper</option><option value="folio">Long bond paper (8.5 × 13)</option><option value="legal">Legal</option></select></div><div class="field full"><label for="flowWordOrientation">Orientation</label><select id="flowWordOrientation"><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select></div></div></div><div class="modal-foot"><button class="btn primary" onclick="downloadFlowWord()">Export Word Document</button></div></div></div>`);
+  }
+  function downloadFlowWord(){
+    try{if(!state.guide||String(state.guide.type||'PROGRAM_FLOW').toUpperCase()!=='PROGRAM_FLOW')return;syncGuide();const bytes=SSGFlowWord.build(state.guide,{paper:$('flowWordPaper').value,orientation:$('flowWordOrientation').value});const name=($('flowWordName').value.trim().replace(/[\\/:*?"<>|]/g,'-').replace(/\.docx$/i,'')||'Program Flow')+'.docx';downloadBlobFile(new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),name);$('flowWordModal').remove();}catch(e){console.error(e);showToast('Word export failed. Please try again.');}
+  }
 
   function syncSequenceGuide(){
     if(!state.guide)return;
@@ -2250,6 +2260,7 @@ function getStoredAuth(){
         startTime:card.querySelector('.sec-start').value,
         endTime:card.querySelector('.sec-end').value,
         notes:card.querySelector('.sec-notes').value,
+        color:SSGFlowWord.color(card.querySelector('.sec-color').value,sidx),
         _manualEnd:card.dataset.manualEnd==='1',
         items:[]
       };
@@ -2298,11 +2309,12 @@ function getStoredAuth(){
           <div class="field full"><label>Section Title</label><input class="sec-title" value="${escAttr(sec.title)}"></div>
           <div class="field"><label>Start Time${sidx>0?' (Auto)':''}</label><input class="sec-start time-input ${sidx>0?'time-auto':''}" value="${escAttr(sec.startTime)}" ${sidx>0?'disabled':''}></div>
           <div class="field"><label>End Time</label><input class="sec-end time-input" value="${escAttr(sec.endTime)}"></div>
-          <div class="field full"><label>Section Notes</label><textarea class="sec-notes">${esc(sec.notes)}</textarea></div>
+          <div class="field"><label>Export Section Color</label><input type="color" class="sec-color" value="${SSGFlowWord.color(sec.color,sidx)}" aria-label="Section export color"></div><div class="field"><label>HEX Color</label><input class="sec-hex" value="${SSGFlowWord.color(sec.color,sidx)}" maxlength="7" aria-label="Section HEX color" onchange="if(/^#[0-9a-f]{6}$/i.test(this.value)){this.closest('.section-card').querySelector('.sec-color').value=this.value;this.closest('.section-card').querySelector('.sec-color').dispatchEvent(new Event('change',{bubbles:true}));}else{this.value=this.closest('.section-card').querySelector('.sec-color').value;}"></div><div class="field full"><label>Section Notes</label><textarea class="sec-notes">${esc(sec.notes)}</textarea></div>
         </div>
         <div class="items-root"></div>
         <div style="margin-top:10px;display:flex;justify-content:flex-start"><button class="btn small" onclick="addItem('${escAttr(sec.id)}')">+ Add Program Item</button></div>`;
       root.appendChild(wrap);
+      for(const event of ['input','change'])wrap.querySelector('.sec-color').addEventListener(event,e=>{wrap.querySelector('.sec-hex').value=e.target.value;});
       const itemsRoot=wrap.querySelector('.items-root');
       (sec.items||[]).forEach((item,iidx)=>itemsRoot.appendChild(makeItemElement(item,iidx)));
 
