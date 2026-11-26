@@ -22,7 +22,7 @@
     .nav{display:flex;flex-direction:column;gap:7px}
     .nav button{border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:8px;color:#34404b;font-weight:700;font-size:13px}
     .nav button:hover,.nav button.active{background:#edf3f9;color:var(--blue)}
-    body.viewer-mode .nav button:not([data-page="home"]){display:none}
+    body.viewer-mode .nav button:not([data-page="home"]):not([data-page="tech"]){display:none}
     body.viewer-mode .ssg-tools-grid,body.viewer-mode .ssg-dashboard-columns{display:none!important}
     body.viewer-mode .ssg-home-intro p{max-width:760px}
     .operator-follow-modal{position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:10000;display:none;align-items:center;justify-content:center;padding:18px}.operator-follow-modal.show{display:flex}.operator-follow-card{background:#fff;color:#182433;border-radius:14px;padding:22px;width:min(560px,100%);max-height:80vh;overflow:auto;box-shadow:0 20px 60px #0004}.operator-follow-card h3{margin:0 0 8px}.operator-follow-list{display:grid;gap:8px;margin-top:14px}.operator-follow-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #dce2e8;border-radius:9px;padding:12px}.operator-follow-empty{padding:16px;background:#f4f6f8;border-radius:8px;color:#596675;font-size:13px}
@@ -918,6 +918,7 @@ html[data-ssg-layout="phone"] .ssg-dashboard-columns{grid-template-columns:minma
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="./firebase-adapter.js"></script>
 <script src="./program-flow-export.js"></script>
+<script src="./onsite-tech-view.js"></script>
 <script>
   const AUTH_STORAGE_KEY = 'SSG_PF_AUTH_V1';
   const state = {
@@ -1465,6 +1466,7 @@ function getStoredAuth(){
   }
 
   function logoutClient(){
+    SSGTech.close();
     const token=state.auth?.token||getStoredAuth()?.token;
     if(token) window.SSGFirebase.signOut().catch(()=>{});
     try{localStorage.removeItem(AUTH_STORAGE_KEY);}catch(err){}
@@ -1503,7 +1505,7 @@ function getStoredAuth(){
                 <button data-page="lyrics" onclick="showPage('lyrics');setLyricMode('video')">Video Lyrics</button>
               </div>
             </div>
-            <button data-page="prompt" onclick="showPage('prompt')">Live Windows</button>
+            <button data-page="prompt" onclick="showPage('prompt')">Live Windows</button><button data-page="tech" onclick="showPage('tech')">Onsite Tech View</button>
             ${state.auth?.role==='admin'?'<button data-page="admin" onclick="showPage(\'admin\')">Officer Requests</button>':''}
           </nav>
           <div class="sidebar-foot">Independent Apps Script database.<br>Does not use TALAAN or Event Tracker data.</div>
@@ -1513,7 +1515,7 @@ function getStoredAuth(){
           <div class="content">
             <section id="page-home" class="page active"></section>
             <section id="page-editor" class="page"></section>
-            <section id="page-prompt" class="page"></section>
+            <section id="page-prompt" class="page"></section><section id="page-tech" class="page"></section>
             <section id="page-lyrics" class="page"></section>
             <section id="page-admin" class="page"></section>
           </div>
@@ -1582,6 +1584,7 @@ function getStoredAuth(){
   }
 
   const pageInfo={
+    tech:['Onsite Tech View','Read-only live program flow.'],
     home:['Dashboard','Your workspace for program guides, live sequence, and lyrics.'],
     editor:['Program Guides','Build a complete event program flow with unlimited sections and items.'],
     sequence:['Program Sequence','Build a take-based live program sequence with scheduled times.'],
@@ -1601,11 +1604,13 @@ function getStoredAuth(){
 
   function showPage(page){
     if(page==='admin' && state.auth?.role!=='admin'){showToast('Administrator access is required.');return;}
+    if(state.page==='tech' && page!=='tech') SSGTech.close();
     state.page=page;
     document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     $('page-'+page).classList.add('active');
     $('pageTitle').textContent=pageInfo[page][0]; $('pageSubtitle').textContent=pageInfo[page][1];
+    if(page==='tech') SSGTech.open($('page-tech'),state.guides||[],window.SSGFirebase);
     if(page==='home') renderHome();
     if(page==='editor' || page==='sequence') renderEditor();
     if(page==='prompt') renderPromptPage();
@@ -1731,7 +1736,7 @@ function getStoredAuth(){
         <section class="ssg-dashboard-panel">
           <div class="ssg-section-title"><div><h2>Recently opened</h2><p>Pick up where you left off.</p></div><button class="ssg-text-link" type="button" onclick="openSavedGuidesFromHome()">View all →</button></div>
           <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="homeSearch" placeholder="Search guides by title…" value="${escAttr(window.homeSearchValue||'')}" oninput="window.homeSearchValue=this.value;renderHome()"></div>
-          <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="shareGuideLink('${escAttr(g.id)}')">Share link</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="shareGuideLink('${escAttr(g.id)}')">Share link</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button>${String(g.type||'PROGRAM_FLOW')!=='PROGRAM_SEQUENCE'&&['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small primary" onclick="useGuideAsSequence('${escAttr(g.id)}')">Use as Sequence</button>`:''}${['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small danger" onclick="deleteGuideClient('${escAttr(g.id)}')">Delete</button>`:''}</div>`}</div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
+          <div class="guide-list">${recent.length?recent.map(g=>`<div class="guide-row"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap">${String(g.type||'PROGRAM_FLOW').toUpperCase()!=='PROGRAM_SEQUENCE'?`<button class="btn small" onclick="openSavedTech('${escAttr(g.id)}')">Onsite Tech View</button>`:''}<button class="btn small" onclick="shareGuideLink('${escAttr(g.id)}')">Share link</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button>${String(g.type||'PROGRAM_FLOW').toUpperCase()!=='PROGRAM_SEQUENCE'?`<button class="btn small" onclick="openSavedTech('${escAttr(g.id)}')">Onsite Tech View</button>`:''}<button class="btn small" onclick="shareGuideLink('${escAttr(g.id)}')">Share link</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button>${String(g.type||'PROGRAM_FLOW')!=='PROGRAM_SEQUENCE'&&['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small primary" onclick="useGuideAsSequence('${escAttr(g.id)}')">Use as Sequence</button>`:''}${['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small danger" onclick="deleteGuideClient('${escAttr(g.id)}')">Delete</button>`:''}</div>`}</div>`).join(''):`<div class="empty">${q?'No guides match your search.':'No saved guides yet.'}<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div></div>
         </section>
         <section class="ssg-dashboard-panel">
           <div class="ssg-section-title"><div><h2>Quick access</h2><p>Supporting tools for your program.</p></div></div>
@@ -1745,7 +1750,7 @@ function getStoredAuth(){
       <section class="ssg-dashboard-panel ssg-saved-guides-section" id="savedGuidesSection" style="margin-top:26px">
         <div class="ssg-section-title"><div><h2>Saved Guides & Sequences</h2><p>${isViewer?'View all saved program guides and sequences.':'Open and manage all your saved program guides and sequences.'}</p></div></div>
         <div class="ssg-panel-inner"><div class="ssg-search-row"><input class="search" id="savedGuideSearch" placeholder="Search saved guides by title…" aria-label="Search saved guides" oninput="filterSavedGuides(this.value)"></div>
-          <div class="guide-list" id="savedGuideList">${all.length?all.map(g=>`<div class="guide-row" data-saved-title="${escAttr(String(g.title||'').toLowerCase())}"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="shareGuideLink('${escAttr(g.id)}')">Share link</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button><button class="btn small" onclick="shareGuideLink('${escAttr(g.id)}')">Share link</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button>${['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small danger" onclick="deleteGuideClient('${escAttr(g.id)}')">Delete</button>`:''}</div>`}</div>`).join(''):`<div class="empty">No saved guides yet.<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div>
+          <div class="guide-list" id="savedGuideList">${all.length?all.map(g=>`<div class="guide-row" data-saved-title="${escAttr(String(g.title||'').toLowerCase())}"><div class="ssg-guide-mark">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'☷':'▤'}</div><div class="guide-info"><div class="guide-title">${esc(g.title)}</div><div class="guide-meta">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Program sequence':'Program guide'} · ${esc(g.eventDate||'No date')}</div></div><span class="ssg-type-pill">${String(g.type||'PROGRAM_FLOW')==='PROGRAM_SEQUENCE'?'Sequence':'Guide'}</span>${isViewer?`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap">${String(g.type||'PROGRAM_FLOW').toUpperCase()!=='PROGRAM_SEQUENCE'?`<button class="btn small" onclick="openSavedTech('${escAttr(g.id)}')">Onsite Tech View</button>`:''}<button class="btn small" onclick="shareGuideLink('${escAttr(g.id)}')">Share link</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Guide Preview</button><button class="btn small primary" onclick="chooseOnlineOperator('${escAttr(g.id)}')">Follow Online Operator</button><button class="btn small" onclick="openHostViewReadOnly('${escAttr(g.id)}')">Host View</button></div>`:`<div class="actions" style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn small" onclick="editGuide('${escAttr(g.id)}')">Open</button>${String(g.type||'PROGRAM_FLOW').toUpperCase()!=='PROGRAM_SEQUENCE'?`<button class="btn small" onclick="openSavedTech('${escAttr(g.id)}')">Onsite Tech View</button>`:''}<button class="btn small" onclick="shareGuideLink('${escAttr(g.id)}')">Share link</button><button class="btn small" onclick="previewGuide('${escAttr(g.id)}')">Preview</button>${['officer','admin'].includes(String(state.auth?.role||'').toLowerCase())?`<button class="btn small danger" onclick="deleteGuideClient('${escAttr(g.id)}')">Delete</button>`:''}</div>`}</div>`).join(''):`<div class="empty">No saved guides yet.<br><br>Create a Program Guide or Program Sequence to get started.</div>`}</div>
         </div>
       </section>
       <div id="operatorFollowModal" class="operator-follow-modal" role="dialog" aria-modal="true" aria-labelledby="operatorFollowTitle"><div class="operator-follow-card"><h3 id="operatorFollowTitle">Follow an online operator</h3><p style="font-size:13px;color:#596675;margin:0">Choose an operator currently running this guide. Your window is view-only; keyboard and timer controls are disabled.</p><div id="operatorFollowList" class="operator-follow-list"><div class="operator-follow-empty">Checking online operators…</div></div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn" type="button" onclick="closeOperatorFollowModal()">Close</button></div></div></div>`;
@@ -1875,7 +1880,7 @@ function getStoredAuth(){
           <button class="btn" onclick="createBlankGuide()">Blank</button><button class="btn" onclick="loadTemplateIntoEditor()">Use CP/FC Template</button><span id="guideSaveStatus" class="save-status">Not saved yet</span>
         </div>
         <div class="toolbar-right">
-          <button class="btn" type="button" onclick="openFlowWordExport()">Export to Word</button><button class="btn primary" onclick="saveGuideClient()">Save Guide</button>
+          <button class="btn" type="button" onclick="openCurrentTech()">Onsite Tech View</button><button class="btn" type="button" onclick="openFlowWordExport()">Export to Word</button><button class="btn primary" onclick="saveGuideClient()">Save Guide</button>
         </div>
       </div>
 
@@ -1917,6 +1922,8 @@ function getStoredAuth(){
   }
 
 
+  function openSavedTech(id){showPage("tech");SSGTech.select(id);}
+  function openCurrentTech(){syncGuide();if(!state.guide?.id){showToast("Save the guide before opening Onsite Tech View.");return;}const g=clone(state.guide);showPage("tech");SSGTech.select(g.id,g);}
   function openFlowWordExport(){
     if(!state.guide||String(state.guide.type||'PROGRAM_FLOW').toUpperCase()!=='PROGRAM_FLOW')return;
     syncGuide(); $('flowWordModal')?.remove();
